@@ -1,2 +1,5 @@
 *.class
 .vscode/settings.json
+
+# Maven
+target/

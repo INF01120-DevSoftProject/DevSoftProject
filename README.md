@@ -82,8 +82,27 @@ A pasta `target/` é gerada pelo Maven e não é versionada.
 ### Convenções
 
 - **Código e testes ficam separados:** classes em `src/main/java`, testes em `src/test/java`. Os testes nunca vão para o JAR final.
-- **Pacotes seguem as pastas.** Uma classe do pacote `music` fica em `src/main/java/music/`, e o seu teste em `src/test/java/music/`.
+- **Toda classe pertence a um pacote**, tanto as de `src/main/java` quanto as de `src/test/java`. Não use classes sem pacote.
+- **Pacotes seguem as pastas.** A linha `package music;` exige que o arquivo esteja em uma pasta `music/`.
+- **O teste usa o mesmo pacote da classe testada.** `Music` fica em `src/main/java/music/Music.java` e `MusicTest` em `src/test/java/music/MusicTest.java`, ambos com `package music;`. Assim, o teste enxerga membros *package-private* sem precisar de `import`.
 - **Nome do teste:** `<Classe>Test`, por exemplo `NoteElementTest` para `NoteElement`.
+- **Classes de outro pacote exigem `import`**, por exemplo `import music.SheetMusic;`. Classes do mesmo pacote não precisam.
+- **Nomes de pacote:** em minúsculas, sem hífen, espaço ou underline, e curtos. Cada pacote agrupa uma responsabilidade (música, input, tradutor).
+- **O pacote raiz é curto** (sem o domínio ao contrário, como `br.ufrgs`), porque o projeto não será publicado como biblioteca. O `groupId` do `pom.xml` é independente dos pacotes.
+- **Um tipo público por arquivo**, com o arquivo tendo o mesmo nome da classe ou interface.
+- **Renomear pacotes:** use o recurso de renomear da extensão de Java do VS Code, que atualiza as pastas, o `package` e os `import` automaticamente.
+
+Exemplo de organização (os pacotes ainda podem mudar):
+
+```
+src/main/java/
+├── music/        Music, Voice, SheetMusic, VoicePreset
+├── element/      MusicElement, NoteElement, OctaveElement...
+├── input/        InputReader, TXTInputReader, TerminalInputReader
+└── translator/   Translator, TextToSheetMusicTranslator, CurrentState...
+src/test/java/
+└── (mesmos pacotes de src/main/java, com as classes <Classe>Test)
+```
 
 ### O que o `pom.xml` define
 

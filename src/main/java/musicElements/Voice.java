@@ -1,5 +1,10 @@
 package musicElements;
 
+/**
+ * Voz: uma partitura (o que tocar) junto com um preset (como tocar: instrumento, volume e oitava iniciais).
+ *
+ * Uma Music é composta por várias Voices tocando ao mesmo tempo.
+ */
 public class Voice {
 
     private final SheetMusic sheetMusic;

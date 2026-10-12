@@ -1,5 +1,11 @@
 package musicElements;
 
+/**
+ * Configuração inicial de uma voz: instrumento, volume e oitava.
+ *
+ * new VoicePreset() usa os valores padrão (constantes DEFAULT_*);
+ * o outro construtor permite escolher cada valor.
+ */
 public class VoicePreset {
 
     public static final int DEFAULT_INSTRUMENT = 0;   // Piano

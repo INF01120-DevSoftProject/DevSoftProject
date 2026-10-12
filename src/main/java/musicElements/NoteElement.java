@@ -5,10 +5,11 @@ package musicElements;
 public class NoteElement implements MusicElement {
 
     private final String note;
+    private final DurationTime duration;
     private final boolean flat;
     private final boolean sharp;
 
-    public NoteElement ( String newNote){
+    public NoteElement ( String newNote, DurationTime newDuration){
 
         char baseNote = newNote.charAt(0);
 
@@ -16,7 +17,11 @@ public class NoteElement implements MusicElement {
             throw new IllegalArgumentException("Nota inválida");
         }
 
-        if (newNote.length()==2){
+
+        if (newDuration == null) throw new IllegalArgumentException("Duração inválida");
+
+
+        if (newNote.length()==3){
              char extensionNote = newNote.charAt(1);
             
             if (extensionNote != 'b' & extensionNote != '#' ){
@@ -38,6 +43,7 @@ public class NoteElement implements MusicElement {
         }
 
         this.note = newNote;
+        this.duration = newDuration;
     
     }
 

@@ -15,6 +15,45 @@ Para conferir se o Java está instalado:
 java -version
 ```
 
+### Configurando o `JAVA_HOME`
+
+O Maven Wrapper exige a variável de ambiente `JAVA_HOME` apontando para a **pasta raiz do JDK** (a que contém `bin/javac`), e não para a pasta `bin` nem para o `java.exe`. Sem ela, ou com um caminho incorreto, aparece o erro:
+
+```
+The JAVA_HOME environment variable is not defined correctly,
+this environment variable is needed to run this program.
+```
+
+Para conferir o valor atual:
+
+```powershell
+echo $env:JAVA_HOME          # Windows (PowerShell)
+```
+
+```bash
+echo $JAVA_HOME              # Linux / macOS
+```
+
+**Windows (PowerShell)** — define de forma permanente para o seu usuário (feche e reabra o terminal depois):
+
+```powershell
+[Environment]::SetEnvironmentVariable('JAVA_HOME', 'C:\caminho\para\o\jdk-21', 'User')
+```
+
+Para testar só na sessão atual do terminal:
+
+```powershell
+$env:JAVA_HOME = 'C:\caminho\para\o\jdk-21'
+```
+
+**Linux / macOS** — adicione ao `~/.bashrc` ou `~/.zshrc`:
+
+```bash
+export JAVA_HOME=/caminho/para/o/jdk-21
+```
+
+> Dica: se você não tem um JDK instalado separadamente, a extensão *Language Support for Java (Red Hat)* do VS Code traz um JDK 21 em `%USERPROFILE%\.vscode\extensions\redhat.java-<versão>\jre\<versão-do-jdk>`. Como o nome dessa pasta muda a cada atualização da extensão, prefira instalar um JDK 21 próprio (por exemplo, Eclipse Temurin) e apontar o `JAVA_HOME` para ele.
+
 ## Como usar o Maven
 
 Todos os comandos são executados na raiz do projeto, onde está o `pom.xml`.

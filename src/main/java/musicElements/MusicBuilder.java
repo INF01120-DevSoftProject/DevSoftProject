@@ -6,6 +6,7 @@ import java.util.List;
 public class MusicBuilder {
 
     public static final int DEFAULT_BPM = 120;
+    public static final int DEFAULT_NUMBER_OF_VOICES = 3;
 
     private String name;
     private BPMElement defaultBPM;
@@ -35,6 +36,22 @@ public class MusicBuilder {
     }
 
     public Music buildMusic(){
+
+        if (this.voices.isEmpty()){
+            return new Music(this.name, this.defaultBPM, createDefaultVoices());
+        }
+
         return new Music(this.name, this.defaultBPM, this.voices);
+    }
+
+    private List<Voice> createDefaultVoices(){
+
+        List<Voice> defaultVoices = new ArrayList<>();
+
+        for (int i = 0; i < DEFAULT_NUMBER_OF_VOICES; i++){
+            defaultVoices.add(new VoiceBuilder().setSheetMusic(new SheetMusic()).buildVoice());
+        }
+
+        return defaultVoices;
     }
 }

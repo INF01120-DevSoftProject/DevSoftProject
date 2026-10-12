@@ -54,8 +54,6 @@ public class MusicBuilderTest {
         assertThrows(IllegalArgumentException.class,
             () -> new MusicBuilder().addVoice(voiceWith(new SheetMusic())).buildMusic());
         assertThrows(IllegalArgumentException.class,
-            () -> new MusicBuilder().setName("Minha musica").buildMusic());
-        assertThrows(IllegalArgumentException.class,
             () -> new MusicBuilder().setName("Minha musica").setDefaultBPM(null).addVoice(voiceWith(new SheetMusic())).buildMusic());
         assertThrows(IllegalArgumentException.class,
             () -> new MusicBuilder().addVoice(null));
@@ -64,5 +62,83 @@ public class MusicBuilderTest {
     @Test
     void invalidVoiceIsRejectedWhenAdded() {
         assertThrows(IllegalArgumentException.class, () -> new MusicBuilder().addVoice(new VoiceBuilder()));
+    }
+
+    @Test
+    void hasThreeVoicesByDefault() {
+        Music music = new MusicBuilder().setName("Minha musica").buildMusic();
+
+        assertThat(music.getVoices()).hasSize(MusicBuilder.DEFAULT_NUMBER_OF_VOICES);
+        assertThat(MusicBuilder.DEFAULT_NUMBER_OF_VOICES).isEqualTo(3);
+    }
+
+    @Test
+    void defaultVoicesAreIndependent() {
+        Music music = new MusicBuilder().setName("Minha musica").buildMusic();
+        Voice first = music.getVoices().get(0);
+        Voice second = music.getVoices().get(1);
+        Voice third = music.getVoices().get(2);
+
+        assertThat(first.getSheetMusic()).isNotSameAs(second.getSheetMusic());
+        assertThat(second.getSheetMusic()).isNotSameAs(third.getSheetMusic());
+        assertThat(first.getSheetMusic()).isNotSameAs(third.getSheetMusic());
+
+        first.getSheetMusic().appendToSheetMusic(new VolumeElement(80));
+
+        assertThat(first.getSheetMusic().getSheetMusic()).hasSize(1);
+        assertThat(second.getSheetMusic().getSheetMusic()).isEmpty();
+        assertThat(third.getSheetMusic().getSheetMusic()).isEmpty();
+    }
+
+    @Test
+    void defaultVoicesUseDefaultPreset() {
+        Music music = new MusicBuilder().setName("Minha musica").buildMusic();
+
+        for (Voice voice : music.getVoices()){
+            assertThat(voice.getSheetMusic().getSheetMusic()).isEmpty();
+            assertThat(voice.getVoicePreset().getInstrument().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
+            assertThat(voice.getVoicePreset().getVolume().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
+            assertThat(voice.getVoicePreset().getOctave().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
+        }
+    }
+
+    @Test
+    void canHaveAnyNumberOfVoicesUpToTheMaximum() {
+        for (int count = 1; count <= Music.MAX_VOICES; count++){
+            MusicBuilder builder = new MusicBuilder().setName("Minha musica");
+            for (int i = 0; i < count; i++){
+                builder.addVoice(voiceWith(new SheetMusic()));
+            }
+
+            assertThat(builder.buildMusic().getVoices()).hasSize(count);
+        }
+    }
+
+    @Test
+    void canHaveMoreThanThreeVoices() {
+        MusicBuilder builder = new MusicBuilder().setName("Minha musica");
+        for (int i = 0; i < 4; i++){
+            builder.addVoice(voiceWith(new SheetMusic()));
+        }
+
+        assertThat(builder.buildMusic().getVoices()).hasSize(4);
+        assertThat(Music.MAX_VOICES).isEqualTo(16);
+    }
+
+    @Test
+    void canHaveFewerThanThreeVoices() {
+        Music music = new MusicBuilder().setName("Minha musica").addVoice(voiceWith(new SheetMusic())).buildMusic();
+
+        assertThat(music.getVoices()).hasSize(1);
+    }
+
+    @Test
+    void moreVoicesThanTheMaximumAreRejected() {
+        MusicBuilder builder = new MusicBuilder().setName("Minha musica");
+        for (int i = 0; i <= Music.MAX_VOICES; i++){
+            builder.addVoice(voiceWith(new SheetMusic()));
+        }
+
+        assertThrows(IllegalArgumentException.class, builder::buildMusic);
     }
 }

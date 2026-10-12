@@ -21,7 +21,7 @@ public class NoteElement implements MusicElement {
         if (newDuration == null) throw new IllegalArgumentException("Duração inválida");
 
 
-        if (newNote.length()==3){
+        if (newNote.length()==2){
              char extensionNote = newNote.charAt(1);
             
             if (extensionNote != 'b' & extensionNote != '#' ){
@@ -51,8 +51,12 @@ public class NoteElement implements MusicElement {
         return this.note;
     }
 
-     public char getNoteBase(){
+    public char getNoteBase(){
         return this.note.charAt(0);
+    }
+
+    public DurationTime getDuration(){
+        return  this.duration;
     }
 
     public boolean isFlat(){

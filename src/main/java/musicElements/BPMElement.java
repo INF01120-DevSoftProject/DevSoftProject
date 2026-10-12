@@ -1,6 +1,6 @@
 package musicElements;
 
-public class BPMElement {
+public class BPMElement implements MusicElement{
 
     private final int BPM;
 

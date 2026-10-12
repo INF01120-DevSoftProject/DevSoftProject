@@ -30,5 +30,9 @@ public class BPMElementTest {
             BPMElement bpm2 = new BPMElement(1000);
         });
     }
-
+    
+    @Test
+    void isAMusicElement() {
+        assertThat(new BPMElement(22)).isInstanceOf(MusicElement.class);
+    }
 }

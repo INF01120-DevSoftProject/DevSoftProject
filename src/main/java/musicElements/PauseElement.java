@@ -1,6 +1,6 @@
 package musicElements;
 
-public class PauseElement {
+public class PauseElement implements MusicElement{
     
     private final DurationTime duration;
 

@@ -24,4 +24,9 @@ public class PauseElementTest {
         });
     }
 
+    @Test 
+    void isAMusicElement() {
+        assertThat(new PauseElement(DurationTime.EIGHTH)).isInstanceOf(MusicElement.class);
+    }
+
 }

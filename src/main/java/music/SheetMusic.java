@@ -1,8 +1,10 @@
-package musicElements;
+package music;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import musicElements.MusicElement;
 
 public class SheetMusic {
 

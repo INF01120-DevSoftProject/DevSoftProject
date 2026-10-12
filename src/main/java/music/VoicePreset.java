@@ -1,4 +1,8 @@
-package musicElements;
+package music;
+
+import musicElements.InstrumentElement;
+import musicElements.OctaveElement;
+import musicElements.VolumeElement;
 
 public class VoicePreset {
 

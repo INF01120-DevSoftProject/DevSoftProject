@@ -1,4 +1,4 @@
-package musicElements;
+package music;
 
 public class Voice {
 

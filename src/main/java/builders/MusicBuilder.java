@@ -1,7 +1,12 @@
-package musicElements;
+package builders;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import music.Music;
+import music.SheetMusic;
+import music.Voice;
+import musicElements.BPMElement;
 
 public class MusicBuilder {
 

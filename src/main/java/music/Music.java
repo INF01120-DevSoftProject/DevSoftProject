@@ -1,6 +1,8 @@
-package musicElements;
+package music;
 
 import java.util.List;
+
+import musicElements.BPMElement;
 
 public class Music {
 

@@ -1,4 +1,8 @@
-package musicElements;
+package builders;
+
+import music.SheetMusic;
+import music.Voice;
+import music.VoicePreset;
 
 public class VoiceBuilder {
 

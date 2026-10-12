@@ -41,7 +41,7 @@ class NoteElementTest {
         assertThat(sharp.isSharp()).isTrue();
     }
 
-     @Test 
+    @Test 
     void invalidNote(){
         assertThrows(IllegalArgumentException.class, () -> {
             NoteElement a = new NoteElement("a", DurationTime.QUARTER);

@@ -18,7 +18,7 @@ public class NoteElement implements MusicElement {
         }
 
 
-        if (newDuration == null) throw new IllegalArgumentException("Duração inválida");
+        if (newDuration == null) throw new IllegalArgumentException("Duraçao invalida");
 
 
         if (newNote.length()==2){

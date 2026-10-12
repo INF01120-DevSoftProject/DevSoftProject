@@ -1,9 +1,5 @@
 package musicElements;
 
-/**
- * Troca de instrumento. O número segue a tabela General MIDI contando a partir de 0, como no JFugue
- * (0 = Piano, 23 = Bandoneon, 24 = Violão, 109 = Gaita de foles...).
- */
 public class InstrumentElement implements MusicElement{
 
     private final int instrument;

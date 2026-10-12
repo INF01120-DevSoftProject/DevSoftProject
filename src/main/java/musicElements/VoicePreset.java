@@ -1,16 +1,10 @@
 package musicElements;
 
-/**
- * Configuração inicial de uma voz: instrumento, volume e oitava.
- *
- * new VoicePreset() usa os valores padrão (constantes DEFAULT_*);
- * o outro construtor permite escolher cada valor.
- */
 public class VoicePreset {
 
-    public static final int DEFAULT_INSTRUMENT = 0;   // Piano
+    public static final int DEFAULT_INSTRUMENT = 0;
     public static final int DEFAULT_VOLUME = 100;
-    public static final int DEFAULT_OCTAVE = 5;       // oitava padrão do JFugue
+    public static final int DEFAULT_OCTAVE = 5;
 
     private final InstrumentElement instrument;
     private final VolumeElement volume;

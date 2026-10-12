@@ -1,10 +1,5 @@
 package musicElements;
 
-/**
- * Tempo da nota: muda a duração de uma nota (semínima, colcheia...), mantendo a mesma nota.
- *
- * Exemplo: com DurationTime.EIGHTH, um C de semínima vira um C de colcheia.
- */
 public class NoteTempoElement implements MusicElement{
 
     private final DurationTime duration;

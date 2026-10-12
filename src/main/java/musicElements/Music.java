@@ -2,11 +2,6 @@ package musicElements;
 
 import java.util.List;
 
-/**
- * Música completa: um nome, um BPM padrão e as vozes que tocam ao mesmo tempo.
- *
- * Depois de criada não muda: a lista de vozes é copiada e não pode ser alterada.
- */
 public class Music {
 
     private final String name;

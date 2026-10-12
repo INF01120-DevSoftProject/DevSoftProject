@@ -58,4 +58,17 @@ public class MusicTest {
         assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, List.of()));
         assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, Arrays.asList(newVoice(), null)));
     }
+
+    @Test
+    void acceptsUpToMaxVoices() {
+        List<Voice> voices = new ArrayList<>();
+        for (int i = 0; i < Music.MAX_VOICES; i++){
+            voices.add(newVoice());
+        }
+
+        assertThat(new Music("Minha musica", new BPMElement(120), voices).getVoices()).hasSize(Music.MAX_VOICES);
+
+        voices.add(newVoice());
+        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", new BPMElement(120), voices));
+    }
 }

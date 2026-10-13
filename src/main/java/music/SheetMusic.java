@@ -22,6 +22,6 @@ public class SheetMusic {
     }
 
     public List<MusicElement> getSheetMusic(){
-        return Collections.unmodifiableList(this.sheetMusic);
+        return Collections.unmodifiableList(this.sheetMusic); // legal usar unmodifiableList, pois assim protege a lista
     }
 }

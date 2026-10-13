@@ -1,8 +1,10 @@
 package music;
 
+
 import musicElements.InstrumentElement;
 import musicElements.OctaveElement;
 import musicElements.VolumeElement;
+
 
 public class VoicePreset {
 
@@ -14,6 +16,7 @@ public class VoicePreset {
     private final VolumeElement volume;
     private final OctaveElement octave;
 
+    
     public VoicePreset(){
         this(new InstrumentElement(DEFAULT_INSTRUMENT),
              new VolumeElement(DEFAULT_VOLUME),
@@ -26,20 +29,21 @@ public class VoicePreset {
         if (newVolume == null) throw new IllegalArgumentException("Volume invalido");
         if (newOctave == null) throw new IllegalArgumentException("Oitava invalida");
 
+
         this.instrument = newInstrument;
         this.volume = newVolume;
         this.octave = newOctave;
     }
 
-    public InstrumentElement getInstrument(){
+    public InstrumentElement getInstrumentElement(){
         return this.instrument;
     }
 
-    public VolumeElement getVolume(){
+    public VolumeElement getVolumeElement(){
         return this.volume;
     }
 
-    public OctaveElement getOctave(){
+    public OctaveElement getOctaveElement(){
         return this.octave;
     }
 }

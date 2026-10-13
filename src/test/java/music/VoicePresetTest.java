@@ -15,9 +15,9 @@ public class VoicePresetTest {
     void defaultPresetUsesDefaultValues() {
         VoicePreset preset = new VoicePreset();
 
-        assertThat(preset.getInstrument().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
-        assertThat(preset.getVolume().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
-        assertThat(preset.getOctave().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
+        assertThat(preset.getInstrumentElement().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
+        assertThat(preset.getVolumeElement().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
+        assertThat(preset.getOctaveElement().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
     }
 
     @Test
@@ -28,9 +28,9 @@ public class VoicePresetTest {
 
         VoicePreset preset = new VoicePreset(instrument, volume, octave);
 
-        assertThat(preset.getInstrument()).isSameAs(instrument);
-        assertThat(preset.getVolume()).isSameAs(volume);
-        assertThat(preset.getOctave()).isSameAs(octave);
+        assertThat(preset.getInstrumentElement()).isSameAs(instrument);
+        assertThat(preset.getVolumeElement()).isSameAs(volume);
+        assertThat(preset.getOctaveElement()).isSameAs(octave);
     }
 
     @Test

@@ -26,7 +26,7 @@ public class MusicTest {
         Music music = new Music("Minha musica", bpm, List.of(voice1, voice2));
 
         assertThat(music.getName()).isEqualTo("Minha musica");
-        assertThat(music.getDefaultBPM()).isSameAs(bpm);
+        assertThat(music.getDefaultBPMElement()).isSameAs(bpm);
         assertThat(music.getVoices()).containsExactly(voice1, voice2);
     }
 

@@ -32,7 +32,7 @@ public class MusicBuilderTest {
             .buildMusic();
 
         assertThat(music.getName()).isEqualTo("Minha musica");
-        assertThat(music.getDefaultBPM()).isSameAs(bpm);
+        assertThat(music.getDefaultBPMElement()).isSameAs(bpm);
         assertThat(music.getVoices()).hasSize(2);
         assertThat(music.getVoices().get(0).getSheetMusic()).isSameAs(sheet1);
         assertThat(music.getVoices().get(1).getSheetMusic()).isSameAs(sheet2);
@@ -42,7 +42,7 @@ public class MusicBuilderTest {
     void usesDefaultBpmWhenNoneIsSet() {
         Music music = new MusicBuilder().setName("Minha musica").addVoice(voiceWith(new SheetMusic())).buildMusic();
 
-        assertThat(music.getDefaultBPM().getBPM()).isEqualTo(MusicBuilder.DEFAULT_BPM);
+        assertThat(music.getDefaultBPMElement().getBPM()).isEqualTo(MusicBuilder.DEFAULT_BPM);
     }
 
     @Test
@@ -103,9 +103,9 @@ public class MusicBuilderTest {
 
         for (Voice voice : music.getVoices()){
             assertThat(voice.getSheetMusic().getSheetMusic()).isEmpty();
-            assertThat(voice.getVoicePreset().getInstrument().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
-            assertThat(voice.getVoicePreset().getVolume().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
-            assertThat(voice.getVoicePreset().getOctave().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
+            assertThat(voice.getVoicePreset().getInstrumentElement().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
+            assertThat(voice.getVoicePreset().getVolumeElement().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
+            assertThat(voice.getVoicePreset().getOctaveElement().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
         }
     }
 

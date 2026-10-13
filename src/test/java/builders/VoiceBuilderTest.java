@@ -30,9 +30,9 @@ public class VoiceBuilderTest {
         Voice voice = new VoiceBuilder().setSheetMusic(new SheetMusic()).buildVoice();
 
         VoicePreset preset = voice.getVoicePreset();
-        assertThat(preset.getInstrument().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
-        assertThat(preset.getVolume().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
-        assertThat(preset.getOctave().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
+        assertThat(preset.getInstrumentElement().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
+        assertThat(preset.getVolumeElement().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
+        assertThat(preset.getOctaveElement().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
     }
 
     @Test

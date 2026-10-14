@@ -20,7 +20,7 @@ public class BPMElementTest {
     }
 
     @Test
-    void BPMsecure(){
+    void invalidBPM(){
 
         assertThrows(IllegalArgumentException.class, () -> {
             new BPMElement(19);

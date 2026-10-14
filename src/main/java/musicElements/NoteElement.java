@@ -1,69 +1,50 @@
 package musicElements;
 
-
-
 public class NoteElement implements MusicElement {
 
-    private final String note;
+    private final Notes note;
+    private final OctaveElement octave;
     private final DurationTime duration;
-    private final boolean flat;
-    private final boolean sharp;
+    private final Accidentals accidental;
 
-    public NoteElement ( String newNote, DurationTime newDuration){
+    public NoteElement(Notes newNote, OctaveElement newOctave, DurationTime newDuration, Accidentals newAccidental){
 
-        char baseNote = newNote.charAt(0);
+        if (newNote == null) throw new IllegalArgumentException("Nota invalida");
 
-        if (baseNote < 'A' || baseNote > 'G'){
-            throw new IllegalArgumentException("Nota inválida");
-        }
+        if (newOctave == null) throw new IllegalArgumentException("Oitava invalida");
 
+        if (newDuration == null) throw new IllegalArgumentException("Duracao invalida");
 
-        if (newDuration == null) throw new IllegalArgumentException("Duraçao invalida");
-
-
-        if (newNote.length()==2){
-             char extensionNote = newNote.charAt(1);
-            
-            if (extensionNote != 'b' & extensionNote != '#' ){
-                throw new IllegalArgumentException("Extensão da nota inválida");
-            }
-            
-            if (extensionNote == 'b'){
-                this.flat = true;
-                this.sharp = false;
-            }
-            else {
-                this.flat = false;
-                this.sharp = true;
-            }
-        }
-        else {
-            this.flat = false;
-            this.sharp = false;
-        }
+        if (newAccidental == null) throw new IllegalArgumentException("Acidente invalido");
 
         this.note = newNote;
+        this.octave = newOctave;
         this.duration = newDuration;
-    
+        this.accidental = newAccidental;
+
     }
 
-    public String getNote(){
+    public Notes getNote(){
         return this.note;
     }
 
-    public char getNoteBase(){
-        return this.note.charAt(0);
+    public String getNoteString(){
+        return  this.note.getString();
+    }
+
+    public OctaveElement getOctaveElement(){
+        return this.octave;
+    }
+
+    public int getOctaveValue(){
+        return this.octave.getOctave();
     }
 
     public DurationTime getDuration(){
         return  this.duration;
     }
 
-    public boolean isFlat(){
-        return this.flat;
-    }
-
-    public boolean isSharp(){
-        return this.sharp;
+    public Accidentals getAccidental(){
+        return this.accidental;
     }
 }

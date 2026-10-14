@@ -10,7 +10,7 @@ public class InstrumentElement implements MusicElement{
     public InstrumentElement(int newInstrument){
 
         if(newInstrument < MIN_INSTRUMENT || newInstrument > MAX_INSTRUMENT){
-            throw new IllegalArgumentException("Instrumento inválido");
+            throw new IllegalArgumentException("Instrumento invalido");
         }
 
         this.instrument = newInstrument;

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 public class PauseElementTest {
     
     @Test 
-    void durationSecure(){
+    void eachInstanceKeepsItsOwnDuration(){
 
         PauseElement pause1 = new PauseElement(DurationTime.WHOLE);
         PauseElement pause2 = new PauseElement(DurationTime.SIXTEENTH);
@@ -18,7 +18,7 @@ public class PauseElementTest {
     }
 
     @Test
-    void nullDuration(){
+    void invalidDuration(){
         assertThrows(IllegalArgumentException.class, () -> {
             new PauseElement(null);
         });

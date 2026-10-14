@@ -2,7 +2,7 @@ package musicElements;
 
 public class BPMElement implements MusicElement{
 
-    private final int BPM;
+    private final int bpm;
 
     private static final int MAX_BPM = 999;
     private static final int MIN_BPM = 20;
@@ -13,11 +13,11 @@ public class BPMElement implements MusicElement{
             throw new IllegalArgumentException("BPM invalido");
         }
 
-        this.BPM = newBPM;
+        this.bpm = newBPM;
     }
 
     public int getBPM(){
-        return this.BPM;
+        return this.bpm;
     }
 
 }

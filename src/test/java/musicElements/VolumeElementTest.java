@@ -16,8 +16,8 @@ public class VolumeElementTest {
         assertThat(b.getVolume()).isEqualTo(127);
     }
 
-     @Test 
-    void invalidNote(){
+    @Test
+    void invalidVolume(){
         assertThrows(IllegalArgumentException.class, () -> {
             new VolumeElement(-10);
         });

@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+import musicElements.Accidentals;
 import musicElements.DurationTime;
 import musicElements.NoteElement;
+import musicElements.Notes;
+import musicElements.OctaveElement;
 import musicElements.PauseElement;
 import musicElements.VolumeElement;
 
@@ -20,7 +23,7 @@ public class SheetMusicTest {
     @Test
     void keepsElementsInAppendOrder() {
         SheetMusic sheet = new SheetMusic();
-        NoteElement note = new NoteElement("C", DurationTime.QUARTER);
+        NoteElement note = new NoteElement(Notes.C, new OctaveElement(4), DurationTime.QUARTER, Accidentals.NONE);
         PauseElement pause = new PauseElement(DurationTime.HALF);
         VolumeElement volume = new VolumeElement(80);
 

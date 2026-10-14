@@ -10,7 +10,7 @@ public class VolumeElement implements MusicElement{
     public VolumeElement(int newVolume){
 
         if(newVolume < MIN_VOLUME || newVolume > MAX_VOLUME ){
-            throw new IllegalArgumentException("Volume inválido");
+            throw new IllegalArgumentException("Volume invalido");
         }
 
         this.volume  = newVolume;

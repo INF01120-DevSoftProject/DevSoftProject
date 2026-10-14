@@ -19,11 +19,11 @@ public class InstrumentElementTest {
     @Test
     void invalidInstrument(){
         assertThrows(IllegalArgumentException.class, () -> {
-            InstrumentElement a = new InstrumentElement(-1);
+            new InstrumentElement(-1);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            InstrumentElement b = new InstrumentElement(128);
+            new InstrumentElement(128);
         });
     }
 

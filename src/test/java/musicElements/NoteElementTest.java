@@ -44,27 +44,27 @@ class NoteElementTest {
     @Test 
     void invalidNote(){
         assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement a = new NoteElement("a", DurationTime.QUARTER);
+            new NoteElement("a", DurationTime.QUARTER);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement b = new NoteElement("H", DurationTime.QUARTER);
+            new NoteElement("H", DurationTime.QUARTER);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement b = new NoteElement(" ", DurationTime.QUARTER);
+            new NoteElement(" ", DurationTime.QUARTER);
         });
 
          assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement b = new NoteElement(" b", DurationTime.QUARTER);
+            new NoteElement(" b", DurationTime.QUARTER);
         });
 
          assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement b = new NoteElement("#", DurationTime.QUARTER);
+            new NoteElement("#", DurationTime.QUARTER);
         });
 
          assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement b = new NoteElement("Fa", DurationTime.QUARTER);
+            new NoteElement("Fa", DurationTime.QUARTER);
         });
     }
 
@@ -119,15 +119,15 @@ class NoteElementTest {
     @Test
     void invalidDuration() {
         assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement a = new NoteElement("A", null);
+            new NoteElement("A", null);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement b = new NoteElement("Ab", null);
+            new NoteElement("Ab", null);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            NoteElement c = new NoteElement("B#", null);
+            new NoteElement("B#", null);
         });
     }
 

@@ -19,11 +19,11 @@ public class OctaveElementTest {
     @Test 
     void invalidOctave(){
         assertThrows(IllegalArgumentException.class, () -> {
-            OctaveElement a = new OctaveElement(-2);
+            new OctaveElement(-2);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            OctaveElement b = new OctaveElement(10);
+            new OctaveElement(10);
         });
     }
 

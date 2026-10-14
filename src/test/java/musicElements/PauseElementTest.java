@@ -20,7 +20,7 @@ public class PauseElementTest {
     @Test
     void nullDuration(){
         assertThrows(IllegalArgumentException.class, () -> {
-            PauseElement pause3 = new PauseElement(null);
+            new PauseElement(null);
         });
     }
 

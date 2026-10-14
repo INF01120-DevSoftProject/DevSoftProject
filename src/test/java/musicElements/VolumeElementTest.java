@@ -19,11 +19,11 @@ public class VolumeElementTest {
      @Test 
     void invalidNote(){
         assertThrows(IllegalArgumentException.class, () -> {
-            VolumeElement a = new VolumeElement(-10);
+            new VolumeElement(-10);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            VolumeElement b = new VolumeElement(144);
+            new VolumeElement(144);
         });
         
     }

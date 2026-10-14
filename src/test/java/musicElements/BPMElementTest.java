@@ -23,11 +23,11 @@ public class BPMElementTest {
     void BPMsecure(){
 
         assertThrows(IllegalArgumentException.class, () -> {
-            BPMElement bpm1 = new BPMElement(19);
+            new BPMElement(19);
         });
 
         assertThrows(IllegalArgumentException.class, () -> {
-            BPMElement bpm2 = new BPMElement(1000);
+            new BPMElement(1000);
         });
     }
     

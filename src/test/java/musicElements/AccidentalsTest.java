@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import net.bytebuddy.dynamic.scaffold.TypeInitializer.None;
+
 class AccidentalsTest {
 
     @Test
@@ -13,5 +15,12 @@ class AccidentalsTest {
             Accidentals.FLAT,
             Accidentals.SHARP
         );
+    }
+
+    @Test
+    void checkConstructor(){
+        
+        assertThat(Accidentals.valueOf("FLAT")).isEqualTo(Accidentals.FLAT);
+        
     }
 }

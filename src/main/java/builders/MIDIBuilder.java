@@ -31,7 +31,6 @@ public class MIDIBuilder {
     }
 
     public MIDIBuilder addTrack() {
-
         currentTrack = sequence.createTrack();
         currentTick = 0;
         currentChannel = 0;
@@ -49,9 +48,40 @@ public class MIDIBuilder {
 
             currentTick += note.getDuration().getDivisor();
 
+            // Bad smell get duplo
+            // Codigo precisa suportar resoluções diferentes de Quarter
+
             ShortMessage messageOff = new ShortMessage();
             messageOff.setMessage(ShortMessage.NOTE_OFF, currentChannel, getMIDINoteNumber(note), DEFAULT_VELOCITY);
             currentTrack.add(new MidiEvent(messageOff, currentTick));
+
+            return this;
+
+        } catch(InvalidMidiDataException e) {
+            throw new RuntimeException("Não foi possível criar a sequência MIDI", e);
+        }
+    }
+
+    public MIDIBuilder addPause(PauseElement pause) {
+        if (currentTrack == null) throw new IllegalStateException("Nenhuma track foi criada");
+
+        currentTick = pause.getDuration().getDivisor();
+        // Bad smell get duplo
+
+        return this;
+
+    }
+
+    public MIDIBuilder setInstrument(InstrumentElement instrument) {
+        try {
+
+            if (currentTrack == null) throw new IllegalStateException("Nenhuma track foi criada");
+
+            ShortMessage message = new ShortMessage();
+            message.setMessage(ShortMessage.PROGRAM_CHANGE, currentChannel, instrument.getInstrument());
+            currentTrack.add(new MidiEvent(message, currentTick));
+
+            // Alterar getInstrument para um nome que diga que é o valor MIDI ou só valor
 
             return this;
 

@@ -1,13 +1,13 @@
 package musicElements;
 
-public class OctaveElement implements  MusicElement {
+public class Octave {
 
     public static final int MIN_OCTAVE = 0;
     public static final int MAX_OCTAVE = 8;
 
     private final int octave;
 
-    public OctaveElement(int newOctave){
+    public Octave(int newOctave){
 
         if (newOctave < MIN_OCTAVE || newOctave > MAX_OCTAVE){
              throw new IllegalArgumentException("Oitava invalida") ; 
@@ -16,7 +16,7 @@ public class OctaveElement implements  MusicElement {
         this.octave = newOctave;
     }
     
-    public int getOctave(){
+    public int getOctaveInt(){
         return this.octave;
     }
 

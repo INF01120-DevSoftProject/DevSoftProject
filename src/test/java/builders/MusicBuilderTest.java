@@ -105,7 +105,7 @@ public class MusicBuilderTest {
             assertThat(voice.getSheetMusic().getSheetMusic()).isEmpty();
             assertThat(voice.getVoicePreset().getInstrumentElement().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
             assertThat(voice.getVoicePreset().getVolumeElement().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
-            assertThat(voice.getVoicePreset().getOctaveElement().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
+            assertThat(voice.getVoicePreset().getDefaultOctave().getOctaveInt()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
         }
     }
 

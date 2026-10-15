@@ -9,7 +9,7 @@ import music.SheetMusic;
 import music.Voice;
 import music.VoicePreset;
 import musicElements.InstrumentElement;
-import musicElements.OctaveElement;
+import musicElements.Octave;
 import musicElements.VolumeElement;
 
 public class VoiceBuilderTest {
@@ -17,7 +17,7 @@ public class VoiceBuilderTest {
     @Test
     void buildsVoiceWithSheetMusicAndPreset() {
         SheetMusic sheet = new SheetMusic();
-        VoicePreset preset = new VoicePreset(new InstrumentElement(24), new VolumeElement(60), new OctaveElement(3));
+        VoicePreset preset = new VoicePreset(new InstrumentElement(24), new VolumeElement(60), new Octave(3));
 
         Voice voice = new VoiceBuilder().setSheetMusic(sheet).setVoicePreset(preset).buildVoice();
 
@@ -32,7 +32,7 @@ public class VoiceBuilderTest {
         VoicePreset preset = voice.getVoicePreset();
         assertThat(preset.getInstrumentElement().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
         assertThat(preset.getVolumeElement().getVolume()).isEqualTo(VoicePreset.DEFAULT_VOLUME);
-        assertThat(preset.getOctaveElement().getOctave()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
+        assertThat(preset.getDefaultOctave().getOctaveInt()).isEqualTo(VoicePreset.DEFAULT_OCTAVE);
     }
 
     @Test

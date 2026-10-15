@@ -3,11 +3,11 @@ package musicElements;
 public class NoteElement implements MusicElement {
 
     private final Notes note;
-    private final OctaveElement octave;
+    private final Octave octave;
     private final DurationTime duration;
     private final Accidentals accidental;
 
-    public NoteElement(Notes newNote, OctaveElement newOctave, DurationTime newDuration, Accidentals newAccidental){
+    public NoteElement(Notes newNote, Octave newOctave, DurationTime newDuration, Accidentals newAccidental){
 
         if (newNote == null) throw new IllegalArgumentException("Nota invalida");
 
@@ -32,12 +32,12 @@ public class NoteElement implements MusicElement {
         return  this.note.getString();
     }
 
-    public OctaveElement getOctaveElement(){
+    public Octave getOctave(){
         return this.octave;
     }
 
     public int getOctaveValue(){
-        return this.octave.getOctave();
+        return this.octave.getOctaveInt();
     }
 
     public DurationTime getDuration(){

@@ -19,13 +19,14 @@ public class MIDIBuilder {
     private final static int DEFAULT_VELOCITY = 100;
     private final static int MIN_NOTE_VALUE = 0;
     private final static int MAX_NOTE_VALUE = 127;
+    private final static int VOLUME_CONTROL_CHANNEL = 7;
 
     public MIDIBuilder() {
 
         try {
             sequence = new Sequence(Sequence.PPQ, DurationTime.QUARTER.getDivisor());
         } catch (InvalidMidiDataException e) {
-            throw new RuntimeException("Não foi possível criar a sequência MIDI", e);
+            throw new RuntimeException("Não foi possível criar a sequencia MIDI", e);
         }
 
     }
@@ -40,7 +41,8 @@ public class MIDIBuilder {
     public MIDIBuilder addNote(NoteElement note) {
         try {
 
-            if (currentTrack == null) throw new IllegalStateException("Nenhuma track foi criada");
+            if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
+            if (note == null) throw new NullPointerException("Nota nao pode ser nula");
 
             ShortMessage messageOn = new ShortMessage();
             messageOn.setMessage(ShortMessage.NOTE_ON, currentChannel, getMIDINoteNumber(note), DEFAULT_VELOCITY);
@@ -63,9 +65,10 @@ public class MIDIBuilder {
     }
 
     public MIDIBuilder addPause(PauseElement pause) {
-        if (currentTrack == null) throw new IllegalStateException("Nenhuma track foi criada");
+        if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
+        if (pause == null) throw new NullPointerException("Pause nao pode ser nulo");
 
-        currentTick = pause.getDuration().getDivisor();
+        currentTick += pause.getDuration().getDivisor();
         // Bad smell get duplo
 
         return this;
@@ -75,10 +78,11 @@ public class MIDIBuilder {
     public MIDIBuilder setInstrument(InstrumentElement instrument) {
         try {
 
-            if (currentTrack == null) throw new IllegalStateException("Nenhuma track foi criada");
+            if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
+            if (instrument == null) throw new NullPointerException("Instrumento nao pode ser nulo");
 
             ShortMessage message = new ShortMessage();
-            message.setMessage(ShortMessage.PROGRAM_CHANGE, currentChannel, instrument.getInstrument());
+            message.setMessage(ShortMessage.PROGRAM_CHANGE, currentChannel, instrument.getInstrument(), 0);
             currentTrack.add(new MidiEvent(message, currentTick));
 
             // Alterar getInstrument para um nome que diga que é o valor MIDI ou só valor
@@ -88,6 +92,48 @@ public class MIDIBuilder {
         } catch(InvalidMidiDataException e) {
             throw new RuntimeException("Não foi possível criar a sequência MIDI", e);
         }
+    }
+
+    public MIDIBuilder setVolume(VolumeElement volume) {
+        try {
+
+            if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
+            if (volume == null) throw new NullPointerException("Instrument nao pode ser nulo");
+
+            ShortMessage message = new ShortMessage();
+            message.setMessage(ShortMessage.CONTROL_CHANGE, currentChannel, VOLUME_CONTROL_CHANNEL, volume.getVolume());
+            currentTrack.add(new MidiEvent(message, currentTick));
+
+        } catch(InvalidMidiDataException e) {
+            throw new RuntimeException("Não foi possível criar a sequência MIDI", e);
+        }
+
+        return this;
+    }
+
+    public MIDIBuilder setBPM(BPMElement bpm) {
+        try {
+            if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
+            if (bpm == null) throw new NullPointerException("BPM nao pode ser nulo");
+
+            int mpq; // Microseconds Per Quarter Note
+            mpq = 60000000 / bpm.getBPM();
+
+            byte[] mpqData = new byte[] {
+                (byte) (mpq >> 16),
+                (byte) (mpq >> 8),
+                (byte) (mpq)
+            };
+
+            MetaMessage bpmMessage = new MetaMessage();
+            bpmMessage.setMessage(0x51, mpqData, 3);
+            currentTrack.add(new MidiEvent(bpmMessage, currentTick));
+
+        } catch(InvalidMidiDataException e) {
+            throw new RuntimeException("Não foi possível criar a sequência MIDI", e);
+        }
+
+        return this;
     }
 
     public MIDIBuilder setCurrentChannel(int channel) {
@@ -121,12 +167,11 @@ public class MIDIBuilder {
         else if (note.getAccidental() == Accidentals.SHARP)
             MIDINoteNumber++;
 
-        MIDINoteNumber += (note.getOctaveValue() * NOTES_PER_OCTAVE);
+        MIDINoteNumber += ((note.getOctaveValue() + 1) * NOTES_PER_OCTAVE);
 
         if (MIDINoteNumber < MIN_NOTE_VALUE || MIDINoteNumber > MAX_NOTE_VALUE) {
             throw new IllegalArgumentException("Número de nota musical MIDI invalida");
         }
-
 
         return MIDINoteNumber;
     }

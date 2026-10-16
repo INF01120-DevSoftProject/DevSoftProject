@@ -16,6 +16,14 @@ public class InstrumentElement implements MusicElement{
         this.instrument = newInstrument;
     }
 
+    public InstrumentElement(int newInstrument, InstrumentType type){
+
+        this(newInstrument);
+
+        if (type == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
+        if (!type.contains(newInstrument)) throw new IllegalArgumentException("Instrumento fora do tipo");
+    }
+
     public int getInstrument(){
         return this.instrument;
     }

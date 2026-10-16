@@ -1,4 +1,4 @@
-package translators;
+package parsers;
 
 import musicElements.*;
 import music.*;

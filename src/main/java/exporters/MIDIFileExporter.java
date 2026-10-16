@@ -19,9 +19,9 @@ public class MIDIFileExporter implements FileExporter<Sequence> {
     @Override 
     public void save(Sequence data, String fileName) throws IOException {
         if (fileName == null) throw new NullPointerException("file name can't be null");
-        if (filePath == null) throw new NullPointerException("file name can't be null");
+        if (data == null) throw new NullPointerException("file name can't be null");
 
-        File file = new File(filePath + fileName);
+        File file = new File(filePath, fileName);
         MidiSystem.write(data, 1, file);
     }
 

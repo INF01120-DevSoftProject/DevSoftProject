@@ -1,7 +1,7 @@
 package player;
 
-import music.Music;
+import java.nio.file.Path;
 
 public interface Player {
-    void playMusic(Music music);
+    void playFile(Path midiFilePath) throws Exception;
 }

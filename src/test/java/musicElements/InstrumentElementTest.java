@@ -55,4 +55,28 @@ public class InstrumentElementTest {
     void typedConstructorRejectsNullType() {
         assertThrows(IllegalArgumentException.class, () -> new InstrumentElement(0, null));
     }
+
+    @Test
+    void keepsTheGivenType() {
+        assertThat(new InstrumentElement(40, InstrumentType.STRINGS).getType()).isEqualTo(InstrumentType.STRINGS);
+        assertThat(new InstrumentElement(112, InstrumentType.PERCUSSION).getType()).isEqualTo(InstrumentType.PERCUSSION);
+    }
+
+    @Test
+    void constructorWithoutTypeFindsTheFamily() {
+        assertThat(new InstrumentElement(0).getType()).isEqualTo(InstrumentType.PIANO);
+        assertThat(new InstrumentElement(40).getType()).isEqualTo(InstrumentType.STRINGS);
+        assertThat(new InstrumentElement(119).getType()).isEqualTo(InstrumentType.PERCUSSION);
+        assertThat(new InstrumentElement(127).getType()).isEqualTo(InstrumentType.SOUND_EFFECTS);
+    }
+
+    @Test
+    void everyInstrumentGetsTheFamilyThatContainsIt() {
+        for (int instrument = 0; instrument <= 127; instrument++){
+            InstrumentType type = new InstrumentElement(instrument).getType();
+
+            assertThat(type).as("instrumento %d", instrument).isNotNull();
+            assertThat(type.contains(instrument)).as("instrumento %d", instrument).isTrue();
+        }
+    }
 }

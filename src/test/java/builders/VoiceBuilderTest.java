@@ -9,25 +9,31 @@ import music.SheetMusic;
 import music.Voice;
 import music.VoicePreset;
 import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
 import musicElements.Octave;
 import musicElements.VolumeElement;
 
 public class VoiceBuilderTest {
 
     @Test
-    void buildsVoiceWithSheetMusicAndPreset() {
+    void buildsVoiceWithSheetMusicPresetAndInstrumentType() {
         SheetMusic sheet = new SheetMusic();
         VoicePreset preset = new VoicePreset(new InstrumentElement(24), new VolumeElement(60), new Octave(3));
 
-        Voice voice = new VoiceBuilder().setSheetMusic(sheet).setVoicePreset(preset).buildVoice();
+        Voice voice = new VoiceBuilder()
+            .setSheetMusic(sheet)
+            .setVoicePreset(preset)
+            .setInstrumentType(InstrumentType.GUITAR)
+            .buildVoice();
 
         assertThat(voice.getSheetMusic()).isSameAs(sheet);
         assertThat(voice.getVoicePreset()).isSameAs(preset);
+        assertThat(voice.getInstrumentType()).isEqualTo(InstrumentType.GUITAR);
     }
 
     @Test
     void usesDefaultPresetWhenNoneIsSet() {
-        Voice voice = new VoiceBuilder().setSheetMusic(new SheetMusic()).buildVoice();
+        Voice voice = new VoiceBuilder().setSheetMusic(new SheetMusic()).setInstrumentType(InstrumentType.PIANO).buildVoice();
 
         VoicePreset preset = voice.getVoicePreset();
         assertThat(preset.getInstrumentElement().getInstrument()).isEqualTo(VoicePreset.DEFAULT_INSTRUMENT);
@@ -37,15 +43,18 @@ public class VoiceBuilderTest {
 
     @Test
     void eachBuildCreatesANewVoice() {
-        VoiceBuilder builder = new VoiceBuilder().setSheetMusic(new SheetMusic());
+        VoiceBuilder builder = new VoiceBuilder().setSheetMusic(new SheetMusic()).setInstrumentType(InstrumentType.PIANO);
 
         assertThat(builder.buildVoice()).isNotSameAs(builder.buildVoice());
     }
 
     @Test
     void missingValuesAreRejected() {
-        assertThrows(IllegalArgumentException.class, () -> new VoiceBuilder().buildVoice());
         assertThrows(IllegalArgumentException.class,
-            () -> new VoiceBuilder().setSheetMusic(new SheetMusic()).setVoicePreset(null).buildVoice());
+            () -> new VoiceBuilder().setInstrumentType(InstrumentType.PIANO).buildVoice());
+        assertThrows(IllegalArgumentException.class,
+            () -> new VoiceBuilder().setSheetMusic(new SheetMusic()).setVoicePreset(null).setInstrumentType(InstrumentType.PIANO).buildVoice());
+        assertThrows(IllegalArgumentException.class,
+            () -> new VoiceBuilder().setSheetMusic(new SheetMusic()).buildVoice());
     }
 }

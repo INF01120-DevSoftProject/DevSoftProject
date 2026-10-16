@@ -6,6 +6,7 @@ import musicElements.BPMElement;
 
 public class Music {
 
+    public static final int MIN_VOICES = 4;
     public static final int MAX_VOICES = 16;
 
 
@@ -21,6 +22,8 @@ public class Music {
         if (newDefaultBPM == null) throw new IllegalArgumentException("BPM invalido");
 
         if (newVoices == null || newVoices.isEmpty()) throw new IllegalArgumentException("Musica sem vozes");
+
+        if (newVoices.size() < MIN_VOICES) throw new IllegalArgumentException("Musica com vozes de menos");
 
         if (newVoices.size() > MAX_VOICES) throw new IllegalArgumentException("Musica com vozes demais");
 

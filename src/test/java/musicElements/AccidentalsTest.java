@@ -14,4 +14,11 @@ class AccidentalsTest {
             Accidentals.SHARP
         );
     }
+
+    @Test
+    void checkConstructor(){
+        
+        assertThat(Accidentals.valueOf("FLAT")).isEqualTo(Accidentals.FLAT);
+        
+    }
 }

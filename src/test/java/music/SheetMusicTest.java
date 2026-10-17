@@ -9,7 +9,7 @@ import musicElements.Accidentals;
 import musicElements.DurationTime;
 import musicElements.NoteElement;
 import musicElements.Notes;
-import musicElements.OctaveElement;
+import musicElements.Octave;
 import musicElements.PauseElement;
 import musicElements.VolumeElement;
 
@@ -23,7 +23,7 @@ public class SheetMusicTest {
     @Test
     void keepsElementsInAppendOrder() {
         SheetMusic sheet = new SheetMusic();
-        NoteElement note = new NoteElement(Notes.C, new OctaveElement(4), DurationTime.QUARTER, Accidentals.NONE);
+        NoteElement note = new NoteElement(Notes.C, new Octave(4), DurationTime.QUARTER, Accidentals.NONE);
         PauseElement pause = new PauseElement(DurationTime.HALF);
         VolumeElement volume = new VolumeElement(80);
 

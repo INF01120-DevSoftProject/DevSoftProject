@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 class NoteElementTest {
 
-    private static final OctaveElement OCTAVE = new OctaveElement(4);
+    private static final Octave OCTAVE = new Octave(4);
 
     @Test
     void eachInstanceKeepsItsOwnNote() {
@@ -40,8 +40,8 @@ class NoteElementTest {
 
     @Test
     void acceptsEveryNoteWithEveryAccidentalInEveryOctave() {
-        for (int octaveValue = OctaveElement.MIN_OCTAVE; octaveValue <= OctaveElement.MAX_OCTAVE; octaveValue++) {
-            OctaveElement octave = new OctaveElement(octaveValue);
+        for (int octaveValue = Octave.MIN_OCTAVE; octaveValue <= Octave.MAX_OCTAVE; octaveValue++) {
+            Octave octave = new Octave(octaveValue);
 
             for (Notes note : Notes.values()) {
                 for (Accidentals accidental : Accidentals.values()) {
@@ -57,17 +57,17 @@ class NoteElementTest {
 
     @Test
     void eachInstanceKeepsItsOwnOctave() {
-        OctaveElement low = new OctaveElement(OctaveElement.MIN_OCTAVE);
-        OctaveElement mid = new OctaveElement(4);
-        OctaveElement high = new OctaveElement(OctaveElement.MAX_OCTAVE);
+        Octave low = new Octave(Octave.MIN_OCTAVE);
+        Octave mid = new Octave(4);
+        Octave high = new Octave(Octave.MAX_OCTAVE);
 
         NoteElement a = new NoteElement(Notes.C, low, DurationTime.QUARTER, Accidentals.NONE);
         NoteElement b = new NoteElement(Notes.C, mid, DurationTime.QUARTER, Accidentals.NONE);
         NoteElement c = new NoteElement(Notes.C, high, DurationTime.QUARTER, Accidentals.NONE);
 
-        assertThat(a.getOctaveElement()).isSameAs(low);
-        assertThat(b.getOctaveElement()).isSameAs(mid);
-        assertThat(c.getOctaveElement()).isSameAs(high);
+        assertThat(a.getOctave()).isSameAs(low);
+        assertThat(b.getOctave()).isSameAs(mid);
+        assertThat(c.getOctave()).isSameAs(high);
 
         assertThat(a.getOctaveValue()).isEqualTo(0);
         assertThat(b.getOctaveValue()).isEqualTo(4);

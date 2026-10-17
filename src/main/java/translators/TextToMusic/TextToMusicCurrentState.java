@@ -3,20 +3,20 @@ package translators.TextToMusic;
 import music.VoicePreset;
 import musicElements.InstrumentElement;
 import musicElements.MusicElement;
-import musicElements.OctaveElement;
+import musicElements.Octave;
 import musicElements.VolumeElement;
 
 public class TextToMusicCurrentState {
-    private OctaveElement currentOctave = new OctaveElement(VoicePreset.DEFAULT_OCTAVE);
+    private Octave currentOctave = new Octave(VoicePreset.DEFAULT_OCTAVE);
     private VolumeElement currentVolume;
     private InstrumentElement currentInstrument;
     private MusicElement lastMusicElement;
 
-    public OctaveElement getCurrentOctave() {
+    public Octave getCurrentOctave() {
         return currentOctave;
     }
 
-    public void setCurrentOctave(OctaveElement currentOctave) {
+    public void setCurrentOctave(Octave currentOctave) {
         this.currentOctave = currentOctave;
     }
 

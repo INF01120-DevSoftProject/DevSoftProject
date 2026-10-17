@@ -12,7 +12,7 @@ import musicElements.DurationTime;
 import musicElements.MusicElement;
 import musicElements.NoteElement;
 import musicElements.Notes;
-import musicElements.OctaveElement;
+import musicElements.Octave;
 import musicElements.PauseElement;
 import musicElements.VolumeElement;
 
@@ -35,7 +35,7 @@ public class TextToMusicTranslator {
                 String noteString = matcher.group("note");
                 String accidentalString = matcher.group("accidental");
 
-                OctaveElement currentOctave = this.currentState.getCurrentOctave();
+                Octave currentOctave = this.currentState.getCurrentOctave();
                 DurationTime durationTime = this.musicRules.getDurationTime(durationTimeString);
                 Notes note = this.musicRules.getNote(noteString);
                 Accidentals accidental = this.musicRules.getAccidental(accidentalString);
@@ -55,14 +55,14 @@ public class TextToMusicTranslator {
                 this.currentState.setLastMusicElement(pause);
             } else if (matcher.group("octaveUp") != null) {
                 // oitava atual + 1; se passar de 8, volta pra oitava base da voz
-                int octave = this.currentState.getCurrentOctave().getOctave() + 1;
-                if (octave > OctaveElement.MAX_OCTAVE) octave = VoicePreset.DEFAULT_OCTAVE;
-                this.currentState.setCurrentOctave(new OctaveElement(octave));
+                int octave = this.currentState.getCurrentOctave().getOctaveInt() + 1;
+                if (octave > Octave.MAX_OCTAVE) octave = VoicePreset.DEFAULT_OCTAVE;
+                this.currentState.setCurrentOctave(new Octave(octave));
             } else if (matcher.group("octaveDown") != null) {
                 // oitava atual - 1, sem passar da mínima
-                int octave = this.currentState.getCurrentOctave().getOctave() - 1;
-                if (octave < OctaveElement.MIN_OCTAVE) octave = OctaveElement.MIN_OCTAVE;
-                this.currentState.setCurrentOctave(new OctaveElement(octave));
+                int octave = this.currentState.getCurrentOctave().getOctaveInt() - 1;
+                if (octave < Octave.MIN_OCTAVE) octave = Octave.MIN_OCTAVE;
+                this.currentState.setCurrentOctave(new Octave(octave));
             } else if (matcher.group("bpmUp") != null) {
                 // BPM global + 10
                 currentBPM = Math.min(currentBPM + 10, 999);

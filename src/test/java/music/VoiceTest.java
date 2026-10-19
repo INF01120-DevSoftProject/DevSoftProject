@@ -10,24 +10,20 @@ import musicElements.InstrumentType;
 public class VoiceTest {
 
     @Test
-    void keepsSheetMusicPresetAndInstrumentType() {
-        SheetMusic sheet = new SheetMusic();
-        VoicePreset preset = new VoicePreset();
+    void createsEmptySheetMusicAndKeepsPreset() {
+        Voice byType = new Voice(InstrumentType.STRINGS);
+        assertThat(byType.getSheetMusic().getSheetMusic()).isEmpty();
+        assertThat(byType.getInstrumentType()).isEqualTo(InstrumentType.STRINGS);
 
-        Voice voice = new Voice(sheet, preset, InstrumentType.STRINGS);
-
-        assertThat(voice.getSheetMusic()).isSameAs(sheet);
-        assertThat(voice.getVoicePreset()).isSameAs(preset);
-        assertThat(voice.getInstrumentType()).isEqualTo(InstrumentType.STRINGS);
+        VoicePreset customPreset = new VoicePreset(InstrumentType.KEYS);
+        Voice byPreset = new Voice(customPreset);
+        assertThat(byPreset.getVoicePreset()).isSameAs(customPreset);
+        assertThat(byPreset.getInstrumentType()).isEqualTo(InstrumentType.KEYS);
     }
 
     @Test
     void nullValuesAreRejected() {
-        SheetMusic sheet = new SheetMusic();
-        VoicePreset preset = new VoicePreset();
-
-        assertThrows(IllegalArgumentException.class, () -> new Voice(null, preset, InstrumentType.PIANO));
-        assertThrows(IllegalArgumentException.class, () -> new Voice(sheet, null, InstrumentType.PIANO));
-        assertThrows(IllegalArgumentException.class, () -> new Voice(sheet, preset, null));
+        assertThrows(IllegalArgumentException.class, () -> new Voice((InstrumentType) null));
+        assertThrows(IllegalArgumentException.class, () -> new Voice((VoicePreset) null));
     }
 }

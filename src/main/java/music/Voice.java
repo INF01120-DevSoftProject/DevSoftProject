@@ -6,17 +6,17 @@ public class Voice {
 
     private final SheetMusic sheetMusic;
     private final VoicePreset voicePreset;
-    private final InstrumentType instrumentType;
 
-    public Voice(SheetMusic newSheetMusic, VoicePreset newVoicePreset, InstrumentType newInstrumentType){
+    public Voice(InstrumentType type){
+        this(new VoicePreset(type));
+    }
 
-        if (newSheetMusic == null) throw new IllegalArgumentException("Partitura invalida");
+    public Voice(VoicePreset newVoicePreset){
+
         if (newVoicePreset == null) throw new IllegalArgumentException("Preset invalido");
-        if (newInstrumentType == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
 
-        this.sheetMusic = newSheetMusic;
+        this.sheetMusic = new SheetMusic();
         this.voicePreset = newVoicePreset;
-        this.instrumentType = newInstrumentType;
     }
 
     public SheetMusic getSheetMusic(){
@@ -28,6 +28,6 @@ public class Voice {
     }
 
     public InstrumentType getInstrumentType(){
-        return this.instrumentType;
+        return this.voicePreset.getInstrumentElement().getType();
     }
 }

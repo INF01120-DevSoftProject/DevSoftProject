@@ -5,33 +5,21 @@ public class InstrumentElement implements MusicElement{
     private final int instrument;
     private final InstrumentType type;
 
-    public static final int MIN_INSTRUMENT = 0;
-    public static final int MAX_INSTRUMENT = 127;
+    public InstrumentElement(InstrumentType newType){
 
-    public InstrumentElement(int newInstrument){
-        this(newInstrument, findType(newInstrument));
+        if (newType == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
+
+        this.type = newType;
+        this.instrument = newType.getDefaultInstrument();
     }
 
     public InstrumentElement(int newInstrument, InstrumentType newType){
 
-        if(newInstrument < MIN_INSTRUMENT || newInstrument > MAX_INSTRUMENT){
-            throw new IllegalArgumentException("Instrumento invalido");
-        }
-
         if (newType == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
-        if (!newType.contains(newInstrument)) throw new IllegalArgumentException("Instrumento fora do tipo");
+        if (newInstrument < 0) throw new IllegalArgumentException("Instrumento invalido");
 
-        this.instrument = newInstrument;
         this.type = newType;
-    }
-
-    private static InstrumentType findType(int instrument){
-
-        for (InstrumentType type : InstrumentType.values()){
-            if (type.contains(instrument)) return type;
-        }
-
-        return null;
+        this.instrument = newType.contains(newInstrument) ? newInstrument : newType.getDefaultInstrument();
     }
 
     public int getInstrument(){

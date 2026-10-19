@@ -1,23 +1,11 @@
 package musicElements;
 
 public enum InstrumentType {
-    PIANO(0, 7),
-    CHROMATIC_PERCUSSION(8, 15),
-    ORGAN(16, 23),
-    GUITAR(24, 31),
-    BASS(32, 39),
-    STRINGS(40, 47),
-    ENSEMBLE(48, 55),
-    BRASS(56, 63),
-    REED(64, 71),
-    PIPE(72, 79),
-    SYNTH_LEAD(80, 87),
-    SYNTH_PAD(88, 95),
-    SYNTH_EFFECTS(96, 103),
-    ETHNIC(104, 111),
-    // TODO: sao instrumentos melodicos de percussao; a bateria de verdade fica no canal 10 do MIDI
-    PERCUSSION(112, 119),
-    SOUND_EFFECTS(120, 127);
+    KEYS(0, 23),
+    PLUCKED(24, 39),
+    STRINGS(40, 55),
+    WINDS(56, 79),
+    PERCUSSION_AND_SYNTH(80, 127);
 
     private final int minInstrument;
     private final int maxInstrument;
@@ -28,6 +16,10 @@ public enum InstrumentType {
     }
 
     public int getMinInstrument(){
+        return this.minInstrument;
+    }
+
+    public int getDefaultInstrument(){
         return this.minInstrument;
     }
 

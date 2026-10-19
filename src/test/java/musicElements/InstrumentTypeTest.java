@@ -7,21 +7,11 @@ import org.junit.jupiter.api.Test;
 public class InstrumentTypeTest {
 
     @Test
-    void hasSixteenFamilies() {
-        assertThat(InstrumentType.values()).hasSize(16);
-    }
-
-    @Test
-    void containsItsMinAndMax() {
+    void containsBoundariesAndRejectsOutsideValues() {
         for (InstrumentType type : InstrumentType.values()){
+            assertThat(type.getDefaultInstrument()).isEqualTo(type.getMinInstrument());
             assertThat(type.contains(type.getMinInstrument())).isTrue();
             assertThat(type.contains(type.getMaxInstrument())).isTrue();
-        }
-    }
-
-    @Test
-    void doesNotContainValuesJustOutsideItsLimits() {
-        for (InstrumentType type : InstrumentType.values()){
             assertThat(type.contains(type.getMinInstrument() - 1)).isFalse();
             assertThat(type.contains(type.getMaxInstrument() + 1)).isFalse();
         }
@@ -36,16 +26,5 @@ public class InstrumentTypeTest {
             }
             assertThat(families).as("instrumento %d", instrument).isEqualTo(1);
         }
-    }
-
-    @Test
-    void familiesFollowGeneralMidi() {
-        assertThat(InstrumentType.PIANO.getMinInstrument()).isEqualTo(0);
-        assertThat(InstrumentType.PIANO.getMaxInstrument()).isEqualTo(7);
-        assertThat(InstrumentType.STRINGS.getMinInstrument()).isEqualTo(40);
-        assertThat(InstrumentType.STRINGS.getMaxInstrument()).isEqualTo(47);
-        assertThat(InstrumentType.PERCUSSION.getMinInstrument()).isEqualTo(112);
-        assertThat(InstrumentType.PERCUSSION.getMaxInstrument()).isEqualTo(119);
-        assertThat(InstrumentType.SOUND_EFFECTS.getMaxInstrument()).isEqualTo(127);
     }
 }

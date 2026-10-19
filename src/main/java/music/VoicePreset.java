@@ -2,25 +2,58 @@ package music;
 
 
 import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
 import musicElements.Octave;
 import musicElements.VolumeElement;
 
 
 public class VoicePreset {
 
-    public static final int DEFAULT_INSTRUMENT = 0;
-    public static final int DEFAULT_VOLUME = 100;
-    public static final int DEFAULT_OCTAVE = 5;
-
     private final InstrumentElement instrument;
     private final VolumeElement volume;
     private final Octave octave;
 
     
-    public VoicePreset(){
-        this(new InstrumentElement(DEFAULT_INSTRUMENT),
-             new VolumeElement(DEFAULT_VOLUME),
-             new Octave(DEFAULT_OCTAVE));
+    public VoicePreset(InstrumentType type){
+
+        if (type == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
+
+        int defaultVolume = 100;
+        int defaultOctave = 5;
+
+        switch (type) {
+            case STRINGS:
+                defaultVolume = 100;
+                defaultOctave = 6;
+                break;
+            
+            case KEYS:
+                defaultVolume = 90;
+                defaultOctave = 4;
+                break;
+            
+            case PLUCKED:
+                defaultVolume = 90;
+                defaultOctave = 3;
+                break;
+
+            case WINDS:
+                defaultVolume = 80;
+                defaultOctave = 5;
+                break;
+            
+            case PERCUSSION_AND_SYNTH:
+                defaultVolume = 80;
+                defaultOctave = 5;
+                break;
+        
+            default:
+                break;
+        }
+
+        this.instrument = new InstrumentElement(type);
+        this.volume = new VolumeElement(defaultVolume);
+        this.octave = new Octave(defaultOctave);
     }
 
     public VoicePreset(InstrumentElement newInstrument, VolumeElement newVolume, Octave newOctave){

@@ -4,11 +4,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import music.VoicePreset;
 import musicElements.Accidentals;
+import musicElements.BPMElement;
 import musicElements.DurationTime;
+import musicElements.MusicElement;
+import musicElements.NoteElement;
 import musicElements.Notes;
+import musicElements.Octave;
+import musicElements.PauseElement;
+import musicElements.VolumeElement;
 
 public class TextToMusicRules {
+
 
     private String REGEXToken;
 
@@ -27,10 +35,74 @@ public class TextToMusicRules {
 
         elementsMapping.put("doubleVolume", " ");
 
-        elementsMapping.put("newVoice", "\n");
+        elementsMapping.put("newVoice",     "\n");
         elementsMapping.put("startDelay",   "0123456789");
 
     }
+
+    //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action
+    //A ordem importa: "note" primeiro e "else" por último
+    private Map<String, TextToMusicActions> elementsActionMapping = new LinkedHashMap<>();
+    {
+        elementsActionMapping.put("note", (matcher, context) -> {
+            NoteElement newNote = new NoteElement(
+                getNote(matcher.group("note")),
+                context.getCurrentOctave(),
+                getDurationTime(matcher.group("duration")),
+                getAccidental(matcher.group("accidental"))
+            );
+            context.appendToSheetMusic(newNote);
+        });
+
+        elementsActionMapping.put("pause", (matcher, context) ->
+            context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER))
+        );
+
+        elementsActionMapping.put("octaveUp", (matcher, context) -> {
+            // oitava atual + 1; se passar de 8, volta pra oitava base da voz
+            int octave = context.getCurrentOctave().getOctaveInt() + 1;
+            if (octave > Octave.MAX_OCTAVE) octave = VoicePreset.DEFAULT_OCTAVE;
+            context.setCurrentOctave(new Octave(octave));
+        });
+
+        elementsActionMapping.put("octaveDown", (matcher, context) -> {
+            // oitava atual - 1, sem passar da mínima
+            int octave = context.getCurrentOctave().getOctaveInt() - 1;
+            if (octave < Octave.MIN_OCTAVE) octave = Octave.MIN_OCTAVE;
+            context.setCurrentOctave(new Octave(octave));
+        });
+
+        elementsActionMapping.put("bpmUp", (matcher, context) -> {
+            context.setBpm(Math.min(context.getBpm() + 10, 999));
+            context.appendControlElement(new BPMElement(context.getBpm()));
+        });
+
+        elementsActionMapping.put("bpmDown", (matcher, context) -> {
+            context.setBpm(Math.max(context.getBpm() - 10, 20));
+            context.appendControlElement(new BPMElement(context.getBpm()));
+        });
+
+        elementsActionMapping.put("doubleVolume", (matcher, context) -> {
+            // volume * 2, no máximo 127 (VolumeElement.MAX_VOLUME)
+            int volume = Math.min(context.getCurrentVolume().getVolume() * 2, VolumeElement.MAX_VOLUME);
+            VolumeElement newVolume = new VolumeElement(volume);
+            context.setCurrentVolume(newVolume);
+            context.appendControlElement(newVolume);
+        });
+
+        elementsActionMapping.put("newVoice", (matcher, context) -> context.closeVoice());
+
+        elementsActionMapping.put("else", (matcher, context) -> {
+            // se o último elemento é nota → repete; senão → pausa
+            MusicElement last = context.getLastMusicElement();
+            if (last instanceof NoteElement) {
+                context.appendToSheetMusic(last);
+            } else {
+                context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
+            }
+        });
+    }
+
     private String semNull(String s) {
         return s == null ? "" : s;
     }
@@ -122,6 +194,10 @@ public class TextToMusicRules {
 
     public DurationTime getDurationTime(String input) {
         return durationTimeRules.getOrDefault(input, DurationTime.QUARTER);
+    }
+
+    public Map<String, TextToMusicActions> getElementsActionMapping() {
+        return elementsActionMapping;
     }
 
     public Accidentals getAccidental(String input) {

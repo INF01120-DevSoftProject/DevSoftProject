@@ -8,27 +8,28 @@ import org.junit.jupiter.api.Test;
 public class InstrumentElementTest {
 
     @Test
-    void eachInstanceKeepsItsOwnInstrument() {
-        InstrumentElement a = new InstrumentElement(0);
-        InstrumentElement b = new InstrumentElement(127);
+    void typeConstructorUsesDefaultInstrument() {
+        for (InstrumentType type : InstrumentType.values()){
+            InstrumentElement element = new InstrumentElement(type);
 
-        assertThat(a.getInstrument()).isEqualTo(0);
-        assertThat(b.getInstrument()).isEqualTo(127);
+            assertThat(element.getType()).isEqualTo(type);
+            assertThat(element.getInstrument()).isEqualTo(type.getDefaultInstrument());
+        }
     }
 
     @Test
-    void invalidInstrument(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            new InstrumentElement(-1);
-        });
+    void acceptsBoundariesAndFallsBackToDefaultOutsideRange() {
+        assertThat(new InstrumentElement(40, InstrumentType.STRINGS).getInstrument()).isEqualTo(40);
+        assertThat(new InstrumentElement(55, InstrumentType.STRINGS).getInstrument()).isEqualTo(55);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            new InstrumentElement(128);
-        });
+        assertThat(new InstrumentElement(39, InstrumentType.STRINGS).getInstrument()).isEqualTo(40);
+        assertThat(new InstrumentElement(56, InstrumentType.STRINGS).getInstrument()).isEqualTo(40);
     }
 
     @Test
-    void isAMusicElement() {
-        assertThat(new InstrumentElement(0)).isInstanceOf(MusicElement.class);
+    void rejectsNegativeInstrumentAndNullType() {
+        assertThrows(IllegalArgumentException.class, () -> new InstrumentElement(-1, InstrumentType.KEYS));
+        assertThrows(IllegalArgumentException.class, () -> new InstrumentElement(null));
+        assertThrows(IllegalArgumentException.class, () -> new InstrumentElement(0, null));
     }
 }

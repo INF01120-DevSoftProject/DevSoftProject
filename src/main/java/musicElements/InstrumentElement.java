@@ -3,20 +3,30 @@ package musicElements;
 public class InstrumentElement implements MusicElement{
 
     private final int instrument;
+    private final InstrumentType type;
 
-    public static final int MIN_INSTRUMENT = 0;
-    public static final int MAX_INSTRUMENT = 127;
+    public InstrumentElement(InstrumentType newType){
 
-    public InstrumentElement(int newInstrument){
+        if (newType == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
 
-        if(newInstrument < MIN_INSTRUMENT || newInstrument > MAX_INSTRUMENT){
-            throw new IllegalArgumentException("Instrumento invalido");
-        }
+        this.type = newType;
+        this.instrument = newType.getDefaultInstrument();
+    }
 
-        this.instrument = newInstrument;
+    public InstrumentElement(int newInstrument, InstrumentType newType){
+
+        if (newType == null) throw new IllegalArgumentException("Tipo de instrumento invalido");
+        if (newInstrument < 0) throw new IllegalArgumentException("Instrumento invalido");
+
+        this.type = newType;
+        this.instrument = newType.contains(newInstrument) ? newInstrument : newType.getDefaultInstrument();
     }
 
     public int getInstrument(){
         return this.instrument;
+    }
+
+    public InstrumentType getType(){
+        return this.type;
     }
 }

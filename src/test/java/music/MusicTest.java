@@ -3,74 +3,70 @@ package music;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
 
 import musicElements.BPMElement;
+import musicElements.InstrumentType;
 
 public class MusicTest {
 
-    private Voice newVoice(){
-        return new Voice(new SheetMusic(), new VoicePreset());
-    }
-
     @Test
-    void keepsNameBpmAndVoices() {
-        BPMElement bpm = new BPMElement(120);
-        Voice voice1 = newVoice();
-        Voice voice2 = newVoice();
-
-        Music music = new Music("Minha musica", bpm, List.of(voice1, voice2));
+    void defaultMusicHasFourVoicesDefaultBpmAndBaseCycle() {
+        Music music = new Music("Minha musica");
 
         assertThat(music.getName()).isEqualTo("Minha musica");
-        assertThat(music.getDefaultBPMElement()).isSameAs(bpm);
-        assertThat(music.getVoices()).containsExactly(voice1, voice2);
+        assertThat(music.getDefaultBPMElement().getBPM()).isEqualTo(Music.DEFAULT_BPM);
+        assertThat(music.getVoices())
+            .extracting(Voice::getInstrumentType)
+            .containsExactly(
+                InstrumentType.STRINGS,
+                InstrumentType.KEYS,
+                InstrumentType.PLUCKED,
+                InstrumentType.WINDS);
     }
 
     @Test
-    void changingOriginalListDoesNotChangeMusic() {
-        List<Voice> voices = new ArrayList<>();
-        voices.add(newVoice());
+    void cycleRepeatsAndPausesForPercussionVoice() {
+        Music music = new Music("Minha musica", new BPMElement(90), 6, true, 4);
 
-        Music music = new Music("Minha musica", new BPMElement(120), voices);
-        voices.add(newVoice());
-
-        assertThat(music.getVoices()).hasSize(1);
+        assertThat(music.getDefaultBPMElement().getBPM()).isEqualTo(90);
+        assertThat(music.getVoices())
+            .extracting(Voice::getInstrumentType)
+            .containsExactly(
+                InstrumentType.STRINGS,
+                InstrumentType.KEYS,
+                InstrumentType.PLUCKED,
+                InstrumentType.WINDS,
+                InstrumentType.PERCUSSION_AND_SYNTH,
+                InstrumentType.STRINGS);
     }
 
     @Test
-    void voicesCannotBeModified() {
-        Music music = new Music("Minha musica", new BPMElement(120), List.of(newVoice()));
+    void voiceCountBoundaries() {
+        assertThat(new Music("Minha musica", Music.MIN_VOICES).getVoices()).hasSize(4);
+        assertThat(new Music("Minha musica", Music.MAX_VOICES).getVoices()).hasSize(15);
 
-        assertThrows(UnsupportedOperationException.class, () -> music.getVoices().add(newVoice()));
+        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", Music.MIN_VOICES - 1));
+        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", Music.MAX_VOICES + 1));
     }
 
     @Test
-    void invalidValuesAreRejected() {
+    void percussionVoiceBoundaries() {
         BPMElement bpm = new BPMElement(120);
-        List<Voice> voices = List.of(newVoice());
 
-        assertThrows(IllegalArgumentException.class, () -> new Music(null, bpm, voices));
-        assertThrows(IllegalArgumentException.class, () -> new Music("  ", bpm, voices));
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", null, voices));
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, null));
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, List.of()));
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, Arrays.asList(newVoice(), null)));
+        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, 5, true, 3));
+        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, 5, true, 5));
     }
 
     @Test
-    void acceptsUpToMaxVoices() {
-        List<Voice> voices = new ArrayList<>();
-        for (int i = 0; i < Music.MAX_VOICES; i++){
-            voices.add(newVoice());
-        }
+    void invalidArgumentsAndVoiceListMutationAreRejected() {
+        BPMElement bpm = new BPMElement(120);
+        Music music = new Music("Minha musica");
 
-        assertThat(new Music("Minha musica", new BPMElement(120), voices).getVoices()).hasSize(Music.MAX_VOICES);
-
-        voices.add(newVoice());
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", new BPMElement(120), voices));
+        assertThrows(IllegalArgumentException.class, () -> new Music(null));
+        assertThrows(IllegalArgumentException.class, () -> new Music("  "));
+        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", null, 4));
+        assertThrows(IllegalArgumentException.class, () -> music.setName(" "));
+        assertThrows(UnsupportedOperationException.class, () -> music.getVoices().add(new Voice(InstrumentType.KEYS)));
     }
 }

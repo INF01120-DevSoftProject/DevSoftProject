@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import music.VoicePreset;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
 import musicElements.DurationTime;
@@ -61,7 +60,7 @@ public class TextToMusicRules {
         elementsActionMapping.put("octaveUp", (matcher, context) -> {
             // oitava atual + 1; se passar de 8, volta pra oitava base da voz
             int octave = context.getCurrentOctave().getOctaveInt() + 1;
-            if (octave > Octave.MAX_OCTAVE) octave = VoicePreset.DEFAULT_OCTAVE;
+            if (octave > Octave.MAX_OCTAVE) octave = context.getBaseOctave().getOctaveInt();
             context.setCurrentOctave(new Octave(octave));
         });
 

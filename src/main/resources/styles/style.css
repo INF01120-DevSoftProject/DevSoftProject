@@ -1,0 +1,69 @@
+
+.sidebar {
+    -fx-padding: 20px 10px;
+    -fx-background-color: #184D40;
+    -fx-pref-width: 150px;
+    -fx-alignment: top-center;
+}
+
+.button {
+    -fx-background-color: #15876A;
+    -fx-background-radius: 10px;
+    -fx-font-size: 16px;
+
+    transition: -fx-background-color 0.3s ease;
+}
+
+.label {
+    -fx-font-size: 32px;
+    -fx-padding: 8px 12px;
+    -fx-font-weight: 900;
+}
+
+.voice-node .label  {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-alignment: center; 
+}
+
+.voice-main-container .label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;  
+    -fx-alignment: center-left;
+    -fx-padding: 10px 0px;
+    -fx-alignment: center; 
+}
+
+.voice-label-container {
+    -fx-alignment: center; 
+    -fx-padding: 0px 32px 0px 0px;
+}
+
+
+.voice-node  {
+    -fx-background-color: #f1f0ef;;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px 20px;
+}
+
+.voice-header {
+    -fx-alignment: center-left;
+}
+
+.voice-main-container {
+    -fx-alignment: center; 
+}
+
+.button:hover {
+    -fx-background-color: #D0F48F;
+
+}
+
+.root {
+    -fx-background-color: #EDE6E4;
+}
+
+
+#main {
+    -fx-padding: 8px 24px;
+}

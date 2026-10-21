@@ -28,6 +28,7 @@ public class TextToMusicTranslator {
         return context.finish();
     }
 
+    //Isso vai ser removido e atualmente serve só pra debug
     public static void main(String[] args) {
         TextToMusicTranslator translator = new TextToMusicTranslator();
         List<Voice> voices = translator.textToVoices("CDE:2 F#G?A\nC:1 aE");

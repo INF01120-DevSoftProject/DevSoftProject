@@ -45,9 +45,10 @@ public class TextToMusicRules {
     }
 
     //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action
-    //A ordem importa: "note" primeiro e "else" por último
+    //A ordem importa: "startDelay" e "note" primeiro, "else" por último
     private Map<String, TextToMusicActions> elementsActionMapping = new LinkedHashMap<>();
     {
+        elementsActionMapping.put("startDelay",   this::addStartDelay);
         elementsActionMapping.put("note",         this::addNote);
         elementsActionMapping.put("pause",        this::addPause);
         elementsActionMapping.put("octaveUp",     this::raiseOctave);
@@ -58,6 +59,14 @@ public class TextToMusicRules {
         elementsActionMapping.put("newVoice",     this::startNewVoice);
         elementsActionMapping.put("instrument",   this::nextInstrument);
         elementsActionMapping.put("else",         this::repeatLastNoteOrPause);
+    }
+
+    private void addStartDelay(Matcher matcher, TextToMusicContext context) {
+        // "[n]" no começo da linha: a voz espera n tempos (pausas de semínima) antes de começar
+        int beats = Integer.parseInt(matcher.group("startDelay"));
+        for (int i = 0; i < beats; i++) {
+            context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
+        }
     }
 
     private void addNote(Matcher matcher, TextToMusicContext context) {
@@ -154,7 +163,8 @@ public class TextToMusicRules {
 
         REGEXRules.put("newVoice",     "(?<newVoice>["     + getElementChars("newVoice")     + "])");
         REGEXRules.put("instrument",   "(?<instrument>["   + getElementChars("instrument")   + "])");
-        REGEXRules.put("startDelay",   "^\\[(?<startDelay>[" + getElementChars("startDelay") + "]+)\\] ?");
+
+        REGEXRules.put("startDelay",   "(?m:^)\\[(?<startDelay>[" + getElementChars("startDelay") + "]{1,3})\\] ?");
 
         REGEXRules.put("else",         "(?<else>.)");
     }
@@ -194,6 +204,8 @@ public class TextToMusicRules {
     //Cria um Token para o REGEX, é a unção de todas as regras em uma String
     private String createREGEXToken() {
         StringJoiner joiner = new StringJoiner("|");
+        //Token do ATRASO (vem antes de tudo, só casa no começo da linha)
+        joiner.add(REGEXRules.get("startDelay"));
         //Token das NOTAS
         joiner.add(REGEXRules.get("note") + REGEXRules.get("accidental") + REGEXRules.get("duration"));
 

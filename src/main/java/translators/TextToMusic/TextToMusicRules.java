@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.regex.Matcher;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
 import musicElements.DurationTime;
@@ -47,70 +48,83 @@ public class TextToMusicRules {
     //A ordem importa: "note" primeiro e "else" por último
     private Map<String, TextToMusicActions> elementsActionMapping = new LinkedHashMap<>();
     {
-        elementsActionMapping.put("note", (matcher, context) -> {
-            NoteElement newNote = new NoteElement(
-                getNote(matcher.group("note")),
-                context.getCurrentOctave(),
-                getDurationTime(matcher.group("duration")),
-                getAccidental(matcher.group("accidental"))
-            );
-            context.appendToSheetMusic(newNote);
-        });
+        elementsActionMapping.put("note",         this::addNote);
+        elementsActionMapping.put("pause",        this::addPause);
+        elementsActionMapping.put("octaveUp",     this::raiseOctave);
+        elementsActionMapping.put("octaveDown",   this::lowerOctave);
+        elementsActionMapping.put("bpmUp",        this::increaseBpm);
+        elementsActionMapping.put("bpmDown",      this::decreaseBpm);
+        elementsActionMapping.put("doubleVolume", this::doubleVolume);
+        elementsActionMapping.put("newVoice",     this::startNewVoice);
+        elementsActionMapping.put("instrument",   this::nextInstrument);
+        elementsActionMapping.put("else",         this::repeatLastNoteOrPause);
+    }
 
-        elementsActionMapping.put("pause", (matcher, context) ->
-            context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER))
+    private void addNote(Matcher matcher, TextToMusicContext context) {
+        NoteElement newNote = new NoteElement(
+            getNote(matcher.group("note")),
+            context.getCurrentOctave(),
+            getDurationTime(matcher.group("duration")),
+            getAccidental(matcher.group("accidental"))
         );
+        context.appendToSheetMusic(newNote);
+    }
 
-        elementsActionMapping.put("octaveUp", (matcher, context) -> {
-            // oitava atual + 1; se passar de 8, volta pra oitava base da voz
-            int octave = context.getCurrentOctave().getOctaveInt() + 1;
-            if (octave > Octave.MAX_OCTAVE) octave = context.getBaseOctave().getOctaveInt();
-            context.setCurrentOctave(new Octave(octave));
-        });
+    private void addPause(Matcher matcher, TextToMusicContext context) {
+        context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
+    }
 
-        elementsActionMapping.put("octaveDown", (matcher, context) -> {
-            // oitava atual - 1, sem passar da mínima
-            int octave = context.getCurrentOctave().getOctaveInt() - 1;
-            if (octave < Octave.MIN_OCTAVE) octave = Octave.MIN_OCTAVE;
-            context.setCurrentOctave(new Octave(octave));
-        });
+    private void raiseOctave(Matcher matcher, TextToMusicContext context) {
+        // oitava atual + 1; se passar de 8, volta pra oitava base da voz
+        int octave = context.getCurrentOctave().getOctaveInt() + 1;
+        if (octave > Octave.MAX_OCTAVE) octave = context.getBaseOctave().getOctaveInt();
+        context.setCurrentOctave(new Octave(octave));
+    }
 
-        elementsActionMapping.put("bpmUp", (matcher, context) -> {
-            context.setBpm(Math.min(context.getBpm() + 10, 999));
-            context.appendControlElement(new BPMElement(context.getBpm()));
-        });
+    private void lowerOctave(Matcher matcher, TextToMusicContext context) {
+        // oitava atual - 1, sem passar da mínima
+        int octave = context.getCurrentOctave().getOctaveInt() - 1;
+        if (octave < Octave.MIN_OCTAVE) octave = Octave.MIN_OCTAVE;
+        context.setCurrentOctave(new Octave(octave));
+    }
 
-        elementsActionMapping.put("bpmDown", (matcher, context) -> {
-            context.setBpm(Math.max(context.getBpm() - 10, 20));
-            context.appendControlElement(new BPMElement(context.getBpm()));
-        });
+    private void increaseBpm(Matcher matcher, TextToMusicContext context) {
+        context.setBpm(Math.min(context.getBpm() + 10, 999));
+        context.appendControlElement(new BPMElement(context.getBpm()));
+    }
 
-        elementsActionMapping.put("doubleVolume", (matcher, context) -> {
-            // volume * 2, no máximo 127 (VolumeElement.MAX_VOLUME)
-            int volume = Math.min(context.getCurrentVolume().getVolume() * 2, VolumeElement.MAX_VOLUME);
-            VolumeElement newVolume = new VolumeElement(volume);
-            context.setCurrentVolume(newVolume);
-            context.appendControlElement(newVolume);
-        });
+    private void decreaseBpm(Matcher matcher, TextToMusicContext context) {
+        context.setBpm(Math.max(context.getBpm() - 10, 20));
+        context.appendControlElement(new BPMElement(context.getBpm()));
+    }
 
-        elementsActionMapping.put("newVoice", (matcher, context) -> context.closeVoice());
+    private void doubleVolume(Matcher matcher, TextToMusicContext context) {
+        // volume * 2, no máximo 127 (VolumeElement.MAX_VOLUME)
+        int volume = Math.min(context.getCurrentVolume().getVolume() * 2, VolumeElement.MAX_VOLUME);
+        VolumeElement newVolume = new VolumeElement(volume);
+        context.setCurrentVolume(newVolume);
+        context.appendControlElement(newVolume);
+    }
 
-        elementsActionMapping.put("instrument", (matcher, context) -> {
-            // dígito par (qualquer um): avança um instrumento dentro da família da voz, dando a volta
-            InstrumentElement newInstrument = nextInstrumentInFamily(context.getCurrentInstrument());
-            context.setCurrentInstrument(newInstrument);
-            context.appendControlElement(newInstrument);
-        });
+    private void startNewVoice(Matcher matcher, TextToMusicContext context) {
+        context.closeVoice();
+    }
 
-        elementsActionMapping.put("else", (matcher, context) -> {
-            // se o último elemento é nota → repete; senão → pausa
-            MusicElement last = context.getLastMusicElement();
-            if (last instanceof NoteElement) {
-                context.appendToSheetMusic(last);
-            } else {
-                context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
-            }
-        });
+    private void nextInstrument(Matcher matcher, TextToMusicContext context) {
+        // dígito par (qualquer um): avança um instrumento dentro da família da voz, dando a volta
+        InstrumentElement newInstrument = nextInstrumentInFamily(context.getCurrentInstrument());
+        context.setCurrentInstrument(newInstrument);
+        context.appendControlElement(newInstrument);
+    }
+
+    private void repeatLastNoteOrPause(Matcher matcher, TextToMusicContext context) {
+        // se o último elemento é nota → repete; senão → pausa
+        MusicElement last = context.getLastMusicElement();
+        if (last instanceof NoteElement) {
+            context.appendToSheetMusic(last);
+        } else {
+            context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
+        }
     }
 
     private String semNull(String s) {

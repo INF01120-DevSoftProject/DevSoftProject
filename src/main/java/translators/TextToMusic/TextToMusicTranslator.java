@@ -3,6 +3,7 @@ package translators.TextToMusic;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.*;
+import music.Music;
 import music.Voice;
 import musicElements.MusicElement;
 import musicElements.NoteElement;
@@ -10,11 +11,19 @@ import musicElements.NoteElement;
 public class TextToMusicTranslator {
     private TextToMusicRules musicRules = new TextToMusicRules();
 
-    public List<Voice> textToVoices(String text){
+    public Music textToMusic(String name, String text){
+
+        // cada linha (separada por \n) é uma voz; a Music cria as vozes (no mínimo MIN_VOICES)
+        int numberOfLines = text.split("\n", -1).length;
+        if (numberOfLines > Music.MAX_VOICES) {
+            throw new IllegalArgumentException(
+                "O texto tem " + numberOfLines + " linhas, mas o máximo é " + Music.MAX_VOICES + " (uma voz por linha)");
+        }
+        Music music = new Music(name, Math.max(numberOfLines, Music.MIN_VOICES));
 
         Pattern token = Pattern.compile(this.musicRules.getREGEXToken());
         Matcher matcher = token.matcher(text);
-        TextToMusicContext context = new TextToMusicContext();
+        TextToMusicContext context = new TextToMusicContext(music.getVoices());
 
         while (matcher.find()) {
             // acha o grupo que casou e executa a action dele
@@ -25,23 +34,6 @@ public class TextToMusicTranslator {
                 }
             }
         }
-        return context.finish();
-    }
-
-    //Isso vai ser removido e atualmente serve só pra debug
-    public static void main(String[] args) {
-        TextToMusicTranslator translator = new TextToMusicTranslator();
-        List<Voice> voices = translator.textToVoices("CDE:2 F#G?A\nC:1 aE");
-
-        for (int i = 0; i < voices.size(); i++) {
-            System.out.println("Voz " + (i + 1) + ":");
-            for (MusicElement element : voices.get(i).getSheetMusic().getSheetMusic()) {
-                if (element instanceof NoteElement note) {
-                    System.out.println("  " + note.getNote() + " " + note.getAccidental() + " " + note.getDuration());
-                } else {
-                    System.out.println("  " + element.getClass().getSimpleName());
-                }
-            }
-        }
+        return music;
     }
 }

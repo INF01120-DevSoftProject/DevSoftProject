@@ -1,37 +1,31 @@
 package translators.TextToMusic;
 
-import java.util.ArrayList;
 import java.util.List;
+import music.Music;
 import music.SheetMusic;
 import music.Voice;
 import music.VoicePreset;
 import musicElements.InstrumentElement;
-import musicElements.InstrumentType;
 import musicElements.MusicElement;
 import musicElements.Octave;
 import musicElements.VolumeElement;
 
 public class TextToMusicContext {
-    public static final int DEFAULT_BPM = 120;
-
-    //Pensar em como tirar essa informação repetida daqui
-    private static final List<InstrumentType> VOICE_INSTRUMENT_CYCLE = List.of(
-        InstrumentType.STRINGS,
-        InstrumentType.KEYS,
-        InstrumentType.PLUCKED,
-        InstrumentType.WINDS);
+    public static final int DEFAULT_BPM = Music.DEFAULT_BPM;
 
     private Octave currentOctave;
     private VolumeElement currentVolume;
     private InstrumentElement currentInstrument;
-    private final List<Voice> voices = new ArrayList<>();
+    private final List<Voice> voices;
+    private int voiceIndex = 0;
     private Voice currentVoice;
     private SheetMusic sheetMusic;
     private MusicElement lastMusicElement;
     private int bpm = DEFAULT_BPM;
 
 
-    public TextToMusicContext() {
+    public TextToMusicContext(List<Voice> voices) {
+        this.voices = voices;
         startVoice();
     }
 
@@ -89,8 +83,7 @@ public class TextToMusicContext {
     }
 
     private void startVoice() {
-        InstrumentType type = VOICE_INSTRUMENT_CYCLE.get(voices.size() % VOICE_INSTRUMENT_CYCLE.size());
-        currentVoice = new Voice(type);
+        currentVoice = voices.get(voiceIndex);
         VoicePreset preset = currentVoice.getVoicePreset();
         sheetMusic = currentVoice.getSheetMusic();
         currentOctave = preset.getDefaultOctave();
@@ -100,13 +93,8 @@ public class TextToMusicContext {
         bpm = DEFAULT_BPM;
     }
 
-    public List<Voice> finish() {
-        closeVoice();
-        return voices;
-    }
-
     public void closeVoice() {
-        voices.add(currentVoice);
+        voiceIndex++;
         startVoice();
     }
 }

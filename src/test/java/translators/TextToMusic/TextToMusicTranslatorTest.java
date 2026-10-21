@@ -1,11 +1,14 @@
 package translators.TextToMusic;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import music.Music;
 import music.Voice;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
@@ -22,8 +25,12 @@ class TextToMusicTranslatorTest {
 
     private final TextToMusicTranslator translator = new TextToMusicTranslator();
 
+    private List<Voice> voices(String text) {
+        return translator.textToMusic("Teste", text).getVoices();
+    }
+
     private List<MusicElement> firstVoiceElements(String text) {
-        return translator.textToVoices(text).get(0).getSheetMusic().getSheetMusic();
+        return voices(text).get(0).getSheetMusic().getSheetMusic();
     }
 
     private NoteElement noteAt(List<MusicElement> elements, int index) {
@@ -148,10 +155,11 @@ class TextToMusicTranslatorTest {
     }
 
     @Test
-    void eachLineIsAVoice() {
-        List<Voice> voices = translator.textToVoices("A\nB\nC");
+    void eachLineIsAVoiceAndMissingVoicesStayEmpty() {
+        List<Voice> voices = voices("A\nB\nC");
 
-        assertThat(voices).hasSize(3);
+        assertThat(voices).hasSize(Music.MIN_VOICES);
+        assertThat(voices.get(3).getSheetMusic().getSheetMusic()).isEmpty();
         assertThat(noteAt(voices.get(0).getSheetMusic().getSheetMusic(), 0).getNote()).isEqualTo(Notes.A);
         assertThat(noteAt(voices.get(1).getSheetMusic().getSheetMusic(), 0).getNote()).isEqualTo(Notes.B);
         assertThat(noteAt(voices.get(2).getSheetMusic().getSheetMusic(), 0).getNote()).isEqualTo(Notes.C);
@@ -159,7 +167,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void voicesFollowTheInstrumentTypeCycle() {
-        List<Voice> voices = translator.textToVoices("A\nA\nA\nA\nA");
+        List<Voice> voices = voices("A\nA\nA\nA\nA");
 
         assertThat(voices.get(0).getInstrumentType()).isEqualTo(InstrumentType.STRINGS);
         assertThat(voices.get(1).getInstrumentType()).isEqualTo(InstrumentType.KEYS);
@@ -170,7 +178,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void notesUseTheOctaveOfTheirVoicePreset() {
-        List<Voice> voices = translator.textToVoices("A\nA\nA\nA");
+        List<Voice> voices = voices("A\nA\nA\nA");
 
         for (Voice voice : voices) {
             int presetOctave = voice.getVoicePreset().getDefaultOctave().getOctaveInt();
@@ -230,7 +238,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void instrumentChangeStaysInsideEachVoiceType() {
-        List<Voice> voices = translator.textToVoices("8\n8\n8\n8");
+        List<Voice> voices = voices("8\n8\n8\n8");
 
         assertThat(((InstrumentElement) voices.get(0).getSheetMusic().getSheetMusic().get(0)).getInstrument()).isEqualTo(41);
         assertThat(((InstrumentElement) voices.get(1).getSheetMusic().getSheetMusic().get(0)).getInstrument()).isEqualTo(1);
@@ -267,7 +275,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void startDelayWorksAtTheStartOfEveryLine() {
-        List<MusicElement> secondVoice = translator.textToVoices("A\n[1] B").get(1).getSheetMusic().getSheetMusic();
+        List<MusicElement> secondVoice = voices("A\n[1] B").get(1).getSheetMusic().getSheetMusic();
 
         assertThat(secondVoice).hasSize(2);
         assertThat(secondVoice.get(0)).isInstanceOf(PauseElement.class);
@@ -282,10 +290,32 @@ class TextToMusicTranslatorTest {
     }
 
     @Test
-    void emptyTextGivesOneEmptyVoice() {
-        List<Voice> voices = translator.textToVoices("");
+    void emptyTextGivesTheMinimumOfEmptyVoices() {
+        List<Voice> voices = voices("");
 
-        assertThat(voices).hasSize(1);
-        assertThat(voices.get(0).getSheetMusic().getSheetMusic()).isEmpty();
+        assertThat(voices).hasSize(Music.MIN_VOICES);
+        for (Voice voice : voices) {
+            assertThat(voice.getSheetMusic().getSheetMusic()).isEmpty();
+        }
+    }
+
+    @Test
+    void musicKeepsTheGivenName() {
+        assertThat(translator.textToMusic("Fuga", "A").getName()).isEqualTo("Fuga");
+    }
+
+    @Test
+    void acceptsUpToTheMaximumOfVoices() {
+        String text = String.join("\n", Collections.nCopies(Music.MAX_VOICES, "A"));
+
+        assertThat(voices(text)).hasSize(Music.MAX_VOICES);
+    }
+
+    @Test
+    void rejectsMoreLinesThanTheMaximumOfVoices() {
+        String text = String.join("\n", Collections.nCopies(Music.MAX_VOICES + 1, "A"));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> voices(text));
+        assertThat(error.getMessage()).contains(String.valueOf(Music.MAX_VOICES + 1));
     }
 }

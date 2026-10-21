@@ -6,6 +6,7 @@ import music.SheetMusic;
 import music.Voice;
 import music.VoicePreset;
 import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
 import musicElements.MusicElement;
 import musicElements.Octave;
 import musicElements.VolumeElement;
@@ -13,10 +14,18 @@ import musicElements.VolumeElement;
 public class TextToMusicContext {
     public static final int DEFAULT_BPM = 120;
 
+    //Pensar em como tirar essa informação repetida daqui
+    private static final List<InstrumentType> VOICE_INSTRUMENT_CYCLE = List.of(
+        InstrumentType.STRINGS,
+        InstrumentType.KEYS,
+        InstrumentType.PLUCKED,
+        InstrumentType.WINDS);
+
     private Octave currentOctave;
     private VolumeElement currentVolume;
     private InstrumentElement currentInstrument;
     private final List<Voice> voices = new ArrayList<>();
+    private Voice currentVoice;
     private SheetMusic sheetMusic;
     private MusicElement lastMusicElement;
     private int bpm = DEFAULT_BPM;
@@ -24,6 +33,10 @@ public class TextToMusicContext {
 
     public TextToMusicContext() {
         startVoice();
+    }
+
+    public Octave getBaseOctave() {
+        return currentVoice.getVoicePreset().getDefaultOctave();
     }
 
     public Octave getCurrentOctave() {
@@ -76,10 +89,13 @@ public class TextToMusicContext {
     }
 
     private void startVoice() {
-        sheetMusic = new SheetMusic();
-        currentOctave = new Octave(VoicePreset.DEFAULT_OCTAVE);
-        currentVolume = new VolumeElement(VoicePreset.DEFAULT_VOLUME);
-        currentInstrument = null;
+        InstrumentType type = VOICE_INSTRUMENT_CYCLE.get(voices.size() % VOICE_INSTRUMENT_CYCLE.size());
+        currentVoice = new Voice(type);
+        VoicePreset preset = currentVoice.getVoicePreset();
+        sheetMusic = currentVoice.getSheetMusic();
+        currentOctave = preset.getDefaultOctave();
+        currentVolume = preset.getVolumeElement();
+        currentInstrument = preset.getInstrumentElement();
         lastMusicElement = null;
         bpm = DEFAULT_BPM;
     }
@@ -90,7 +106,7 @@ public class TextToMusicContext {
     }
 
     public void closeVoice() {
-        voices.add(new Voice(sheetMusic, new VoicePreset()));
+        voices.add(currentVoice);
         startVoice();
     }
 }

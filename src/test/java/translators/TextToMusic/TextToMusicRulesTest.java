@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
+import music.Music;
+import music.Voice;
 import musicElements.Accidentals;
 import musicElements.DurationTime;
 import musicElements.InstrumentElement;
@@ -21,13 +23,18 @@ import musicElements.VolumeElement;
 class TextToMusicRulesTest {
 
     private final TextToMusicRules rules = new TextToMusicRules();
+    private final List<Voice> voices = new Music("Teste", Music.MIN_VOICES).getVoices();
+
+    private TextToMusicContext newContext() {
+        return new TextToMusicContext(voices);
+    }
 
     private void apply(String group, TextToMusicContext context) {
         rules.getElementsActionMapping().get(group).apply(null, context);
     }
 
-    private List<MusicElement> sheetOf(TextToMusicContext context) {
-        return context.finish().get(0).getSheetMusic().getSheetMusic();
+    private List<MusicElement> firstVoiceSheet() {
+        return voices.get(0).getSheetMusic().getSheetMusic();
     }
 
     @Test
@@ -101,18 +108,18 @@ class TextToMusicRulesTest {
 
     @Test
     void doubleVolumeActionDoublesTheCurrentVolume() {
-        TextToMusicContext context = new TextToMusicContext();
+        TextToMusicContext context = newContext();
         context.setCurrentVolume(new VolumeElement(30));
 
         apply("doubleVolume", context);
 
         assertThat(context.getCurrentVolume().getVolume()).isEqualTo(60);
-        assertThat(((VolumeElement) sheetOf(context).get(0)).getVolume()).isEqualTo(60);
+        assertThat(((VolumeElement) firstVoiceSheet().get(0)).getVolume()).isEqualTo(60);
     }
 
     @Test
     void octaveUpActionGoesBackToTheBaseOctaveAboveTheMaximum() {
-        TextToMusicContext context = new TextToMusicContext();
+        TextToMusicContext context = newContext();
         context.setCurrentOctave(new Octave(Octave.MAX_OCTAVE));
 
         apply("octaveUp", context);
@@ -122,7 +129,7 @@ class TextToMusicRulesTest {
 
     @Test
     void octaveDownActionStopsAtTheMinimum() {
-        TextToMusicContext context = new TextToMusicContext();
+        TextToMusicContext context = newContext();
         context.setCurrentOctave(new Octave(Octave.MIN_OCTAVE));
 
         apply("octaveDown", context);
@@ -132,7 +139,7 @@ class TextToMusicRulesTest {
 
     @Test
     void instrumentActionMovesToTheNextInstrumentOfTheSameType() {
-        TextToMusicContext context = new TextToMusicContext();
+        TextToMusicContext context = newContext();
         context.setCurrentInstrument(new InstrumentElement(60, InstrumentType.WINDS));
 
         apply("instrument", context);
@@ -140,12 +147,12 @@ class TextToMusicRulesTest {
 
         assertThat(newInstrument.getInstrument()).isEqualTo(61);
         assertThat(newInstrument.getType()).isEqualTo(InstrumentType.WINDS);
-        assertThat(sheetOf(context).get(0)).isSameAs(newInstrument);
+        assertThat(firstVoiceSheet().get(0)).isSameAs(newInstrument);
     }
 
     @Test
     void instrumentActionGoesBackToTheFirstOfTheTypeAfterTheLast() {
-        TextToMusicContext context = new TextToMusicContext();
+        TextToMusicContext context = newContext();
         for (InstrumentType type : InstrumentType.values()) {
             context.setCurrentInstrument(new InstrumentElement(type.getMaxInstrument(), type));
 

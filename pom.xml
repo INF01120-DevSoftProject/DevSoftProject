@@ -45,6 +45,20 @@
             <artifactId>jfugue</artifactId>
             <version>5.0.9</version>
         </dependency>
+        <!-- JavaFX: biblioteca de GUI -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>27</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Sheetmusic4J: biblioteca de visualização de partitura integrada ao JavaFX -->
+        <dependency>
+            <groupId>com.sheetmusic4j</groupId>
+            <artifactId>fxviewer</artifactId>
+            <version>0.0.3</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -61,6 +75,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>gui.CompositionScene</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -7,6 +7,8 @@ import java.util.StringJoiner;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
 import musicElements.DurationTime;
+import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
 import musicElements.MusicElement;
 import musicElements.NoteElement;
 import musicElements.Notes;
@@ -35,6 +37,8 @@ public class TextToMusicRules {
         elementsMapping.put("doubleVolume", " ");
 
         elementsMapping.put("newVoice",     "\n");
+
+        elementsMapping.put("instrument",   "02468");
         elementsMapping.put("startDelay",   "0123456789");
 
     }
@@ -91,6 +95,13 @@ public class TextToMusicRules {
 
         elementsActionMapping.put("newVoice", (matcher, context) -> context.closeVoice());
 
+        elementsActionMapping.put("instrument", (matcher, context) -> {
+            // dígito par (qualquer um): avança um instrumento dentro da família da voz, dando a volta
+            InstrumentElement newInstrument = nextInstrumentInFamily(context.getCurrentInstrument());
+            context.setCurrentInstrument(newInstrument);
+            context.appendControlElement(newInstrument);
+        });
+
         elementsActionMapping.put("else", (matcher, context) -> {
             // se o último elemento é nota → repete; senão → pausa
             MusicElement last = context.getLastMusicElement();
@@ -128,6 +139,7 @@ public class TextToMusicRules {
         REGEXRules.put("doubleVolume", "(?<doubleVolume>[" + getElementChars("doubleVolume") + "])");
 
         REGEXRules.put("newVoice",     "(?<newVoice>["     + getElementChars("newVoice")     + "])");
+        REGEXRules.put("instrument",   "(?<instrument>["   + getElementChars("instrument")   + "])");
         REGEXRules.put("startDelay",   "^\\[(?<startDelay>[" + getElementChars("startDelay") + "]+)\\] ?");
 
         REGEXRules.put("else",         "(?<else>.)");
@@ -204,4 +216,13 @@ public class TextToMusicRules {
     }
 
     { REGEXToken = createREGEXToken(); }
+
+    //Próximo instrumento da família (InstrumentType) do instrumento atual; passando do último, volta pro primeiro
+    private InstrumentElement nextInstrumentInFamily(InstrumentElement current) {
+        InstrumentType family = current.getType();
+        int familySize = family.getMaxInstrument() - family.getMinInstrument() + 1;
+        int position = current.getInstrument() - family.getMinInstrument();
+        int next = family.getMinInstrument() + (position + 1) % familySize;
+        return new InstrumentElement(next, family);
+    }
 }

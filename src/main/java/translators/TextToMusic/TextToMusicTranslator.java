@@ -9,9 +9,9 @@ import musicElements.MusicElement;
 import musicElements.NoteElement;
 
 public class TextToMusicTranslator {
-    private TextToMusicRules musicRules = new TextToMusicRules();
-
     public Music textToMusic(String name, String text){
+        // regras novas a cada tradução, pra pegar o mapeamento atual
+        TextToMusicRules musicRules = new TextToMusicRules();
 
         // cada linha (separada por \n) é uma voz; a Music cria as vozes (no mínimo MIN_VOICES)
         int numberOfLines = text.split("\n", -1).length;
@@ -21,13 +21,13 @@ public class TextToMusicTranslator {
         }
         Music music = new Music(name, Math.max(numberOfLines, Music.MIN_VOICES));
 
-        Pattern token = Pattern.compile(this.musicRules.getREGEXToken());
+        Pattern token = Pattern.compile(musicRules.getREGEXToken());
         Matcher matcher = token.matcher(text);
         TextToMusicContext context = new TextToMusicContext(music.getVoices());
 
         while (matcher.find()) {
             // acha o grupo que casou e executa a action dele
-            for (Map.Entry<String, TextToMusicActions> rule : this.musicRules.getElementsActionMapping().entrySet()) {
+            for (Map.Entry<String, TextToMusicActions> rule : musicRules.getElementsActionMapping().entrySet()) {
                 if (matcher.group(rule.getKey()) != null) {
                     rule.getValue().apply(matcher, context);
                     break;

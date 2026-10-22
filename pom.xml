@@ -39,20 +39,7 @@
             <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- JFugue: biblioteca de reprodução de música/MIDI -->
-        <dependency>
-            <groupId>com.github.JensPiegsa</groupId>
-            <artifactId>jfugue</artifactId>
-            <version>5.0.9</version>
-        </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 
     <build>
         <plugins>

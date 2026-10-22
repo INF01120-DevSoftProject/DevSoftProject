@@ -82,6 +82,33 @@ public class TextToMusicRules {
         accidentalsRules.put("", Accidentals.NONE);
     }
 
+    //Substitui TODOS os caracteres de um grupo de elemento, apagando os antigos
+    public static void setElementChars(String elementType, String chars) {
+        if (chars.isEmpty())
+            throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
+        elementsMapping.put(elementType, chars);
+    }
+
+    //Acrescenta caracteres a um grupo
+    public static void addElementChars(String elementType, String chars) {
+        StringBuilder current = new StringBuilder(elementsMapping.get(elementType));
+        for (char c : chars.toCharArray()) {
+            if (current.indexOf(String.valueOf(c)) < 0) current.append(c);
+        }
+        elementsMapping.put(elementType, current.toString());
+    }
+
+    //Tira caracteres de um grupo
+    public static void removeElementChars(String elementType, String chars) {
+        StringBuilder current = new StringBuilder();
+        for (char c : elementsMapping.get(elementType).toCharArray()) {
+            if (chars.indexOf(c) < 0) current.append(c);
+        }
+        if (current.length() == 0)
+            throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
+        elementsMapping.put(elementType, current.toString());
+    }
+
     //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action
     //A ordem importa: "startDelay" e "note" primeiro, "else" por último
     private Map<String, TextToMusicActions> elementsActionMapping = new LinkedHashMap<>();

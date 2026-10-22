@@ -1,16 +1,13 @@
-package gui;
+package gui.screens;
 
-import javafx.application.Application;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import parsers.MusicToMIDIParser;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import translators.TextToMusic.*;
 
 import java.io.File;
@@ -19,22 +16,29 @@ import java.io.IOException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 
+import gui.nodes.BoxNode;
+import gui.nodes.ButtonNode;
+import gui.nodes.ControlFactory;
+import gui.nodes.VoiceNode;
 import music.Music;
 
-public class CompositionScene extends Application {
+public class CompositionScreen extends Screen {
 
-    private static final int SCENE_WIDTH = 600;
-    private static final int SCENE_HEIGHT= 400;
+    public CompositionScreen(Stage stage) {
+        setScreenNode(createScreen(stage)); 
+    }
 
     private VBox voicesContainer;
 
-    @Override 
-    public void start(Stage stage) {
+    public Pane createScreen(Stage stage) {
+        VoiceNode.restartCurrentVoiceNum();
+
         voicesContainer = new BoxNode<>(new VBox(20))
                                     .add(new VoiceNode())
                                     .build();
 
         HBox plusMinusButtons = new BoxNode<>(new HBox(20))
+                                    .addClass("plus-minus-container")
                                     .add(new ButtonNode("+")
                                             .onClickAddToContainer(() -> new VoiceNode(), voicesContainer)
                                             .build())
@@ -45,6 +49,7 @@ public class CompositionScene extends Application {
                                     .build();
 
         HBox saveImportButtons = new BoxNode<>(new HBox(20))
+                                    .addClass("save-import-container")
                                     .add(new ButtonNode("Salvar música")
                                             .onClick(b -> saveMIDI(stage))
                                             .build())
@@ -59,21 +64,8 @@ public class CompositionScene extends Application {
                                     .add(ControlFactory.createVerticalGrower())
                                     .add(saveImportButtons)
                                     .build();
-                
-        VBox sideBar = new BoxNode<>(new VBox(10))
-                                    .addClass("sidebar")
-                                    .add(new ButtonNode("Composição").build())
-                                    .add(new ButtonNode("Mapeamento").build())
-                                    .add(new ButtonNode("Player").build())
-                                    .build();
-
-        BorderPane layout = new BorderNode()
-                                    .apply(b -> b.setLeft(sideBar))
-                                    .apply(b -> b.setCenter(mainContent))
-                                    .build();
-
-        Scene scene = createScene(stage, layout);
-        addCSStoScene(scene, "/styles/style.css");
+        
+        return mainContent;
     }
 
     // FEITO SO PARA TESTE, NÃO DEVERIA ESTAR AQUI, NÃO DEVERIA SER TÃO FEIO
@@ -115,19 +107,6 @@ public class CompositionScene extends Application {
         // FAZER
     }
 
-    private Scene createScene(Stage stage, Parent layout) { //PASSAR PARA UM CLASSE ABSTRATA ISSO
-        Scene scene = new Scene(layout, SCENE_WIDTH, SCENE_HEIGHT);
-        stage.setScene(scene);
-        stage.show();
-
-        return scene;
-    }
-
-    private void addCSStoScene(Scene scene, String path) { //PASSAR PARA UM CLASSE ABSTRATA ISSO
-        scene.getStylesheets().add(
-            getClass().getResource(path).toExternalForm()
-        );
-    }
 
 
 }

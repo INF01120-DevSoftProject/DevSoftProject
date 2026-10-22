@@ -1,4 +1,4 @@
-package gui;
+package gui.nodes;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import javafx.scene.control.*;
 
 public class VoiceNode extends BorderPane {
 
-    private static int currentVoiceNum = 0;
+    private static int currentVoiceNum;
     
     public static List<String> getInstrumentTypes() {
         return List.of("Flauta", "Violão", "Piano");
@@ -38,6 +38,7 @@ public class VoiceNode extends BorderPane {
         VBox octaveContainer = createControlWithLabel(octaveController, "Oitava");
 
         HBox voicePresetContainer = new BoxNode<>(new HBox(15))
+                                    .addClass("voice-preset-container")
                                     .add(instrumentContainer)
                                     .add(ControlFactory.createHorizontalGrower())
                                     .add(volumeContainer)
@@ -67,10 +68,14 @@ public class VoiceNode extends BorderPane {
     }
 
     private static VBox createControlWithLabel(Node control, String title) {
-        return new BoxNode<>(new VBox(6))
+        return new BoxNode<>(new VBox(0))
             .add(new Label(title))
             .add(control)
             .build();
+    }
+
+    public static void restartCurrentVoiceNum() {
+        currentVoiceNum = 0;
     }
 
     public static int decrementCurrentVoiceNum() {

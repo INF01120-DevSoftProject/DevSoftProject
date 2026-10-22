@@ -1,4 +1,4 @@
-package gui;
+package gui.nodes;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

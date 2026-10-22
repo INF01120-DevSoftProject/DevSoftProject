@@ -1,6 +1,6 @@
 
 .sidebar {
-    -fx-padding: 20px 10px;
+    -fx-padding: 64px 10px;
     -fx-background-color: #184D40;
     -fx-pref-width: 150px;
     -fx-alignment: top-center;
@@ -10,20 +10,23 @@
     -fx-background-color: #15876A;
     -fx-background-radius: 10px;
     -fx-font-size: 16px;
+    -fx-max-width: 99999px;
+
 
     transition: -fx-background-color 0.3s ease;
 }
 
 .label {
-    -fx-font-size: 32px;
-    -fx-padding: 8px 12px;
+    -fx-font-size: 40px;
+    -fx-padding: 32px 0px 12px 0px;
     -fx-font-weight: 900;
 }
 
 .voice-node .label  {
-    -fx-font-size: 20px;
+    -fx-font-size: 24px;
     -fx-font-weight: 700;
     -fx-alignment: center; 
+    -fx-padding: 8px 12px;
 }
 
 .voice-main-container .label {
@@ -36,14 +39,27 @@
 
 .voice-label-container {
     -fx-alignment: center; 
-    -fx-padding: 0px 32px 0px 0px;
+    -fx-padding: 0px 24px 0px 12px;
 }
 
 
+.voice-preset-container  {
+}
+
+
+.plus-minus-container .button {
+    -fx-min-width: 40px;
+    -fx-font-size: 16px;
+}
+
+.save-import-container .button {
+    -fx-pref-width: 99999px;
+}
+
 .voice-node  {
-    -fx-background-color: #f1f0ef;;
+    -fx-background-color: #f5f5f5;;
     -fx-background-radius: 8px;
-    -fx-padding: 12px 20px;
+    -fx-padding: 4px 8px;
 }
 
 .voice-header {
@@ -52,6 +68,7 @@
 
 .voice-main-container {
     -fx-alignment: center; 
+    -fx-padding: 12px 24px 12px 0px;
 }
 
 .button:hover {
@@ -66,4 +83,12 @@
 
 #main {
     -fx-padding: 8px 24px;
+}
+
+@font-face {
+    src: url("../fonts/Inter-Regular.ttf");
+}
+
+.root {
+    -fx-font-family: "Inter";
 }

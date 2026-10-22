@@ -82,6 +82,22 @@ public class TextToMusicRules {
         accidentalsRules.put("", Accidentals.NONE);
     }
 
+    // Substitui um caractere por outro:
+    public static void replaceChar(String elementType, String oldChar, String newChar) {
+        String chars = elementsMapping.get(elementType);
+        if (chars == null || !chars.contains(oldChar))
+            throw new IllegalArgumentException("O grupo " + elementType + " não tem o caractere '" + oldChar + "'");
+        if (oldChar.equals(newChar)) return;
+
+        elementsMapping.put(elementType, chars.replace(oldChar, newChar));
+        if (elementType.equals("note"))
+            notesRules.put(newChar, notesRules.remove(oldChar));
+        if (elementType.equals("duration"))
+            durationTimeRules.put(newChar, durationTimeRules.remove(oldChar));
+        if (elementType.equals("accidental"))
+            accidentalsRules.put(newChar, accidentalsRules.remove(oldChar));
+    }
+
     //Substitui TODOS os caracteres de um grupo de elemento, apagando os antigos
     public static void setElementChars(String elementType, String chars) {
         if (chars.isEmpty())
@@ -107,6 +123,20 @@ public class TextToMusicRules {
         if (current.length() == 0)
             throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
         elementsMapping.put(elementType, current.toString());
+    }
+
+    //Associa um caractere a uma nota, tirando o caractere antigo
+    public static void mapNote(String input, Notes note) {
+        String oldChar = null;
+        for (Map.Entry<String, Notes> rule : notesRules.entrySet()) {
+            if (rule.getValue() == note) oldChar = rule.getKey();
+        }
+        if (oldChar != null) {
+            notesRules.remove(oldChar);
+            removeElementChars("note", oldChar);
+        }
+        notesRules.put(input, note);
+        addElementChars("note", input);
     }
 
     //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import music.Music;
@@ -24,6 +25,11 @@ import musicElements.VolumeElement;
 class TextToMusicTranslatorTest {
 
     private final TextToMusicTranslator translator = new TextToMusicTranslator();
+
+    @AfterEach
+    void restoreDefaultMapping() {
+        TextToMusicRules.resetMappings();
+    }
 
     private List<Voice> voices(String text) {
         return translator.textToMusic("Teste", text).getVoices();
@@ -317,5 +323,125 @@ class TextToMusicTranslatorTest {
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> voices(text));
         assertThat(error.getMessage()).contains(String.valueOf(Music.MAX_VOICES + 1));
+    }
+
+    @Test
+    void mappedCharacterBecomesTheChosenNote() {
+        TextToMusicRules.mapNote("J", Notes.A);
+        NoteElement note = noteAt(firstVoiceElements("J#:2"), 0);
+
+        assertThat(note.getNote()).isEqualTo(Notes.A);
+        assertThat(note.getAccidental()).isEqualTo(Accidentals.SHARP);
+        assertThat(note.getDuration()).isEqualTo(DurationTime.HALF);
+    }
+
+    @Test
+    void replacedNoteLetterMovesToTheNewCharacter() {
+        TextToMusicRules.replaceChar("note", "A", "J");
+        List<MusicElement> elements = firstVoiceElements("JA");
+
+        assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
+        // "A" deixou de ser nota: cai no else e repete a última
+        assertThat(elements.get(1)).isSameAs(elements.get(0));
+    }
+
+    @Test
+    void replacedAccidentalAndDurationKeepTheirMeaning() {
+        TextToMusicRules.replaceChar("accidental", "#", "s");
+        TextToMusicRules.replaceChar("duration", "2", "m");
+        NoteElement note = noteAt(firstVoiceElements("Cs:m"), 0);
+
+        assertThat(note.getAccidental()).isEqualTo(Accidentals.SHARP);
+        assertThat(note.getDuration()).isEqualTo(DurationTime.HALF);
+    }
+
+    @Test
+    void replacingADigitOnlyChangesItsGroup() {
+        TextToMusicRules.replaceChar("duration", "2", "m");
+        List<MusicElement> elements = firstVoiceElements("C:2");
+
+        // "2" não é mais duração, mas continua trocando o instrumento
+        assertThat(noteAt(elements, 0).getDuration()).isEqualTo(DurationTime.QUARTER);
+        assertThat(elements).anyMatch(element -> element instanceof InstrumentElement);
+    }
+
+    @Test
+    void replacingACharacterOutsideItsGroupIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.replaceChar("pause", "A", "J"));
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.replaceChar("grupoQueNaoExiste", "A", "J"));
+    }
+
+    @Test
+    void characterAlreadyInUseIsRejected() {
+        // "a" já é pausa: não pode virar também subir o BPM
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> TextToMusicRules.replaceChar("bpmUp", ">", "a"));
+        assertThat(error.getMessage()).contains("pause");
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.addElementChars("bpmUp", "V"));
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.mapNote("a", Notes.A));
+    }
+
+    @Test
+    void digitsCanBeUsedMoreThanOnce() {
+        TextToMusicRules.addElementChars("bpmUp", "9");
+        List<MusicElement> elements = firstVoiceElements("9");
+
+        assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
+    }
+
+    @Test
+    void eachNoteHasOnlyOneCharacter() {
+        TextToMusicRules.mapNote("J", Notes.A);
+        List<MusicElement> elements = firstVoiceElements("JA");
+
+        assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
+        // "A" não é mais nota: cai no else e repete a última nota
+        assertThat(elements).hasSize(2);
+        assertThat(elements.get(1)).isSameAs(elements.get(0));
+    }
+
+    @Test
+    void elementCharsCanBeChanged() {
+        TextToMusicRules.setElementChars("bpmUp", "+]");
+        List<MusicElement> elements = firstVoiceElements("+]>");
+
+        assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
+        assertThat(((BPMElement) elements.get(1)).getBPM()).isEqualTo(140);
+        assertThat(elements.get(2)).isInstanceOf(PauseElement.class);
+    }
+
+    @Test
+    void eachAddedCharacterWorksOnItsOwn() {
+        TextToMusicRules.addElementChars("octaveUp", "^L");
+        // desce 3 antes, pra subir sem passar da oitava máxima
+        List<MusicElement> elements = firstVoiceElements("VVVA^AL?A");
+
+        int start = noteAt(elements, 0).getOctave().getOctaveInt();
+        assertThat(noteAt(elements, 1).getOctave().getOctaveInt()).isEqualTo(start + 1);
+        assertThat(noteAt(elements, 2).getOctave().getOctaveInt()).isEqualTo(start + 3);
+    }
+
+    @Test
+    void removedCharacterStopsWorking() {
+        TextToMusicRules.addElementChars("bpmUp", "+");
+        TextToMusicRules.removeElementChars("bpmUp", ">");
+        List<MusicElement> elements = firstVoiceElements(">+");
+
+        assertThat(elements.get(0)).isInstanceOf(PauseElement.class);
+        assertThat(((BPMElement) elements.get(1)).getBPM()).isEqualTo(130);
+    }
+
+    @Test
+    void groupCannotBeLeftWithoutCharacters() {
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.removeElementChars("bpmUp", ">"));
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.setElementChars("bpmUp", ""));
+    }
+
+    @Test
+    void resetGoesBackToTheDefaultMapping() {
+        TextToMusicRules.mapNote("J", Notes.A);
+        TextToMusicRules.resetMappings();
+
+        assertThat(firstVoiceElements("J").get(0)).isInstanceOf(PauseElement.class);
     }
 }

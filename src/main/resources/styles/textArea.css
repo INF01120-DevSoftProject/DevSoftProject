@@ -1,0 +1,41 @@
+.text-area {
+    -fx-background-color: #F8FAF9;
+    -fx-background-radius: 8px;
+
+    -fx-border-color: #DDE5E0;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+
+    -fx-font-size: 13px;
+    -fx-text-fill: #253630;
+    -fx-prompt-text-fill: #9BA7A1;
+
+    -fx-highlight-fill: #CDEBE1;
+    -fx-highlight-text-fill: #163F36;
+
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Fundo interno do TextArea */
+.text-area .content {
+    -fx-background-color: #F8FAF9;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px;
+}
+
+/* Área de rolagem */
+.text-area .scroll-pane,
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Quando estiver selecionado */
+.text-area:focused {
+    -fx-border-color: #108B72;
+    -fx-effect: dropshadow(
+        gaussian,
+        rgba(16,139,114,0.12),
+        6, 0, 0, 0
+    );
+}

@@ -1,0 +1,38 @@
+
+/* SLIDER */
+
+.slider {
+    -fx-padding: 8px 0;
+}
+
+/* Barra */
+.slider .track {
+    -fx-background-color: #E3EBE7;
+    -fx-background-radius: 10px;
+    -fx-background-insets: 0;
+    -fx-pref-height: 6px;
+}
+
+/* Bolinha */
+.slider .thumb {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 50%;
+    -fx-background-insets: 0;
+
+    -fx-border-color: #108B72;
+    -fx-border-width: 3px;
+    -fx-border-radius: 50%;
+
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+
+    -fx-effect: dropshadow(
+        gaussian, rgba(0,0,0,0.12),
+        4, 0, 0, 1
+    );
+}
+
+/* Hover */
+.slider:hover .thumb {
+    -fx-border-color: #0D725E;
+}

@@ -13,13 +13,15 @@ import javax.sound.midi.Track;
 
 import org.junit.jupiter.api.Test;
 
-import builders.MusicBuilder;
-import builders.VoiceBuilder;
 import music.Music;
-import music.SheetMusic;
+import music.Voice;
 import musicElements.*;
 
 class MusicToMIDIParserTest {
+
+    // Toda Music tem no minimo Music.MIN_VOICES vozes, então toda Sequence gerada tem
+    // essa quantidade de tracks (as vozes sem elementos geram tracks vazias).
+    private static final int TRACKS = Music.MIN_VOICES;
 
     // Fixtures: todos os objetos abaixo são reais (sem mocks).
     private NoteElement note(Notes pitch, int octave,
@@ -40,30 +42,36 @@ class MusicToMIDIParserTest {
     }
 
     private InstrumentElement instrument(int midiProgram) {
-        return new InstrumentElement(midiProgram);
+        for (InstrumentType type : InstrumentType.values()) {
+            if (type.contains(midiProgram)) {
+                return new InstrumentElement(midiProgram, type);
+            }
+        }
+        throw new IllegalArgumentException("Invalid MIDI program: " + midiProgram);
     }
 
     private VolumeElement volume(int midiVolume) {
         return new VolumeElement(midiVolume);
     }
 
-    private SheetMusic sheetWith(MusicElement... elements) {
-        SheetMusic sheet = new SheetMusic();
-        for (MusicElement element : elements) {
-            sheet.appendToSheetMusic(element);
-        }
-        return sheet;
+    // A partitura de uma voz não pode ser injetada em Music, então cada "sheet" é só a
+    // lista de elementos que será anexada à partitura da voz correspondente.
+    private MusicElement[] sheetWith(MusicElement... elements) {
+        return elements;
     }
 
-    private Music musicWith(SheetMusic... sheets) {
-        MusicBuilder builder = new MusicBuilder().setName("Test music");
-        for (SheetMusic sheet : sheets) {
-            builder.addVoice(new VoiceBuilder().setSheetMusic(sheet));
+    private Music musicWith(MusicElement[]... sheets) {
+        Music music = new Music("Test music");
+        List<Voice> voices = music.getVoices();
+        for (int i = 0; i < sheets.length; i++) {
+            for (MusicElement element : sheets[i]) {
+                voices.get(i).getSheetMusic().appendToSheetMusic(element);
+            }
         }
-        return builder.buildMusic();
+        return music;
     }
 
-    private Sequence convert(SheetMusic... sheets) {
+    private Sequence convert(MusicElement[]... sheets) {
         Music music = musicWith(sheets);
         return new MusicToMIDIParser().convertMusicToMIDI(music);
     }
@@ -110,7 +118,7 @@ class MusicToMIDIParserTest {
         List<MidiEvent> on = shortEvents(track, ShortMessage.NOTE_ON);
         List<MidiEvent> off = shortEvents(track, ShortMessage.NOTE_OFF);
 
-        assertThat(sequence.getTracks()).hasSize(1);
+        assertThat(sequence.getTracks()).hasSize(TRACKS);
         assertThat(on).hasSize(1);
         assertThat(off).hasSize(1);
         assertThat(messageOf(on.get(0)).getData1()).isEqualTo(61);
@@ -127,7 +135,7 @@ class MusicToMIDIParserTest {
         Track track = sequence.getTracks()[0];
         List<MidiEvent> endOfTrack = metaEvents(track, 0x2F);
 
-        assertThat(sequence.getTracks()).hasSize(1);
+        assertThat(sequence.getTracks()).hasSize(TRACKS);
         assertThat(shortEvents(track, ShortMessage.NOTE_ON)).isEmpty();
         assertThat(shortEvents(track, ShortMessage.NOTE_OFF)).isEmpty();
         assertThat(endOfTrack).hasSize(1);
@@ -208,7 +216,7 @@ class MusicToMIDIParserTest {
             sheetWith(instrument(10), cSharpQuarter(), quarterRest())
         );
 
-        assertThat(sequence.getTracks()).hasSize(3);
+        assertThat(sequence.getTracks()).hasSize(TRACKS);
         Track first = sequence.getTracks()[0];
         Track second = sequence.getTracks()[1];
         Track third = sequence.getTracks()[2];
@@ -229,6 +237,7 @@ class MusicToMIDIParserTest {
         assertThat(shortEvents(second, ShortMessage.NOTE_ON).get(0).getTick()).isZero();
         assertThat(metaEvents(third, 0x2F).get(0).getTick()).isEqualTo(960);
         assertThat(mpqOf(metaEvents(first, 0x51).get(0))).isEqualTo(500_000);
+        assertThat(shortEvents(sequence.getTracks()[3], ShortMessage.NOTE_ON)).isEmpty();
     }
 
     @Test
@@ -236,7 +245,7 @@ class MusicToMIDIParserTest {
         Sequence sequence = convert(sheetWith());
         Track track = sequence.getTracks()[0];
 
-        assertThat(sequence.getTracks()).hasSize(1);
+        assertThat(sequence.getTracks()).hasSize(TRACKS);
         assertThat(shortEvents(track, ShortMessage.NOTE_ON)).isEmpty();
         assertThat(shortEvents(track, ShortMessage.PROGRAM_CHANGE)).isEmpty();
         assertThat(metaEvents(track, 0x2F)).hasSize(1);
@@ -259,8 +268,8 @@ class MusicToMIDIParserTest {
         ));
 
         assertThat(first).isNotSameAs(second);
-        assertThat(first.getTracks()).hasSize(2);
-        assertThat(second.getTracks()).hasSize(1);
+        assertThat(first.getTracks()).hasSize(TRACKS);
+        assertThat(second.getTracks()).hasSize(TRACKS);
         assertThat(shortEvents(second.getTracks()[0], ShortMessage.NOTE_ON)).isEmpty();
         assertThat(shortEvents(second.getTracks()[0], ShortMessage.CONTROL_CHANGE)).hasSize(1);
     }

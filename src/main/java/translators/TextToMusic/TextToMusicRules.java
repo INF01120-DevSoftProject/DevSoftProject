@@ -88,6 +88,7 @@ public class TextToMusicRules {
         if (chars == null || !chars.contains(oldChar))
             throw new IllegalArgumentException("O grupo " + elementType + " não tem o caractere '" + oldChar + "'");
         if (oldChar.equals(newChar)) return;
+        checkNotUsed(newChar, null);
 
         elementsMapping.put(elementType, chars.replace(oldChar, newChar));
         if (elementType.equals("note"))
@@ -98,8 +99,20 @@ public class TextToMusicRules {
             accidentalsRules.put(newChar, accidentalsRules.remove(oldChar));
     }
 
+    //Verifica se o char já está associado a alguém (números ficam de fora)
+    private static void checkNotUsed(String chars, String elementType) {
+        for (char c : chars.toCharArray()) {
+            if (Character.isDigit(c)) continue;
+            for (Map.Entry<String, String> element : elementsMapping.entrySet()) {
+                if (!element.getKey().equals(elementType) && element.getValue().indexOf(c) >= 0)
+                    throw new IllegalArgumentException("O caractere '" + c + "' já é usado em " + element.getKey());
+            }
+        }
+    }
+
     //Substitui TODOS os caracteres de um grupo de elemento, apagando os antigos
     public static void setElementChars(String elementType, String chars) {
+        checkNotUsed(chars, elementType);
         if (chars.isEmpty())
             throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
         elementsMapping.put(elementType, chars);
@@ -107,6 +120,7 @@ public class TextToMusicRules {
 
     //Acrescenta caracteres a um grupo
     public static void addElementChars(String elementType, String chars) {
+        checkNotUsed(chars, elementType);
         StringBuilder current = new StringBuilder(elementsMapping.get(elementType));
         for (char c : chars.toCharArray()) {
             if (current.indexOf(String.valueOf(c)) < 0) current.append(c);
@@ -127,6 +141,7 @@ public class TextToMusicRules {
 
     //Associa um caractere a uma nota, tirando o caractere antigo
     public static void mapNote(String input, Notes note) {
+        checkNotUsed(input, "note");
         String oldChar = null;
         for (Map.Entry<String, Notes> rule : notesRules.entrySet()) {
             if (rule.getValue() == note) oldChar = rule.getKey();

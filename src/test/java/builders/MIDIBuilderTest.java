@@ -37,7 +37,12 @@ public class MIDIBuilderTest {
     }
 
     private InstrumentElement instrument(int midiProgram) {
-        return new InstrumentElement(midiProgram);
+        for (InstrumentType type : InstrumentType.values()) {
+            if (type.contains(midiProgram)) {
+                return new InstrumentElement(midiProgram, type);
+            }
+        }
+        throw new IllegalArgumentException("Invalid MIDI program: " + midiProgram);
     }
 
     private VolumeElement volume(int midiVolume) {

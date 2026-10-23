@@ -1,6 +1,8 @@
 package music;
 
+import java.util.List;
 import musicElements.InstrumentType;
+import musicElements.MusicElement;
 
 public class Voice {
 
@@ -21,6 +23,10 @@ public class Voice {
 
     public SheetMusic getSheetMusic(){
         return this.sheetMusic;
+    }
+
+    public List<MusicElement> getSheetMusicList(){
+        return this.sheetMusic.getSheetMusic();
     }
 
     public VoicePreset getVoicePreset(){

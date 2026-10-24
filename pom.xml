@@ -39,12 +39,6 @@
             <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- JFugue: biblioteca de reprodução de música/MIDI -->
-        <dependency>
-            <groupId>com.github.JensPiegsa</groupId>
-            <artifactId>jfugue</artifactId>
-            <version>5.0.9</version>
-        </dependency>
         <!-- JavaFX: biblioteca de GUI -->
         <dependency>
             <groupId>org.openjfx</groupId>

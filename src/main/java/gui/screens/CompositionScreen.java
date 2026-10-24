@@ -12,10 +12,12 @@ import translators.TextToMusic.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.StringJoiner;
 
-import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 
+import exporters.MIDIFileExporter;
 import gui.nodes.BoxNode;
 import gui.nodes.ButtonNode;
 import gui.nodes.ControlFactory;
@@ -68,37 +70,36 @@ public class CompositionScreen extends Screen {
         return mainContent;
     }
 
-    // FEITO SO PARA TESTE, NÃO DEVERIA ESTAR AQUI, NÃO DEVERIA SER TÃO FEIO
     public void saveMIDI(Stage stage) {
-        String musicText = ""; 
-
-        for (Node node : voicesContainer.getChildren()) {
-            VoiceNode voiceNode = (VoiceNode) node;
-            String voiceText = voiceNode.getVoiceText();
-            musicText += voiceText + "\n";
-        }
-
-        TextToMusicTranslator translator = new TextToMusicTranslator();
-        MusicToMIDIParser parser = new MusicToMIDIParser();
-
-        Music music = translator.textToMusic("Nome legal", musicText);
-        Sequence sequence = parser.convertMusicToMIDI(music);
-
         FileChooser fileChooser = new FileChooser();
-
         fileChooser.setTitle("Salvar MIDI");
         fileChooser.setInitialFileName("musica.mid");
-
         fileChooser.getExtensionFilters().add(
             new FileChooser.ExtensionFilter("Arquivo MIDI (*.mid)", "*.mid")
         );
 
         File file = fileChooser.showSaveDialog(stage);
-        if (sequence == null) throw new NullPointerException("file name can't be null");
+        if (file == null) {
+            return;
+        }
+
+        StringJoiner musicText = new StringJoiner("\n");
+        for (Node node : voicesContainer.getChildren()) {
+            VoiceNode voiceNode = (VoiceNode) node;
+            musicText.add(voiceNode.getVoiceText());
+        }
+
+        TextToMusicTranslator translator = new TextToMusicTranslator();
+        MusicToMIDIParser parser = new MusicToMIDIParser();
+        MIDIFileExporter exporter = new MIDIFileExporter(file.getParent());
+
+        Music music = translator.textToMusic("Nome legal", musicText.toString());
+        Sequence sequence = parser.convertMusicToMIDI(music);
+
         try {
-            MidiSystem.write(sequence, 1, file);
+            exporter.save(sequence, file.getName());
         } catch (IOException e) {
-            // TODO: handle exception
+            throw new UncheckedIOException("Falha ao salvar o arquivo MIDI", e);
         }
     }
 

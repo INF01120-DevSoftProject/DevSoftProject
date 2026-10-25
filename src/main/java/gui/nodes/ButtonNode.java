@@ -35,11 +35,21 @@ public class ButtonNode {
         return this;
     }
 
+    public ButtonNode onClickAddToContainer(Supplier<? extends Node> component, Pane container, int maxElements) {
+        button.addEventHandler(ActionEvent.ACTION, event -> {
+            if (container.getChildren().size() < maxElements) {
+                container.getChildren().add(component.get());
+            }
+        });
+
+        return this;
+    }
+
     public ButtonNode onClickRemoveLastFromContainer(Pane container) {
         button.addEventHandler(ActionEvent.ACTION, event -> {
             var children = container.getChildren();
 
-            if (!children.isEmpty()) {
+            if (children.size() > 1) {
                 
                 children.remove(children.size() - 1);
             }

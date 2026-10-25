@@ -68,8 +68,37 @@ public class VoicePreset {
         this.octave = newOctave;
     }
 
+    public VoicePreset(int newInitialMidiInstrument, int newInitialVolume, int newInitialOctaveValue) {
+    
+        this(
+        new InstrumentElement(newInitialMidiInstrument, discoverInstrumentType(newInitialMidiInstrument)),
+        new VolumeElement(newInitialVolume),
+        new Octave(newInitialOctaveValue)
+    );
+}
+
     public InstrumentElement getInstrumentElement(){
         return this.instrument;
+    }
+
+    private static InstrumentType discoverInstrumentType(int instrument){
+
+        InstrumentType type = InstrumentType.KEYS;
+
+        while (true){
+
+            if(instrument<0||instrument>127)
+                break;
+
+            if (type.contains(instrument)) 
+                return  type;
+            else {
+                type = InstrumentType.values()[type.ordinal()+1];
+            }
+
+        }
+
+        return InstrumentType.KEYS;
     }
 
     public VolumeElement getVolumeElement(){

@@ -30,4 +30,5 @@ public enum InstrumentType {
     public boolean contains(int instrument){
         return instrument >= this.minInstrument && instrument <= this.maxInstrument;
     }
+
 }

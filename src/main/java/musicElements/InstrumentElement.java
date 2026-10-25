@@ -29,4 +29,5 @@ public class InstrumentElement implements MusicElement{
     public InstrumentType getType(){
         return this.type;
     }
+
 }

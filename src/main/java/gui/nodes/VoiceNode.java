@@ -30,7 +30,7 @@ public class VoiceNode extends BorderPane {
         currentVoiceNum++;
 
         instrumentController = ControlFactory.createComboBox("Insira seu instrumento", getInstrumentTypes());
-        volumeController = ControlFactory.createSlider(0, 100);
+        volumeController = ControlFactory.createSlider(0, 100, 50);
         octaveController = ControlFactory.createComboBox("Insira sua oitava", getOctaveTypes());
 
         VBox instrumentContainer = createControlWithLabel(instrumentController, "Instrumento");
@@ -67,6 +67,10 @@ public class VoiceNode extends BorderPane {
         getStyleClass().add("voice-node");
     }
 
+    public void setVoiceText(String text) {
+        inputBox.setText(text);
+    }
+
     private static VBox createControlWithLabel(Node control, String title) {
         return new BoxNode<>(new VBox(0))
             .add(new Label(title))
@@ -79,7 +83,7 @@ public class VoiceNode extends BorderPane {
     }
 
     public static int decrementCurrentVoiceNum() {
-        if (currentVoiceNum > 0) {
+        if (currentVoiceNum > 1) {
             currentVoiceNum -= 1;
         }
 

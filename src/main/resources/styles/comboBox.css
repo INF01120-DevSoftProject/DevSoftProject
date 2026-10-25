@@ -1,0 +1,62 @@
+
+/* COMBOBOX MODERNO */
+
+.combo-box {
+    -fx-background-color: #F6F8F7;
+    -fx-background-radius: 8px;
+    -fx-border-color: #DDE5E0;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 3px 5px;
+
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+/* Texto selecionado */
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #34443C;
+    -fx-padding: 5px 8px;
+}
+
+/* Área da seta */
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 8px;
+}
+
+/* Cor da seta */
+.combo-box .arrow {
+    -fx-background-color: #63736A;
+}
+
+/* Mouse sobre o ComboBox */
+.combo-box:hover {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #9DCABD;
+}
+
+/* ComboBox com foco */
+.combo-box:focused {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #108B72;
+    -fx-effect: dropshadow(
+        gaussian, rgba(16,139,114,0.12), 6, 0, 0, 0
+    );
+}
+
+/* Menu de opções */
+.combo-box .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #DDE5E0;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+/* Opção destacada */
+.combo-box .list-view .list-cell:hover,
+.combo-box .list-view .list-cell:filled:selected {
+    -fx-background-color: #E0F3ED;
+    -fx-text-fill: #108B72;
+}

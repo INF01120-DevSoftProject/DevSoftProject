@@ -444,4 +444,12 @@ class TextToMusicTranslatorTest {
 
         assertThat(firstVoiceElements("J").get(0)).isInstanceOf(PauseElement.class);
     }
+
+    @Test
+    void trailingLineBreakDoesNotCreateAnExtraVoice() {
+        // arquivo .txt do Windows: toda linha, inclusive a ultima, termina com \r\n
+        String text = String.join("\r\n", Collections.nCopies(Music.MAX_VOICES, "A")) + "\r\n";
+
+        assertThat(voices(text)).hasSize(Music.MAX_VOICES);
+    }
 }

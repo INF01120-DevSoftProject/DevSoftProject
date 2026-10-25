@@ -13,6 +13,9 @@ public class TextToMusicTranslator {
         // regras novas a cada tradução, pra pegar o mapeamento atual
         TextToMusicRules musicRules = new TextToMusicRules();
 
+        // a quebra de linha no fim do texto (TerminalInputReader, GUI e .txt terminam assim) só fecha a última voz
+        text = removeTrailingLineBreak(text);
+
         // cada linha (separada por \n) é uma voz; a Music cria as vozes (no mínimo MIN_VOICES)
         int numberOfLines = text.split("\n", -1).length;
         if (numberOfLines > Music.MAX_VOICES) {
@@ -35,5 +38,12 @@ public class TextToMusicTranslator {
             }
         }
         return music;
+    }
+
+    // remove uma única quebra de linha final ("\n" ou "\r\n"); linhas vazias antes dela continuam sendo vozes
+    private static String removeTrailingLineBreak(String text) {
+        if (text.endsWith("\r\n")) return text.substring(0, text.length() - 2);
+        if (text.endsWith("\n")) return text.substring(0, text.length() - 1);
+        return text;
     }
 }

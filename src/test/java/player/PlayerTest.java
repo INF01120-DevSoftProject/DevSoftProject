@@ -3,21 +3,70 @@ package player;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
 
 public class PlayerTest {
 
+    static class DummyPlayer implements Player {
+        private boolean played = false;
+        private boolean closed = false;
+
+        @Override
+        public void load(Path path) {
+        }
+
+        @Override
+        public void play() {
+            this.played = true;
+        }
+
+        @Override
+        public void pause() {
+            this.played = false;
+        }
+
+        @Override
+        public void stop() {
+            this.played = false;
+        }
+
+        @Override
+        public void seek(long milliseconds) {
+        }
+
+        @Override
+        public long getCurrentTime() {
+            return 0;
+        }
+
+        @Override
+        public long getDuration() {
+            return 1000;
+        }
+
+        @Override
+        public boolean isPlaying() {
+            return this.played;
+        }
+
+        @Override
+        public void close() {
+            this.closed = true;
+        }
+
+        public boolean isClosed() {
+            return this.closed;
+        }
+    }
+
     @Test
-    void anyClassCanBeAPlayer() throws Exception {
-        List<Path> played = new ArrayList<>();
-        Player player = played::add;
-
-        Path midiPath = Path.of("sample.mid");
-        player.playFile(midiPath);
-
-        assertThat(played).containsExactly(midiPath);
+    void anyClassCanImplementPlayerContract() {
+        try (DummyPlayer player = new DummyPlayer()) {
+            player.play();
+            assertThat(player.isPlaying()).isTrue();
+            player.pause();
+            assertThat(player.isPlaying()).isFalse();
+            assertThat(player.getDuration()).isEqualTo(1000);
+        }
     }
 }

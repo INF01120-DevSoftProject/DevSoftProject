@@ -318,4 +318,12 @@ class TextToMusicTranslatorTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> voices(text));
         assertThat(error.getMessage()).contains(String.valueOf(Music.MAX_VOICES + 1));
     }
+
+    @Test
+    void trailingLineBreakDoesNotCreateAnExtraVoice() {
+        // arquivo .txt do Windows: toda linha, inclusive a ultima, termina com \r\n
+        String text = String.join("\r\n", Collections.nCopies(Music.MAX_VOICES, "A")) + "\r\n";
+
+        assertThat(voices(text)).hasSize(Music.MAX_VOICES);
+    }
 }

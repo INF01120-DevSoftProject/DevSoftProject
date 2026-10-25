@@ -72,6 +72,11 @@ public class MidiPlayer implements Player {
         this.sequencer.start();
     }
 
+    @Override 
+    public Sequencer getSequencer() {
+        return this.sequencer;
+    }
+
     @Override
     public void pause() {
         ensureLoaded();
@@ -99,6 +104,7 @@ public class MidiPlayer implements Player {
         ensureLoaded();
         return this.sequencer.getMicrosecondPosition() / 1000L;
     }
+
 
     @Override
     public long getDuration() {

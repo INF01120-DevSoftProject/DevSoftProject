@@ -22,12 +22,15 @@
     -fx-font-weight: 900;
 }
 
-.voice-node .label  {
+.voice-node .label,
+.mapping-node .label  {
     -fx-font-size: 24px;
     -fx-font-weight: 700;
     -fx-alignment: center; 
     -fx-padding: 8px 12px;
 }
+
+
 
 .voice-main-container .label {
     -fx-font-size: 12px;
@@ -43,8 +46,6 @@
 }
 
 
-.voice-preset-container  {
-}
 
 
 .plus-minus-container .button {
@@ -56,10 +57,29 @@
     -fx-pref-width: 99999px;
 }
 
-.voice-node  {
-    -fx-background-color: #f5f5f5;;
+.voice-node,
+.mapping-node,
+.player-controller  {
+    -fx-background-color: #f5f5f5;
+    -fx-alignment: center;
     -fx-background-radius: 8px;
+}
+
+.voice-node {
     -fx-padding: 4px 8px;
+}
+
+.mapping-node {
+    -fx-padding: 16px 8px;
+}
+
+.mapping-container {
+    -fx-padding: 20px 0px;
+}
+
+.mapping-node .text-field {
+    -fx-alignment: top-center;
+    -fx-font-size: 16px;
 }
 
 .voice-header {
@@ -74,6 +94,14 @@
 .button:hover {
     -fx-background-color: #D0F48F;
 
+}
+
+.player-buttons {
+    -fx-alignment: center; 
+}
+
+.player-controller {
+    -fx-padding: 12px 24px;
 }
 
 .root {

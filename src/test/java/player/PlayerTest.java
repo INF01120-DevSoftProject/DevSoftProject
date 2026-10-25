@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import javax.sound.midi.Sequencer;
 
 public class PlayerTest {
 
     static class DummyPlayer implements Player {
         private boolean played = false;
         private boolean closed = false;
+        private Sequencer sequencer;
 
         @Override
         public void load(Path path) {
@@ -33,6 +35,12 @@ public class PlayerTest {
         @Override
         public void seek(long milliseconds) {
         }
+
+        @Override
+        public Sequencer getSequencer() {
+            return this.sequencer;
+        }
+
 
         @Override
         public long getCurrentTime() {

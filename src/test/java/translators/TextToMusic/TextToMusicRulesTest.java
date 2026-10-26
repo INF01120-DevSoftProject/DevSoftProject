@@ -33,8 +33,10 @@ class TextToMusicRulesTest {
         rules.getElementsActionMapping().get(group).apply(null, context);
     }
 
+    // elementos da primeira voz depois do preset (instrumento, volume e BPM)
     private List<MusicElement> firstVoiceSheet() {
-        return voices.get(0).getSheetMusic().getSheetMusic();
+        List<MusicElement> sheet = voices.get(0).getSheetMusic().getSheetMusic();
+        return sheet.subList(3, sheet.size());
     }
 
     @Test

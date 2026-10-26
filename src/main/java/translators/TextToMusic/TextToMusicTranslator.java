@@ -5,13 +5,18 @@ import java.util.Map;
 import java.util.regex.*;
 import music.Music;
 import music.Voice;
+import music.VoicePreset;
 import musicElements.MusicElement;
 import musicElements.NoteElement;
 
 public class TextToMusicTranslator {
-    private TextToMusicRules musicRules = new TextToMusicRules();
-
     public Music textToMusic(String name, String text){
+        return textToMusic(name, text, null);
+    }
+
+    // voz sem preset na lista usa o preset padrão dela
+    public Music textToMusic(String name, String text, List<VoicePreset> presets){
+        TextToMusicRules musicRules = new TextToMusicRules();
 
         // a quebra de linha no fim do texto (TerminalInputReader, GUI e .txt terminam assim) só fecha a última voz
         text = removeTrailingLineBreak(text);
@@ -24,13 +29,13 @@ public class TextToMusicTranslator {
         }
         Music music = new Music(name, Math.max(numberOfLines, Music.MIN_VOICES));
 
-        Pattern token = Pattern.compile(this.musicRules.getREGEXToken());
+        Pattern token = Pattern.compile(musicRules.getREGEXToken());
         Matcher matcher = token.matcher(text);
-        TextToMusicContext context = new TextToMusicContext(music.getVoices());
+        TextToMusicContext context = new TextToMusicContext(music.getVoices(), presets);
 
         while (matcher.find()) {
             // acha o grupo que casou e executa a action dele
-            for (Map.Entry<String, TextToMusicActions> rule : this.musicRules.getElementsActionMapping().entrySet()) {
+            for (Map.Entry<String, TextToMusicActions> rule : musicRules.getElementsActionMapping().entrySet()) {
                 if (matcher.group(rule.getKey()) != null) {
                     rule.getValue().apply(matcher, context);
                     break;

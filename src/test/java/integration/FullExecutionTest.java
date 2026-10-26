@@ -60,6 +60,8 @@ public class FullExecutionTest {
     class CompletePipeline {
 
         /*
+         * Toda voz com conteudo comeca com o preset: instrumento, volume e BPM 120 (tick 0).
+         *
          * Voz 1 (STRINGS: oitava base 6, instrumento 40), token a token:
          *   C     -> nota C6, seminima                 MIDI 84,  tick 0
          *   D:2   -> nota D6, minima                   MIDI 86,  tick 480
@@ -116,11 +118,13 @@ public class FullExecutionTest {
             assertThat(music.getVoices()).hasSize(Music.MIN_VOICES);
 
             assertThat(types(music.getVoices().get(0).getSheetMusicList())).containsExactly(
+                InstrumentElement.class, VolumeElement.class, BPMElement.class,
                 NoteElement.class, NoteElement.class, PauseElement.class, NoteElement.class,
                 VolumeElement.class, BPMElement.class, InstrumentElement.class,
                 NoteElement.class, NoteElement.class);
 
             assertThat(types(music.getVoices().get(1).getSheetMusicList())).containsExactly(
+                InstrumentElement.class, VolumeElement.class, BPMElement.class,
                 PauseElement.class, PauseElement.class, NoteElement.class);
 
             assertThat(music.getVoices().get(2).getSheetMusicList()).isEmpty();
@@ -196,8 +200,8 @@ public class FullExecutionTest {
 
         private final TextToMusicTranslator translator = new TextToMusicTranslator();
 
-        // Music -> MusicToMIDIParser: o VoicePreset (instrumento/volume da voz) e o BPM padrao
-        // devem ser gravados no inicio da track (tick 0) antes dos elementos da partitura.
+        // Translator -> MusicToMIDIParser: o VoicePreset (instrumento/volume da voz) e o BPM padrao
+        // vem no inicio da partitura e devem chegar no inicio da track (tick 0).
         @Test
         void voicePresetIsAppliedToTheMidiTrack() {
             Music music = translator.textToMusic("Preset", "C");

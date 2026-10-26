@@ -3,13 +3,16 @@ package translators.TextToMusic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import music.Music;
 import music.Voice;
+import music.VoicePreset;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
 import musicElements.DurationTime;
@@ -18,6 +21,7 @@ import musicElements.InstrumentType;
 import musicElements.MusicElement;
 import musicElements.NoteElement;
 import musicElements.Notes;
+import musicElements.Octave;
 import musicElements.PauseElement;
 import musicElements.VolumeElement;
 
@@ -25,12 +29,26 @@ class TextToMusicTranslatorTest {
 
     private final TextToMusicTranslator translator = new TextToMusicTranslator();
 
+    @AfterEach
+    void restoreDefaultMapping() {
+        TextToMusicRules.resetMappings();
+    }
+
     private List<Voice> voices(String text) {
         return translator.textToMusic("Teste", text).getVoices();
     }
 
+    // instrumento, volume e BPM do preset no começo de cada voz
+    private static final int PRESET_SIZE = 3;
+
+    // elementos da voz depois do preset
+    private List<MusicElement> elements(Voice voice) {
+        List<MusicElement> sheet = voice.getSheetMusic().getSheetMusic();
+        return sheet.subList(PRESET_SIZE, sheet.size());
+    }
+
     private List<MusicElement> firstVoiceElements(String text) {
-        return voices(text).get(0).getSheetMusic().getSheetMusic();
+        return elements(voices(text).get(0));
     }
 
     private NoteElement noteAt(List<MusicElement> elements, int index) {
@@ -160,9 +178,9 @@ class TextToMusicTranslatorTest {
 
         assertThat(voices).hasSize(Music.MIN_VOICES);
         assertThat(voices.get(3).getSheetMusic().getSheetMusic()).isEmpty();
-        assertThat(noteAt(voices.get(0).getSheetMusic().getSheetMusic(), 0).getNote()).isEqualTo(Notes.A);
-        assertThat(noteAt(voices.get(1).getSheetMusic().getSheetMusic(), 0).getNote()).isEqualTo(Notes.B);
-        assertThat(noteAt(voices.get(2).getSheetMusic().getSheetMusic(), 0).getNote()).isEqualTo(Notes.C);
+        assertThat(noteAt(elements(voices.get(0)), 0).getNote()).isEqualTo(Notes.A);
+        assertThat(noteAt(elements(voices.get(1)), 0).getNote()).isEqualTo(Notes.B);
+        assertThat(noteAt(elements(voices.get(2)), 0).getNote()).isEqualTo(Notes.C);
     }
 
     @Test
@@ -183,7 +201,7 @@ class TextToMusicTranslatorTest {
 
         for (Voice voice : voices) {
             int presetOctave = voice.getVoicePreset().getDefaultOctave().getOctaveInt();
-            assertThat(noteAt(voice.getSheetMusic().getSheetMusic(), 0).getOctaveValue()).isEqualTo(presetOctave);
+            assertThat(noteAt(elements(voice), 0).getOctaveValue()).isEqualTo(presetOctave);
         }
     }
 
@@ -241,10 +259,10 @@ class TextToMusicTranslatorTest {
     void instrumentChangeStaysInsideEachVoiceType() {
         List<Voice> voices = voices("8\n8\n8\n8");
 
-        assertThat(((InstrumentElement) voices.get(0).getSheetMusic().getSheetMusic().get(0)).getInstrument()).isEqualTo(41);
-        assertThat(((InstrumentElement) voices.get(1).getSheetMusic().getSheetMusic().get(0)).getInstrument()).isEqualTo(1);
-        assertThat(((InstrumentElement) voices.get(2).getSheetMusic().getSheetMusic().get(0)).getInstrument()).isEqualTo(25);
-        assertThat(((InstrumentElement) voices.get(3).getSheetMusic().getSheetMusic().get(0)).getInstrument()).isEqualTo(57);
+        assertThat(((InstrumentElement) elements(voices.get(0)).get(0)).getInstrument()).isEqualTo(41);
+        assertThat(((InstrumentElement) elements(voices.get(1)).get(0)).getInstrument()).isEqualTo(1);
+        assertThat(((InstrumentElement) elements(voices.get(2)).get(0)).getInstrument()).isEqualTo(25);
+        assertThat(((InstrumentElement) elements(voices.get(3)).get(0)).getInstrument()).isEqualTo(57);
     }
 
     @Test
@@ -276,7 +294,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void startDelayWorksAtTheStartOfEveryLine() {
-        List<MusicElement> secondVoice = voices("A\n[1] B").get(1).getSheetMusic().getSheetMusic();
+        List<MusicElement> secondVoice = elements(voices("A\n[1] B").get(1));
 
         assertThat(secondVoice).hasSize(2);
         assertThat(secondVoice.get(0)).isInstanceOf(PauseElement.class);
@@ -301,6 +319,106 @@ class TextToMusicTranslatorTest {
     }
 
     @Test
+    void emptyLineGivesAnEmptyVoice() {
+        List<Voice> voices = voices("A\n\nA");
+
+        assertThat(voices.get(1).getSheetMusic().getSheetMusic()).isEmpty();
+        assertThat(noteAt(elements(voices.get(2)), 0).getNote()).isEqualTo(Notes.A);
+    }
+
+    @Test
+    void presetKeepsItsValuesWhenTheFirstCharacterChangesThem() {
+        List<MusicElement> sheet = voices("0 >").get(0).getSheetMusic().getSheetMusic();
+
+        assertThat(((InstrumentElement) sheet.get(0)).getInstrument()).isEqualTo(InstrumentType.STRINGS.getDefaultInstrument());
+        assertThat(((VolumeElement) sheet.get(1)).getVolume()).isEqualTo(100);
+        assertThat(((BPMElement) sheet.get(2)).getBPM()).isEqualTo(Music.DEFAULT_BPM);
+        assertThat(((InstrumentElement) sheet.get(3)).getInstrument()).isEqualTo(41);
+    }
+
+    @Test
+    void eachVoiceStartsWithItsPreset() {
+        List<Voice> voices = voices("A\nA\nA\nA");
+
+        for (Voice voice : voices) {
+            List<MusicElement> sheet = voice.getSheetMusic().getSheetMusic();
+            assertThat(sheet.get(0)).isSameAs(voice.getVoicePreset().getInstrumentElement());
+            assertThat(sheet.get(1)).isSameAs(voice.getVoicePreset().getVolumeElement());
+            assertThat(((BPMElement) sheet.get(2)).getBPM()).isEqualTo(Music.DEFAULT_BPM);
+        }
+    }
+
+    @Test
+    void eachReceivedPresetGoesToItsVoice() {
+        VoicePreset first = new VoicePreset(new InstrumentElement(InstrumentType.WINDS), new VolumeElement(60), new Octave(3));
+        VoicePreset third = new VoicePreset(new InstrumentElement(InstrumentType.KEYS), new VolumeElement(40), new Octave(7));
+        List<Voice> voices = translator.textToMusic("Teste", "A\nA\nA", Arrays.asList(first, null, third)).getVoices();
+
+        assertPresetAtStart(voices.get(0), first);
+        assertThat(noteAt(elements(voices.get(0)), 0).getOctaveValue()).isEqualTo(3);
+        assertPresetAtStart(voices.get(2), third);
+        assertThat(noteAt(elements(voices.get(2)), 0).getOctaveValue()).isEqualTo(7);
+    }
+
+    @Test
+    void voiceWithoutAPresetInTheListUsesItsDefault() {
+        VoicePreset first = new VoicePreset(InstrumentType.WINDS);
+        // posição null e lista menor que o número de vozes
+        List<Voice> voices = translator.textToMusic("Teste", "A\nA\nA", Arrays.asList(first, null)).getVoices();
+
+        assertPresetAtStart(voices.get(0), first);
+        assertPresetAtStart(voices.get(1), voices.get(1).getVoicePreset());
+        assertPresetAtStart(voices.get(2), voices.get(2).getVoicePreset());
+    }
+
+    @Test
+    void extraPresetsAreIgnored() {
+        List<VoicePreset> presets = Collections.nCopies(Music.MAX_VOICES, new VoicePreset(InstrumentType.WINDS));
+
+        assertThat(translator.textToMusic("Teste", "A", presets).getVoices()).hasSize(Music.MIN_VOICES);
+    }
+
+    private void assertPresetAtStart(Voice voice, VoicePreset preset) {
+        List<MusicElement> sheet = voice.getSheetMusic().getSheetMusic();
+        assertThat(sheet.get(0)).isSameAs(preset.getInstrumentElement());
+        assertThat(sheet.get(1)).isSameAs(preset.getVolumeElement());
+        assertThat(((BPMElement) sheet.get(2)).getBPM()).isEqualTo(Music.DEFAULT_BPM);
+    }
+
+    @Test
+    void receivedPresetDecidesTheInstrumentFamily() {
+        VoicePreset preset = new VoicePreset(InstrumentType.WINDS);
+        List<MusicElement> sheet = translator.textToMusic("Teste", "0", List.of(preset)).getVoices().get(0).getSheetMusic().getSheetMusic();
+
+        InstrumentElement next = (InstrumentElement) sheet.get(3);
+        assertThat(next.getType()).isEqualTo(InstrumentType.WINDS);
+        assertThat(next.getInstrument()).isEqualTo(InstrumentType.WINDS.getDefaultInstrument() + 1);
+    }
+
+    @Test
+    void withoutPresetListEachVoiceUsesItsDefault() {
+        List<Voice> withNull = translator.textToMusic("Teste", "A\nA", null).getVoices();
+        List<Voice> withoutArgument = voices("A\nA");
+
+        for (int i = 0; i < 2; i++) {
+            assertThat(withNull.get(i).getSheetMusic().getSheetMusic().get(0))
+                .isSameAs(withNull.get(i).getVoicePreset().getInstrumentElement());
+            assertThat(((InstrumentElement) withoutArgument.get(i).getSheetMusic().getSheetMusic().get(0)).getType())
+                .isEqualTo(withNull.get(i).getInstrumentType());
+        }
+    }
+
+    @Test
+    void presetComesBeforeTheStartDelay() {
+        List<MusicElement> sheet = voices("[1] A").get(0).getSheetMusic().getSheetMusic();
+
+        assertThat(sheet.get(0)).isInstanceOf(InstrumentElement.class);
+        assertThat(sheet.get(1)).isInstanceOf(VolumeElement.class);
+        assertThat(sheet.get(2)).isInstanceOf(BPMElement.class);
+        assertThat(sheet.get(3)).isInstanceOf(PauseElement.class);
+    }
+
+    @Test
     void musicKeepsTheGivenName() {
         assertThat(translator.textToMusic("Fuga", "A").getName()).isEqualTo("Fuga");
     }
@@ -318,6 +436,126 @@ class TextToMusicTranslatorTest {
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> voices(text));
         assertThat(error.getMessage()).contains(String.valueOf(Music.MAX_VOICES + 1));
+    }
+
+    @Test
+    void mappedCharacterBecomesTheChosenNote() {
+        TextToMusicRules.mapNote("J", Notes.A);
+        NoteElement note = noteAt(firstVoiceElements("J#:2"), 0);
+
+        assertThat(note.getNote()).isEqualTo(Notes.A);
+        assertThat(note.getAccidental()).isEqualTo(Accidentals.SHARP);
+        assertThat(note.getDuration()).isEqualTo(DurationTime.HALF);
+    }
+
+    @Test
+    void replacedNoteLetterMovesToTheNewCharacter() {
+        TextToMusicRules.replaceChar("note", "A", "J");
+        List<MusicElement> elements = firstVoiceElements("JA");
+
+        assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
+        // "A" deixou de ser nota: cai no else e repete a última
+        assertThat(elements.get(1)).isSameAs(elements.get(0));
+    }
+
+    @Test
+    void replacedAccidentalAndDurationKeepTheirMeaning() {
+        TextToMusicRules.replaceChar("accidental", "#", "s");
+        TextToMusicRules.replaceChar("duration", "2", "m");
+        NoteElement note = noteAt(firstVoiceElements("Cs:m"), 0);
+
+        assertThat(note.getAccidental()).isEqualTo(Accidentals.SHARP);
+        assertThat(note.getDuration()).isEqualTo(DurationTime.HALF);
+    }
+
+    @Test
+    void replacingADigitOnlyChangesItsGroup() {
+        TextToMusicRules.replaceChar("duration", "2", "m");
+        List<MusicElement> elements = firstVoiceElements("C:2");
+
+        // "2" não é mais duração, mas continua trocando o instrumento
+        assertThat(noteAt(elements, 0).getDuration()).isEqualTo(DurationTime.QUARTER);
+        assertThat(elements).anyMatch(element -> element instanceof InstrumentElement);
+    }
+
+    @Test
+    void replacingACharacterOutsideItsGroupIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.replaceChar("pause", "A", "J"));
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.replaceChar("grupoQueNaoExiste", "A", "J"));
+    }
+
+    @Test
+    void characterAlreadyInUseIsRejected() {
+        // "a" já é pausa: não pode virar também subir o BPM
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> TextToMusicRules.replaceChar("bpmUp", ">", "a"));
+        assertThat(error.getMessage()).contains("pause");
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.addElementChars("bpmUp", "V"));
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.mapNote("a", Notes.A));
+    }
+
+    @Test
+    void digitsCanBeUsedMoreThanOnce() {
+        TextToMusicRules.addElementChars("bpmUp", "9");
+        List<MusicElement> elements = firstVoiceElements("9");
+
+        assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
+    }
+
+    @Test
+    void eachNoteHasOnlyOneCharacter() {
+        TextToMusicRules.mapNote("J", Notes.A);
+        List<MusicElement> elements = firstVoiceElements("JA");
+
+        assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
+        // "A" não é mais nota: cai no else e repete a última nota
+        assertThat(elements).hasSize(2);
+        assertThat(elements.get(1)).isSameAs(elements.get(0));
+    }
+
+    @Test
+    void elementCharsCanBeChanged() {
+        TextToMusicRules.setElementChars("bpmUp", "+]");
+        List<MusicElement> elements = firstVoiceElements("+]>");
+
+        assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
+        assertThat(((BPMElement) elements.get(1)).getBPM()).isEqualTo(140);
+        assertThat(elements.get(2)).isInstanceOf(PauseElement.class);
+    }
+
+    @Test
+    void eachAddedCharacterWorksOnItsOwn() {
+        TextToMusicRules.addElementChars("octaveUp", "^L");
+        // desce 3 antes, pra subir sem passar da oitava máxima
+        List<MusicElement> elements = firstVoiceElements("VVVA^AL?A");
+
+        int start = noteAt(elements, 0).getOctave().getOctaveInt();
+        assertThat(noteAt(elements, 1).getOctave().getOctaveInt()).isEqualTo(start + 1);
+        assertThat(noteAt(elements, 2).getOctave().getOctaveInt()).isEqualTo(start + 3);
+    }
+
+    @Test
+    void removedCharacterStopsWorking() {
+        TextToMusicRules.addElementChars("bpmUp", "+");
+        TextToMusicRules.removeElementChars("bpmUp", ">");
+        List<MusicElement> elements = firstVoiceElements(">+");
+
+        assertThat(elements.get(0)).isInstanceOf(PauseElement.class);
+        assertThat(((BPMElement) elements.get(1)).getBPM()).isEqualTo(130);
+    }
+
+    @Test
+    void groupCannotBeLeftWithoutCharacters() {
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.removeElementChars("bpmUp", ">"));
+        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.setElementChars("bpmUp", ""));
+    }
+
+    @Test
+    void resetGoesBackToTheDefaultMapping() {
+        TextToMusicRules.mapNote("J", Notes.A);
+        TextToMusicRules.resetMappings();
+
+        assertThat(firstVoiceElements("J").get(0)).isInstanceOf(PauseElement.class);
     }
 
     @Test

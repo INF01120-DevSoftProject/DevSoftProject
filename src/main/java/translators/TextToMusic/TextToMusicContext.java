@@ -18,6 +18,7 @@ public class TextToMusicContext {
     private VolumeElement currentVolume;
     private InstrumentElement currentInstrument;
     private final List<Voice> voices;
+    private final List<VoicePreset> chosenPresets;
     private int voiceIndex = 0;
     private Voice currentVoice;
     private SheetMusic sheetMusic;
@@ -27,12 +28,25 @@ public class TextToMusicContext {
 
 
     public TextToMusicContext(List<Voice> voices) {
+        this(voices, null);
+    }
+
+    // chosenPresets.get(i) é o preset da voz i; o que não tiver usa o preset padrão da voz
+    public TextToMusicContext(List<Voice> voices, List<VoicePreset> chosenPresets) {
         this.voices = voices;
+        this.chosenPresets = chosenPresets;
         startVoice();
     }
 
+    // o preset recebido para a voz atual, ou o padrão dela se não recebeu nenhum
+    private VoicePreset currentPreset() {
+        if (chosenPresets != null && voiceIndex < chosenPresets.size() && chosenPresets.get(voiceIndex) != null)
+            return chosenPresets.get(voiceIndex);
+        return currentVoice.getVoicePreset();
+    }
+
     public Octave getBaseOctave() {
-        return currentVoice.getVoicePreset().getDefaultOctave();
+        return currentPreset().getDefaultOctave();
     }
 
     public Octave getCurrentOctave() {
@@ -88,7 +102,7 @@ public class TextToMusicContext {
 
     private void startVoice() {
         currentVoice = voices.get(voiceIndex);
-        VoicePreset preset = currentVoice.getVoicePreset();
+        VoicePreset preset = currentPreset();
         sheetMusic = currentVoice.getSheetMusic();
         currentOctave = preset.getDefaultOctave();
         currentVolume = preset.getVolumeElement();
@@ -103,7 +117,7 @@ public class TextToMusicContext {
     private void writePresetBeforeFirstElement() {
         if (presetWritten) return;
         presetWritten = true;
-        VoicePreset preset = currentVoice.getVoicePreset();
+        VoicePreset preset = currentPreset();
         sheetMusic.appendToSheetMusic(preset.getInstrumentElement());
         sheetMusic.appendToSheetMusic(preset.getVolumeElement());
         sheetMusic.appendToSheetMusic(new BPMElement(DEFAULT_BPM));

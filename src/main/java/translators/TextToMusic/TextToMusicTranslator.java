@@ -5,11 +5,18 @@ import java.util.Map;
 import java.util.regex.*;
 import music.Music;
 import music.Voice;
+import music.VoicePreset;
 import musicElements.MusicElement;
 import musicElements.NoteElement;
 
 public class TextToMusicTranslator {
     public Music textToMusic(String name, String text){
+        return textToMusic(name, text, null);
+    }
+
+    // presets opcionais: o 1º vai pra 1ª voz, o 2º pra 2ª e assim por diante;
+    // voz sem preset na lista (lista menor, posição null ou lista null) usa o preset padrão dela
+    public Music textToMusic(String name, String text, List<VoicePreset> presets){
         // regras novas a cada tradução, pra pegar o mapeamento atual
         TextToMusicRules musicRules = new TextToMusicRules();
 
@@ -26,7 +33,7 @@ public class TextToMusicTranslator {
 
         Pattern token = Pattern.compile(musicRules.getREGEXToken());
         Matcher matcher = token.matcher(text);
-        TextToMusicContext context = new TextToMusicContext(music.getVoices());
+        TextToMusicContext context = new TextToMusicContext(music.getVoices(), presets);
 
         while (matcher.find()) {
             // acha o grupo que casou e executa a action dele

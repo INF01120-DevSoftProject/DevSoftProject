@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
 import musicElements.DurationTime;
@@ -22,8 +23,23 @@ public class TextToMusicRules {
 
     private String REGEXToken;
 
-    private Map<String, String> elementsMapping = new LinkedHashMap<>();
-    {
+    //Mapeamento dos caracteres, compartilhado por todos os tradutores
+    private static final Map<String, String> elementsMapping = new LinkedHashMap<>();
+
+    //Dict das Rules dos Notes usadas no TextToMusicTranslator, sendo salva como: InputRecebido , Notes
+    private static final Map<String, Notes> notesRules = new LinkedHashMap<>();
+
+    //Dict das Rules do DurationTime usadas no TextToMusicTranslator, sendo salva como: InputRecebido , DurationTime
+    private static final Map<String, DurationTime> durationTimeRules = new LinkedHashMap<>();
+
+    //Dict das Rules dos accidentals usadas no TextToMusicTranslator, sendo salva como: InputRecebido , Accidentals
+    private static final Map<String, Accidentals> accidentalsRules = new LinkedHashMap<>();
+
+    static { resetMappings(); }
+
+    //Volta o mapeamento para o padrão
+    public static void resetMappings() {
+        elementsMapping.clear();
         elementsMapping.put("note",         "ABCDEFG");
         elementsMapping.put("accidental",   "#b");
         elementsMapping.put("duration",     "1234567");
@@ -42,6 +58,100 @@ public class TextToMusicRules {
         elementsMapping.put("instrument",   "02468");
         elementsMapping.put("startDelay",   "0123456789");
 
+        notesRules.clear();
+        notesRules.put("A", Notes.A);
+        notesRules.put("B", Notes.B);
+        notesRules.put("C", Notes.C);
+        notesRules.put("D", Notes.D);
+        notesRules.put("E", Notes.E);
+        notesRules.put("F", Notes.F);
+        notesRules.put("G", Notes.G);
+
+        durationTimeRules.clear();
+        durationTimeRules.put("1", DurationTime.WHOLE);
+        durationTimeRules.put("2", DurationTime.HALF);
+        durationTimeRules.put("3", DurationTime.QUARTER);
+        durationTimeRules.put("4", DurationTime.EIGHTH);
+        durationTimeRules.put("5", DurationTime.SIXTEENTH);
+        durationTimeRules.put("6", DurationTime.THIRTY_SECOND);
+        durationTimeRules.put("7", DurationTime.SIXTY_FOURTH);
+
+        accidentalsRules.clear();
+        accidentalsRules.put("b", Accidentals.FLAT);
+        accidentalsRules.put("#", Accidentals.SHARP);
+        accidentalsRules.put("", Accidentals.NONE);
+    }
+
+    // Substitui um caractere por outro:
+    public static void replaceChar(String elementType, String oldChar, String newChar) {
+        String chars = elementsMapping.get(elementType);
+        if (chars == null || !chars.contains(oldChar))
+            throw new IllegalArgumentException("O grupo " + elementType + " não tem o caractere '" + oldChar + "'");
+        if (oldChar.equals(newChar)) return;
+        checkNotUsed(newChar, null);
+
+        elementsMapping.put(elementType, chars.replace(oldChar, newChar));
+        if (elementType.equals("note"))
+            notesRules.put(newChar, notesRules.remove(oldChar));
+        if (elementType.equals("duration"))
+            durationTimeRules.put(newChar, durationTimeRules.remove(oldChar));
+        if (elementType.equals("accidental"))
+            accidentalsRules.put(newChar, accidentalsRules.remove(oldChar));
+    }
+
+    //Verifica se o char já está associado a alguém (números ficam de fora)
+    private static void checkNotUsed(String chars, String elementType) {
+        for (char c : chars.toCharArray()) {
+            if (Character.isDigit(c)) continue;
+            for (Map.Entry<String, String> element : elementsMapping.entrySet()) {
+                if (!element.getKey().equals(elementType) && element.getValue().indexOf(c) >= 0)
+                    throw new IllegalArgumentException("O caractere '" + c + "' já é usado em " + element.getKey());
+            }
+        }
+    }
+
+    //Substitui TODOS os caracteres de um grupo de elemento, apagando os antigos
+    public static void setElementChars(String elementType, String chars) {
+        checkNotUsed(chars, elementType);
+        if (chars.isEmpty())
+            throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
+        elementsMapping.put(elementType, chars);
+    }
+
+    //Acrescenta caracteres a um grupo
+    public static void addElementChars(String elementType, String chars) {
+        checkNotUsed(chars, elementType);
+        StringBuilder current = new StringBuilder(elementsMapping.get(elementType));
+        for (char c : chars.toCharArray()) {
+            if (current.indexOf(String.valueOf(c)) < 0) current.append(c);
+        }
+        elementsMapping.put(elementType, current.toString());
+    }
+
+    //Tira caracteres de um grupo
+    public static void removeElementChars(String elementType, String chars) {
+        StringBuilder current = new StringBuilder();
+        for (char c : elementsMapping.get(elementType).toCharArray()) {
+            if (chars.indexOf(c) < 0) current.append(c);
+        }
+        if (current.length() == 0)
+            throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
+        elementsMapping.put(elementType, current.toString());
+    }
+
+    //Associa um caractere a uma nota, tirando o caractere antigo
+    public static void mapNote(String input, Notes note) {
+        checkNotUsed(input, "note");
+        String oldChar = null;
+        for (Map.Entry<String, Notes> rule : notesRules.entrySet()) {
+            if (rule.getValue() == note) oldChar = rule.getKey();
+        }
+        if (oldChar != null) {
+            notesRules.remove(oldChar);
+            removeElementChars("note", oldChar);
+        }
+        notesRules.put(input, note);
+        addElementChars("note", input);
     }
 
     //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action
@@ -62,7 +172,7 @@ public class TextToMusicRules {
     }
 
     private void addStartDelay(Matcher matcher, TextToMusicContext context) {
-        // "[n]" no começo da linha: a voz espera n tempos (pausas de semínima) antes de começar
+        // "[n]" no começo da linha: a voz espera n tempos
         int beats = Integer.parseInt(matcher.group("startDelay"));
         for (int i = 0; i < beats; i++) {
             context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
@@ -70,6 +180,7 @@ public class TextToMusicRules {
     }
 
     private void addNote(Matcher matcher, TextToMusicContext context) {
+        //Dá um append de uma nova nota na sheetMusic atual
         NoteElement newNote = new NoteElement(
             getNote(matcher.group("note")),
             context.getCurrentOctave(),
@@ -120,7 +231,7 @@ public class TextToMusicRules {
     }
 
     private void nextInstrument(Matcher matcher, TextToMusicContext context) {
-        // dígito par (qualquer um): avança um instrumento dentro da família da voz, dando a volta
+        // dígito par: avança um instrumento dentro da família da voz, dando a volta
         InstrumentElement newInstrument = nextInstrumentInFamily(context.getCurrentInstrument());
         context.setCurrentInstrument(newInstrument);
         context.appendControlElement(newInstrument);
@@ -141,8 +252,8 @@ public class TextToMusicRules {
     }
 
     public String getElementChars(String elementType) {
-        String chars = elementsMapping.get(elementType);
-        return chars;
+        // o quote serve pra caracteres como ] e ^ não quebrarem o REGEX
+        return Pattern.quote(elementsMapping.get(elementType));
     }
 
     //Dict das Rules do REGEX usadas no TextToMusicTranslator, sendo salva como: NomeGrupo , REGEX
@@ -169,42 +280,10 @@ public class TextToMusicRules {
         REGEXRules.put("else",         "(?<else>.)");
     }
 
-    //Dict das Rules do DurationTime usadas no TextToMusicTranslator, sendo salva como: InputRecebido , DurationTime
-    private Map<String, DurationTime> durationTimeRules = new LinkedHashMap<>();
-    {
-        durationTimeRules.put("1", DurationTime.WHOLE);
-        durationTimeRules.put("2", DurationTime.HALF);
-        durationTimeRules.put("3", DurationTime.QUARTER);
-        durationTimeRules.put("4", DurationTime.EIGHTH);
-        durationTimeRules.put("5", DurationTime.SIXTEENTH);
-        durationTimeRules.put("6", DurationTime.THIRTY_SECOND);
-        durationTimeRules.put("7", DurationTime.SIXTY_FOURTH);
-    }
-
-    //Dict das Rules dos accidentals usadas no TextToMusicTranslator, sendo salva como: InputRecebido , Accidentals
-    private Map<String, Accidentals> accidentalsRules = new LinkedHashMap<>();
-    {
-        accidentalsRules.put("b", Accidentals.FLAT);
-        accidentalsRules.put("#", Accidentals.SHARP);
-        accidentalsRules.put("", Accidentals.NONE);
-    }
-
-    //Dict das Rules dos Notes usadas no TextToMusicTranslator, sendo salva como: InputRecebido , Notes
-    private Map<String, Notes> notesRules = new LinkedHashMap<>();
-    {
-        notesRules.put("A", Notes.A);
-        notesRules.put("B", Notes.B);
-        notesRules.put("C", Notes.C);
-        notesRules.put("D", Notes.D);
-        notesRules.put("E", Notes.E);
-        notesRules.put("F", Notes.F);
-        notesRules.put("G", Notes.G);
-    }
-
     //Cria um Token para o REGEX, é a unção de todas as regras em uma String
     private String createREGEXToken() {
         StringJoiner joiner = new StringJoiner("|");
-        //Token do ATRASO (vem antes de tudo, só casa no começo da linha)
+        //Token do ATRASO/DELAY (vem antes de tudo obrigatoriamente)
         joiner.add(REGEXRules.get("startDelay"));
         //Token das NOTAS
         joiner.add(REGEXRules.get("note") + REGEXRules.get("accidental") + REGEXRules.get("duration"));
@@ -214,6 +293,7 @@ public class TextToMusicRules {
             if (!List.of("note", "accidental", "duration", "startDelay").contains(rule.getKey()))
                 joiner.add(rule.getValue());
         }
+        //Junção de todos Tokens
         return joiner.toString();
     }
 
@@ -243,7 +323,7 @@ public class TextToMusicRules {
 
     { REGEXToken = createREGEXToken(); }
 
-    //Próximo instrumento da família (InstrumentType) do instrumento atual; passando do último, volta pro primeiro
+    //Próximo instrumento da família (InstrumentType) do instrumento atual e loopa se necessário
     private InstrumentElement nextInstrumentInFamily(InstrumentElement current) {
         InstrumentType family = current.getType();
         int familySize = family.getMaxInstrument() - family.getMinInstrument() + 1;

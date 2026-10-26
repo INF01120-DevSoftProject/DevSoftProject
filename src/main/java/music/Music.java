@@ -16,52 +16,40 @@ public class Music {
         InstrumentType.STRINGS,
         InstrumentType.KEYS,
         InstrumentType.PLUCKED,
-        InstrumentType.WINDS);
+        InstrumentType.WINDS,
+        InstrumentType.PERCUSSION_AND_SYNTH);
 
     private String name;
     private final BPMElement defaultBPM;
     private final List<Voice> voices;
 
     public Music(String newName){
-        this(newName, new BPMElement(DEFAULT_BPM), MIN_VOICES, false, -1);
+        this(newName, new BPMElement(DEFAULT_BPM), MIN_VOICES);
     }
 
     public Music(String newName, int numberOfVoices){
-        this(newName, new BPMElement(DEFAULT_BPM), numberOfVoices, false, -1);
+        this(newName, new BPMElement(DEFAULT_BPM), numberOfVoices);
     }
 
     public Music(String newName, BPMElement newDefaultBPM, int numberOfVoices){
-        this(newName, newDefaultBPM, numberOfVoices, false, -1);
-    }
-
-    public Music(String newName, BPMElement newDefaultBPM, int numberOfVoices, boolean hasPercussion, int percussionVoice){
 
         if (newName == null || newName.isBlank()) throw new IllegalArgumentException("Nome invalido");
         if (newDefaultBPM == null) throw new IllegalArgumentException("BPM invalido");
         if (numberOfVoices < MIN_VOICES) throw new IllegalArgumentException("Musica com vozes de menos");
         if (numberOfVoices > MAX_VOICES) throw new IllegalArgumentException("Musica com vozes demais");
-        if (hasPercussion && (percussionVoice < MIN_VOICES || percussionVoice >= numberOfVoices)){
-            throw new IllegalArgumentException("Voz de percussao invalida");
-        }
 
         this.name = newName;
         this.defaultBPM = newDefaultBPM;
-        this.voices = createVoices(numberOfVoices, hasPercussion, percussionVoice);
+        this.voices = createVoices(numberOfVoices);
     }
 
-    private static List<Voice> createVoices(int numberOfVoices, boolean hasPercussion, int percussionVoice){
+    private static List<Voice> createVoices(int numberOfVoices){
 
         List<Voice> createdVoices = new ArrayList<>();
-        int cycleIndex = 0;
 
         for (int i = 0; i < numberOfVoices; i++){
-            if (hasPercussion && i == percussionVoice){
-                createdVoices.add(new Voice(InstrumentType.PERCUSSION_AND_SYNTH));
-            } else {
-                InstrumentType type = VOICE_INSTRUMENT_CYCLE.get(cycleIndex % VOICE_INSTRUMENT_CYCLE.size());
-                createdVoices.add(new Voice(type));
-                cycleIndex++;
-            }
+            InstrumentType type = VOICE_INSTRUMENT_CYCLE.get(i % VOICE_INSTRUMENT_CYCLE.size());
+            createdVoices.add(new Voice(type));
         }
 
         return List.copyOf(createdVoices);

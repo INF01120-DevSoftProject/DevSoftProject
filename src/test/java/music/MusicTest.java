@@ -26,8 +26,8 @@ public class MusicTest {
     }
 
     @Test
-    void cycleRepeatsAndPausesForPercussionVoice() {
-        Music music = new Music("Minha musica", new BPMElement(90), 6, true, 4);
+    void cycleRepeatsThroughAllInstrumentTypes() {
+        Music music = new Music("Minha musica", new BPMElement(90), 6);
 
         assertThat(music.getDefaultBPMElement().getBPM()).isEqualTo(90);
         assertThat(music.getVoices())
@@ -51,16 +51,7 @@ public class MusicTest {
     }
 
     @Test
-    void percussionVoiceBoundaries() {
-        BPMElement bpm = new BPMElement(120);
-
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, 5, true, 3));
-        assertThrows(IllegalArgumentException.class, () -> new Music("Minha musica", bpm, 5, true, 5));
-    }
-
-    @Test
     void invalidArgumentsAndVoiceListMutationAreRejected() {
-        BPMElement bpm = new BPMElement(120);
         Music music = new Music("Minha musica");
 
         assertThrows(IllegalArgumentException.class, () -> new Music(null));

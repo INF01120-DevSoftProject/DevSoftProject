@@ -54,6 +54,31 @@ public class VoicePresetTest {
     }
 
     @Test
+    void intConstructorDiscoversInstrumentTypeAndFallsBackAboveMax() {
+        for (InstrumentType type : InstrumentType.values()) {
+            VoicePreset preset = new VoicePreset(type.getMinInstrument(), 75, 4);
+
+            assertThat(preset.getInstrumentElement().getInstrument()).isEqualTo(type.getMinInstrument());
+            assertThat(preset.getInstrumentElement().getType()).isEqualTo(type);
+            assertThat(preset.getVolumeElement().getVolume()).isEqualTo(75);
+            assertThat(preset.getDefaultOctave().getOctaveInt()).isEqualTo(4);
+        }
+
+        VoicePreset fallback = new VoicePreset(128, 75, 4);
+        assertThat(fallback.getInstrumentElement().getType()).isEqualTo(InstrumentType.KEYS);
+        assertThat(fallback.getInstrumentElement().getInstrument()).isEqualTo(InstrumentType.KEYS.getDefaultInstrument());
+    }
+
+    @Test
+    void invalidIntValuesAreRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new VoicePreset(-1, 80, 4));
+        assertThrows(IllegalArgumentException.class, () -> new VoicePreset(0, -1, 4));
+        assertThrows(IllegalArgumentException.class, () -> new VoicePreset(0, 128, 4));
+        assertThrows(IllegalArgumentException.class, () -> new VoicePreset(0, 80, -1));
+        assertThrows(IllegalArgumentException.class, () -> new VoicePreset(0, 80, 9));
+    }
+
+    @Test
     void nullValuesAreRejected() {
         InstrumentElement instrument = new InstrumentElement(InstrumentType.KEYS);
         VolumeElement volume = new VolumeElement(100);

@@ -147,11 +147,10 @@ class MusicToMIDIParserTest {
         Track track = convert(sheetWith(instrument(41))).getTracks()[0];
         List<MidiEvent> changes = shortEvents(track, ShortMessage.PROGRAM_CHANGE);
 
-        // changes.get(0) é o instrumento do preset da voz; o da partitura vem logo depois
-        assertThat(changes).hasSize(2);
-        assertThat(changes.get(1).getTick()).isZero();
-        assertThat(messageOf(changes.get(1)).getData1()).isEqualTo(41);
-        assertThat(messageOf(changes.get(1)).getChannel()).isZero();
+        assertThat(changes).hasSize(1);
+        assertThat(changes.get(0).getTick()).isZero();
+        assertThat(messageOf(changes.get(0)).getData1()).isEqualTo(41);
+        assertThat(messageOf(changes.get(0)).getChannel()).isZero();
     }
 
     @Test
@@ -159,10 +158,9 @@ class MusicToMIDIParserTest {
         Track track = convert(sheetWith(new BPMElement(90))).getTracks()[0];
         List<MidiEvent> tempos = metaEvents(track, 0x51);
 
-        // tempos.get(0) é o BPM padrão da música; o da partitura vem logo depois
-        assertThat(tempos).hasSize(2);
-        assertThat(tempos.get(1).getTick()).isZero();
-        assertThat(mpqOf(tempos.get(1))).isEqualTo(666_666);
+        assertThat(tempos).hasSize(1);
+        assertThat(tempos.get(0).getTick()).isZero();
+        assertThat(mpqOf(tempos.get(0))).isEqualTo(666_666);
     }
 
     @Test
@@ -170,28 +168,23 @@ class MusicToMIDIParserTest {
         Track track = convert(sheetWith(volume(90))).getTracks()[0];
         List<MidiEvent> changes = shortEvents(track, ShortMessage.CONTROL_CHANGE);
 
-        // changes.get(0) é o volume do preset da voz; o da partitura vem logo depois
-        assertThat(changes).hasSize(2);
-        assertThat(changes.get(1).getTick()).isZero();
-        assertThat(messageOf(changes.get(1)).getData1()).isEqualTo(7);
-        assertThat(messageOf(changes.get(1)).getData2()).isEqualTo(90);
-        assertThat(messageOf(changes.get(1)).getChannel()).isZero();
+        assertThat(changes).hasSize(1);
+        assertThat(changes.get(0).getTick()).isZero();
+        assertThat(messageOf(changes.get(0)).getData1()).isEqualTo(7);
+        assertThat(messageOf(changes.get(0)).getData2()).isEqualTo(90);
+        assertThat(messageOf(changes.get(0)).getChannel()).isZero();
     }
 
     @Test
-    void appliesTheVoicePresetAndTheDefaultBpmBeforeTheSheetMusic() {
-        Sequence sequence = convert(sheetWith(cSharpQuarter()));
-        Track first = sequence.getTracks()[0];   // voz STRINGS: instrumento 40, volume 100
-        Track second = sequence.getTracks()[1];  // voz KEYS: instrumento 0, volume 90
+    void onlyConvertsWhatIsInTheSheetMusic() {
+        // o preset da voz e o BPM padrão chegam pela partitura (o TextToMusicTranslator os
+        // coloca no início de cada voz); o parser não acrescenta nada por conta própria
+        Track track = convert(sheetWith(cSharpQuarter())).getTracks()[0];
 
-        assertThat(first.get(0).getTick()).isZero();
-        assertThat(mpqOf(metaEvents(first, 0x51).get(0))).isEqualTo(500_000);
-        assertThat(messageOf(shortEvents(first, ShortMessage.PROGRAM_CHANGE).get(0)).getData1()).isEqualTo(40);
-        assertThat(messageOf(shortEvents(first, ShortMessage.CONTROL_CHANGE).get(0)).getData2()).isEqualTo(100);
-        assertThat(messageOf(shortEvents(second, ShortMessage.PROGRAM_CHANGE).get(0)).getData1()).isZero();
-        assertThat(messageOf(shortEvents(second, ShortMessage.CONTROL_CHANGE).get(0)).getData2()).isEqualTo(90);
-        // o andamento é global no MIDI, então só a primeira track recebe o BPM padrão
-        assertThat(metaEvents(second, 0x51)).isEmpty();
+        assertThat(shortEvents(track, ShortMessage.PROGRAM_CHANGE)).isEmpty();
+        assertThat(shortEvents(track, ShortMessage.CONTROL_CHANGE)).isEmpty();
+        assertThat(metaEvents(track, 0x51)).isEmpty();
+        assertThat(shortEvents(track, ShortMessage.NOTE_ON)).hasSize(1);
     }
 
     @Test
@@ -208,9 +201,8 @@ class MusicToMIDIParserTest {
         List<MidiEvent> volumes = shortEvents(track, ShortMessage.CONTROL_CHANGE);
         List<MidiEvent> tempos = metaEvents(track, 0x51);
 
-        // indice 0 de programs, volumes e tempos vem do preset da voz / BPM padrao da musica
-        assertThat(programs).hasSize(2);
-        assertThat(messageOf(programs.get(1)).getData1()).isZero();
+        assertThat(programs).hasSize(1);
+        assertThat(messageOf(programs.get(0)).getData1()).isZero();
         assertThat(notesOn).hasSize(2);
         assertThat(notesOff).hasSize(2);
         assertThat(notesOn.get(0).getTick()).isZero();
@@ -219,14 +211,14 @@ class MusicToMIDIParserTest {
         assertThat(notesOff.get(1).getTick()).isEqualTo(1440);
         assertThat(messageOf(notesOn.get(0)).getData1()).isEqualTo(61);
         assertThat(messageOf(notesOn.get(1)).getData1()).isEqualTo(63);
-        assertThat(volumes).hasSize(3);
-        assertThat(messageOf(volumes.get(1)).getData2()).isEqualTo(90);
-        assertThat(messageOf(volumes.get(2)).getData2()).isEqualTo(70);
-        assertThat(volumes.get(2).getTick()).isEqualTo(1440);
-        assertThat(tempos).hasSize(3);
-        assertThat(mpqOf(tempos.get(1))).isEqualTo(500_000);
-        assertThat(mpqOf(tempos.get(2))).isEqualTo(666_666);
-        assertThat(tempos.get(2).getTick()).isEqualTo(1440);
+        assertThat(volumes).hasSize(2);
+        assertThat(messageOf(volumes.get(0)).getData2()).isEqualTo(90);
+        assertThat(messageOf(volumes.get(1)).getData2()).isEqualTo(70);
+        assertThat(volumes.get(1).getTick()).isEqualTo(1440);
+        assertThat(tempos).hasSize(2);
+        assertThat(mpqOf(tempos.get(0))).isEqualTo(500_000);
+        assertThat(mpqOf(tempos.get(1))).isEqualTo(666_666);
+        assertThat(tempos.get(1).getTick()).isEqualTo(1440);
     }
 
     @Test
@@ -249,12 +241,12 @@ class MusicToMIDIParserTest {
         assertThat(messageOf(shortEvents(first, ShortMessage.NOTE_ON).get(0)).getChannel()).isZero();
         assertThat(messageOf(shortEvents(second, ShortMessage.NOTE_ON).get(0)).getChannel()).isEqualTo(1);
         assertThat(messageOf(shortEvents(third, ShortMessage.NOTE_ON).get(0)).getChannel()).isEqualTo(2);
-        assertThat(messageOf(shortEvents(first, ShortMessage.PROGRAM_CHANGE).get(1)).getData1()).isZero();
-        assertThat(messageOf(shortEvents(second, ShortMessage.PROGRAM_CHANGE).get(1)).getData1()).isEqualTo(40);
-        assertThat(messageOf(shortEvents(third, ShortMessage.PROGRAM_CHANGE).get(1)).getData1()).isEqualTo(10);
-        assertThat(messageOf(shortEvents(first, ShortMessage.CONTROL_CHANGE).get(1)).getData2()).isEqualTo(90);
-        assertThat(messageOf(shortEvents(second, ShortMessage.CONTROL_CHANGE).get(1)).getData2()).isEqualTo(70);
-        assertThat(shortEvents(third, ShortMessage.CONTROL_CHANGE)).hasSize(1);
+        assertThat(messageOf(shortEvents(first, ShortMessage.PROGRAM_CHANGE).get(0)).getData1()).isZero();
+        assertThat(messageOf(shortEvents(second, ShortMessage.PROGRAM_CHANGE).get(0)).getData1()).isEqualTo(40);
+        assertThat(messageOf(shortEvents(third, ShortMessage.PROGRAM_CHANGE).get(0)).getData1()).isEqualTo(10);
+        assertThat(messageOf(shortEvents(first, ShortMessage.CONTROL_CHANGE).get(0)).getData2()).isEqualTo(90);
+        assertThat(messageOf(shortEvents(second, ShortMessage.CONTROL_CHANGE).get(0)).getData2()).isEqualTo(70);
+        assertThat(shortEvents(third, ShortMessage.CONTROL_CHANGE)).isEmpty();
         assertThat(shortEvents(first, ShortMessage.NOTE_ON).get(1).getTick()).isEqualTo(960);
         assertThat(shortEvents(second, ShortMessage.NOTE_ON).get(0).getTick()).isZero();
         assertThat(metaEvents(third, 0x2F).get(0).getTick()).isEqualTo(960);
@@ -269,8 +261,8 @@ class MusicToMIDIParserTest {
 
         assertThat(sequence.getTracks()).hasSize(TRACKS);
         assertThat(shortEvents(track, ShortMessage.NOTE_ON)).isEmpty();
-        assertThat(shortEvents(track, ShortMessage.PROGRAM_CHANGE)).hasSize(1);
-        assertThat(shortEvents(track, ShortMessage.CONTROL_CHANGE)).hasSize(1);
+        assertThat(shortEvents(track, ShortMessage.PROGRAM_CHANGE)).isEmpty();
+        assertThat(shortEvents(track, ShortMessage.CONTROL_CHANGE)).isEmpty();
         assertThat(metaEvents(track, 0x2F)).hasSize(1);
     }
 
@@ -294,6 +286,6 @@ class MusicToMIDIParserTest {
         assertThat(first.getTracks()).hasSize(TRACKS);
         assertThat(second.getTracks()).hasSize(TRACKS);
         assertThat(shortEvents(second.getTracks()[0], ShortMessage.NOTE_ON)).isEmpty();
-        assertThat(shortEvents(second.getTracks()[0], ShortMessage.CONTROL_CHANGE)).hasSize(2);
+        assertThat(shortEvents(second.getTracks()[0], ShortMessage.CONTROL_CHANGE)).hasSize(1);
     }
 }

@@ -14,10 +14,8 @@ public class TextToMusicTranslator {
         return textToMusic(name, text, null);
     }
 
-    // presets opcionais: o 1º vai pra 1ª voz, o 2º pra 2ª e assim por diante;
-    // voz sem preset na lista (lista menor, posição null ou lista null) usa o preset padrão dela
+    // voz sem preset na lista usa o preset padrão dela
     public Music textToMusic(String name, String text, List<VoicePreset> presets){
-        // regras novas a cada tradução, pra pegar o mapeamento atual
         TextToMusicRules musicRules = new TextToMusicRules();
 
         // a quebra de linha no fim do texto (TerminalInputReader, GUI e .txt terminam assim) só fecha a última voz

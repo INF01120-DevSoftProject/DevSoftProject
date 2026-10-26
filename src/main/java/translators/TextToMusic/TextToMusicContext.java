@@ -5,6 +5,7 @@ import music.Music;
 import music.SheetMusic;
 import music.Voice;
 import music.VoicePreset;
+import musicElements.BPMElement;
 import musicElements.InstrumentElement;
 import musicElements.MusicElement;
 import musicElements.Octave;
@@ -22,6 +23,7 @@ public class TextToMusicContext {
     private SheetMusic sheetMusic;
     private MusicElement lastMusicElement;
     private int bpm = DEFAULT_BPM;
+    private boolean presetWritten;
 
 
     public TextToMusicContext(List<Voice> voices) {
@@ -74,11 +76,13 @@ public class TextToMusicContext {
     }
 
     public void appendToSheetMusic(MusicElement musicElement) {
+        writePresetBeforeFirstElement();
         this.sheetMusic.appendToSheetMusic(musicElement);
         lastMusicElement = musicElement;
     }
 
     public void appendControlElement(MusicElement musicElement) {
+        writePresetBeforeFirstElement();
         this.sheetMusic.appendToSheetMusic(musicElement);
     }
 
@@ -91,6 +95,18 @@ public class TextToMusicContext {
         currentInstrument = preset.getInstrumentElement();
         lastMusicElement = null;
         bpm = DEFAULT_BPM;
+        presetWritten = false;
+    }
+
+    // a sheet de cada voz começa com os valores do preset (instrumento, volume e BPM padrão);
+    // nas vozes vazias não aplica o preset;
+    private void writePresetBeforeFirstElement() {
+        if (presetWritten) return;
+        presetWritten = true;
+        VoicePreset preset = currentVoice.getVoicePreset();
+        sheetMusic.appendToSheetMusic(preset.getInstrumentElement());
+        sheetMusic.appendToSheetMusic(preset.getVolumeElement());
+        sheetMusic.appendToSheetMusic(new BPMElement(DEFAULT_BPM));
     }
 
     public void closeVoice() {

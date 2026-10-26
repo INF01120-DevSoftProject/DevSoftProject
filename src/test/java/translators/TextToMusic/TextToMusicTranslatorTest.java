@@ -167,13 +167,14 @@ class TextToMusicTranslatorTest {
 
     @Test
     void voicesFollowTheInstrumentTypeCycle() {
-        List<Voice> voices = voices("A\nA\nA\nA\nA");
+        List<Voice> voices = voices("A\nA\nA\nA\nA\nA");
 
         assertThat(voices.get(0).getInstrumentType()).isEqualTo(InstrumentType.STRINGS);
         assertThat(voices.get(1).getInstrumentType()).isEqualTo(InstrumentType.KEYS);
         assertThat(voices.get(2).getInstrumentType()).isEqualTo(InstrumentType.PLUCKED);
         assertThat(voices.get(3).getInstrumentType()).isEqualTo(InstrumentType.WINDS);
-        assertThat(voices.get(4).getInstrumentType()).isEqualTo(InstrumentType.STRINGS);
+        assertThat(voices.get(4).getInstrumentType()).isEqualTo(InstrumentType.PERCUSSION_AND_SYNTH);
+        assertThat(voices.get(5).getInstrumentType()).isEqualTo(InstrumentType.STRINGS);
     }
 
     @Test

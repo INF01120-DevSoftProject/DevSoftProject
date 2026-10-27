@@ -5,16 +5,19 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
 import javax.sound.midi.Sequence;
-
 import exporters.MIDIFileExporter;
 import gui.nodes.BoxNode;
 import gui.nodes.ButtonNode;
 import gui.nodes.ControlFactory;
 import gui.nodes.VoiceNode;
+import gui.nodes.VoicePresetNodeKeys;
+import gui.nodes.VoicePresetNodePlucked;
+import gui.nodes.VoicePresetNode;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -27,6 +30,7 @@ import javafx.stage.Stage;
 import music.Music;
 import parsers.MusicToMIDIParser;
 import translators.TextToMusic.TextToMusicTranslator;
+import music.VoicePreset;
 
 public class CompositionScreen extends Screen {
 
@@ -40,7 +44,7 @@ public class CompositionScreen extends Screen {
         VoiceNode.restartCurrentVoiceNum();
 
         voicesContainer = new BoxNode<>(new VBox(20))
-                                    .add(new VoiceNode())
+                                    .add(createVoiceWithVoicePresset())
                                     .build();
 
         ScrollPane voicesContainerScroll = ControlFactory.createScrollPane(voicesContainer);
@@ -48,7 +52,7 @@ public class CompositionScreen extends Screen {
         HBox plusMinusButtons = new BoxNode<>(new HBox(20))
                                     .addClass("plus-minus-container")
                                     .add(new ButtonNode("+")
-                                            .onClickAddToContainer(() -> new VoiceNode(), voicesContainer, 15)
+                                            .onClickAddToContainer(() -> createVoiceWithVoicePresset(), voicesContainer, 15)
                                             .build())
                                     .add(new ButtonNode("-")
                                             .onClickRemoveLastFromContainer(voicesContainer)
@@ -80,9 +84,12 @@ public class CompositionScreen extends Screen {
 
     public void saveMIDI(Stage stage) {
         StringJoiner musicText = new StringJoiner("\n");
+        List<VoicePreset> voicePresets = new ArrayList<>();
 
         for (Node node : voicesContainer.getChildren()) {
             VoiceNode voiceNode = (VoiceNode) node;
+            
+            voicePresets.add(new VoicePreset(voiceNode.getInstrument(), voiceNode.getVolume(), voiceNode.getOctave()));
 
             String text = voiceNode.getVoiceText();
 
@@ -121,8 +128,9 @@ public class CompositionScreen extends Screen {
             MIDIFileExporter exporter = new MIDIFileExporter(file.getParent());
 
             Music music = translator.textToMusic(
-                "Nome legal",
-                musicText.toString()
+                "Default",
+                musicText.toString(),
+                voicePresets
             );
 
             Sequence sequence = parser.convertMusicToMIDI(music);
@@ -166,7 +174,7 @@ public class CompositionScreen extends Screen {
                 if (i < voicesContainer.getChildren().size()) {
                     voiceNode = (VoiceNode) voicesContainer.getChildren().get(i);
                 } else {
-                    voiceNode = new VoiceNode();
+                    voiceNode = createVoiceWithVoicePresset();
                     voicesContainer.getChildren().add(voiceNode);
                 }
 
@@ -179,6 +187,18 @@ public class CompositionScreen extends Screen {
                 "Erro ao importar música: " + e.getMessage()
             ).showAndWait();
         }
+    }
+
+    private VoiceNode createVoiceWithVoicePresset() {
+        int currentPreset = (VoiceNode.getCurrentVoiceNum() + 1) % 2;
+        
+        VoiceNode preset = switch (currentPreset) {
+            case 0 -> new VoiceNode(new VoicePresetNodeKeys());
+            case 1 -> new VoiceNode(new VoicePresetNodePlucked());
+            default -> new VoiceNode(new VoicePresetNodeKeys());
+        };
+
+        return preset;
     }
 
 

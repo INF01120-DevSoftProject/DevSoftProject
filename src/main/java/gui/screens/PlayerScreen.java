@@ -13,7 +13,6 @@ import com.sheetmusic4j.core.io.ScoreFile;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -27,14 +26,8 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -59,9 +52,7 @@ public class PlayerScreen extends Screen {
     private ComboBox<String> musicSelectionBox;
 
     private Timeline sliderUpdater;
-
-    private WatchService watchService;
-    private Thread folderWatcherThread;
+    private Timeline musicListUpdater;
 
     private boolean updatingMusicList = false;
 
@@ -80,8 +71,7 @@ public class PlayerScreen extends Screen {
 
         if (musics.isEmpty()) {
             throw new IllegalStateException(
-                "Nenhuma música MIDI encontrada em: "
-                    + musicFolder
+                "Nenhuma música MIDI encontrada em: " + musicFolder
             );
         }
 
@@ -123,7 +113,6 @@ public class PlayerScreen extends Screen {
         });
 
         musicTitle = new Label(musicSelectionBox.getValue());
-
         timeSlider = createTimeSlider();
 
         playerButtons = new BoxNode<>(new HBox(25))
@@ -157,7 +146,7 @@ public class PlayerScreen extends Screen {
             .build();
 
         startSliderUpdater();
-        startMusicFolderWatcher();
+        startMusicListUpdater();
 
         return mainContent;
     }
@@ -214,9 +203,7 @@ public class PlayerScreen extends Screen {
         playerButtons.getChildren().set(1, button);
     }
 
-
     private Slider createTimeSlider() {
-
         long duration = midiPlayer.getDuration();
 
         Slider slider = new Slider(0, duration, 0);
@@ -233,7 +220,6 @@ public class PlayerScreen extends Screen {
     }
 
     private void startSliderUpdater() {
-
         sliderUpdater = new Timeline(
             new KeyFrame(
                 Duration.millis(100),
@@ -246,7 +232,6 @@ public class PlayerScreen extends Screen {
     }
 
     private void updateTimeSlider() {
-
         if (timeSlider == null) {
             return;
         }
@@ -260,7 +245,6 @@ public class PlayerScreen extends Screen {
 
 
     private List<String> getAllMidiInResourceFolder() {
-
         try (Stream<Path> files = Files.list(musicFolder)) {
 
             return files
@@ -278,7 +262,6 @@ public class PlayerScreen extends Screen {
     }
 
     private boolean isMidiFile(String name) {
-
         String lowerName = name.toLowerCase(Locale.ROOT);
 
         return lowerName.endsWith(".mid")
@@ -286,7 +269,6 @@ public class PlayerScreen extends Screen {
     }
 
     private Path generatePathToResources(String resourcePath) {
-
         URL resource = Objects.requireNonNull(
             getClass().getResource(resourcePath),
             "Recurso não encontrado: " + resourcePath
@@ -294,6 +276,7 @@ public class PlayerScreen extends Screen {
 
         try {
             return Path.of(resource.toURI());
+
         } catch (Exception e) {
             throw new IllegalStateException(
                 "Não foi possível acessar a pasta: "
@@ -304,87 +287,26 @@ public class PlayerScreen extends Screen {
     }
 
 
-    private void startMusicFolderWatcher() {
+    private void startMusicListUpdater() {
+        musicListUpdater = new Timeline(
+            new KeyFrame(
+                Duration.seconds(2),
+                e -> refreshMusicList()
+            )
+        );
 
-        try {
-            watchService = FileSystems
-                .getDefault()
-                .newWatchService();
-
-            musicFolder.register(
-                watchService,
-                StandardWatchEventKinds.ENTRY_CREATE,
-                StandardWatchEventKinds.ENTRY_DELETE,
-                StandardWatchEventKinds.ENTRY_MODIFY
-            );
-
-            folderWatcherThread = new Thread(() -> {
-
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-
-                        WatchKey key = watchService.take();
-
-                        boolean changed = false;
-
-                        for (WatchEvent<?> event : key.pollEvents()) {
-
-                            if (event.kind() ==
-                                    StandardWatchEventKinds.OVERFLOW) {
-                                changed = true;
-                                continue;
-                            }
-
-                            Path changedFile =
-                                (Path) event.context();
-
-                            if (isMidiFile(changedFile.toString())) {
-                                changed = true;
-                            }
-                        }
-
-                        boolean valid = key.reset();
-
-                        if (changed) {
-                            Platform.runLater(
-                                this::refreshMusicList
-                            );
-                        }
-
-                        if (!valid) {
-                            break;
-                        }
-                    }
-
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-
-                } catch (ClosedWatchServiceException e) {
-                    // Monitoramento encerrado normalmente.
-                }
-
-            }, "music-folder-watcher");
-
-            folderWatcherThread.setDaemon(true);
-            folderWatcherThread.start();
-
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                "Erro ao monitorar pasta de músicas", e
-            );
-        }
+        musicListUpdater.setCycleCount(Animation.INDEFINITE);
+        musicListUpdater.play();
     }
 
     private void refreshMusicList() {
-
         List<String> musics = getAllMidiInResourceFolder();
 
-        String selectedMusic = musicSelectionBox.getValue();
-
-        // Não atualiza se a lista não mudou.
         if (musicSelectionBox.getItems().equals(musics)) {
             return;
         }
+
+        String selectedMusic = musicSelectionBox.getValue();
 
         updatingMusicList = true;
 
@@ -399,15 +321,12 @@ public class PlayerScreen extends Screen {
             }
 
             if (musics.isEmpty()) {
-
                 musicSelectionBox.getSelectionModel()
                     .clearSelection();
 
                 midiPlayer.stop();
 
-                musicTitle.setText(
-                    "Nenhuma música disponível"
-                );
+                musicTitle.setText("Nenhuma música disponível");
 
                 timeSlider.setValue(0);
                 timeSlider.setMax(0);
@@ -425,23 +344,13 @@ public class PlayerScreen extends Screen {
         changeMusic(musicSelectionBox.getValue());
     }
 
-
     private void endProgram() {
-
         if (sliderUpdater != null) {
             sliderUpdater.stop();
         }
 
-        if (folderWatcherThread != null) {
-            folderWatcherThread.interrupt();
-        }
-
-        if (watchService != null) {
-            try {
-                watchService.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (musicListUpdater != null) {
+            musicListUpdater.stop();
         }
 
         if (sheetMusicNode != null

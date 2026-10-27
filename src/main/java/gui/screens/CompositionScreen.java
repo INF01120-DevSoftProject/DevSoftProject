@@ -15,9 +15,12 @@ import gui.nodes.BoxNode;
 import gui.nodes.ButtonNode;
 import gui.nodes.ControlFactory;
 import gui.nodes.VoiceNode;
-import gui.nodes.VoicePresetNodeKeys;
-import gui.nodes.VoicePresetNodePlucked;
-import gui.nodes.VoicePresetNode;
+import gui.nodes.voicePresetNodes.VoicePresetKeysNode;
+import gui.nodes.voicePresetNodes.VoicePresetNode;
+import gui.nodes.voicePresetNodes.VoicePresetPercussionNode;
+import gui.nodes.voicePresetNodes.VoicePresetPluckedNode;
+import gui.nodes.voicePresetNodes.VoicePresetStringsNode;
+import gui.nodes.voicePresetNodes.VoicePresetWindsNode;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -190,12 +193,15 @@ public class CompositionScreen extends Screen {
     }
 
     private VoiceNode createVoiceWithVoicePresset() {
-        int currentPreset = (VoiceNode.getCurrentVoiceNum() + 1) % 2;
+        int currentPreset = (VoiceNode.getCurrentVoiceNum() + 1) % 5;
         
         VoiceNode preset = switch (currentPreset) {
-            case 0 -> new VoiceNode(new VoicePresetNodeKeys());
-            case 1 -> new VoiceNode(new VoicePresetNodePlucked());
-            default -> new VoiceNode(new VoicePresetNodeKeys());
+            case 0 -> new VoiceNode(new VoicePresetKeysNode());
+            case 1 -> new VoiceNode(new VoicePresetPluckedNode());
+            case 2 -> new VoiceNode(new VoicePresetStringsNode());
+            case 3 -> new VoiceNode(new VoicePresetWindsNode());
+            case 4 -> new VoiceNode(new VoicePresetPercussionNode());
+            default -> new VoiceNode(new VoicePresetKeysNode());
         };
 
         return preset;

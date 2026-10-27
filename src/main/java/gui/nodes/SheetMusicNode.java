@@ -10,7 +10,6 @@ import com.sheetmusic4j.fxviewer.StripSheetView;
 import javafx.animation.AnimationTimer;
 import javafx.scene.paint.Color;
 import java.nio.file.Path;
-import gui.screens.PlayerScreen;
 
 public class SheetMusicNode {
 

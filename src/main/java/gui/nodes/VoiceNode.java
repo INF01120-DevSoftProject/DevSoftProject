@@ -3,6 +3,7 @@ package gui.nodes;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import gui.nodes.voicePresetNodes.VoicePresetNode;
 import javafx.scene.control.*;
 
 public class VoiceNode extends BorderPane {

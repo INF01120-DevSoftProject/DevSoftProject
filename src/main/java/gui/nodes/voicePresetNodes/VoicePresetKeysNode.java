@@ -1,11 +1,11 @@
-package gui.nodes;
+package gui.nodes.voicePresets;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VoicePresetNodeKeys extends VoicePresetNode {
+public class VoicePresetKeysNode extends VoicePresetNode {
 
     public Map<String, Integer> createInstrumentTypes() {
         Map<String, Integer> instruments = new LinkedHashMap<>();

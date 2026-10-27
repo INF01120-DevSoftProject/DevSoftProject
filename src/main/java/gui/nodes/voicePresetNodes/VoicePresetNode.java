@@ -1,8 +1,10 @@
-package gui.nodes;
+package gui.nodes.voicePresetNodes;
 
 import java.util.List;
 import java.util.Map;
 
+import gui.nodes.BoxNode;
+import gui.nodes.ControlFactory;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;

@@ -1,55 +1,69 @@
+
 package gui.screens;
 
 import gui.nodes.BoxNode;
 import gui.nodes.ButtonNode;
 import gui.nodes.ComboBoxNode;
 import gui.nodes.SheetMusicNode;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-import javafx.util.Duration;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
+import player.MidiPlayer;
+
+import com.sheetmusic4j.core.io.ScoreFile;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-
-import java.net.URL;
-
-import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 
 import java.io.IOException;
-import java.net.URI;
-import com.sheetmusic4j.core.io.ScoreFile;
-
-import player.MidiPlayer;
+import java.net.URL;
+import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.List;
-
+import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class PlayerScreen extends Screen {
 
+    private final MidiPlayer midiPlayer = new MidiPlayer();
 
-    private static MidiPlayer midiPlayer;
-    private static Slider timeSlider;
+    private final Path musicFolder =
+        generatePathToResources("/musics");
 
+    private Slider timeSlider;
     private SheetMusicNode sheetMusicNode;
+
     private Button currentButton;
     private Button playButton;
     private Button pauseButton;
+
     private HBox playerButtons;
     private Label musicTitle;
-    ComboBox<String> musicSelectionBox;
-
+    private ComboBox<String> musicSelectionBox;
 
     private Timeline sliderUpdater;
 
+    private WatchService watchService;
+    private Thread folderWatcherThread;
+
+    private boolean updatingMusicList = false;
 
     public PlayerScreen(Stage stage) {
         setScreenNode(createScreen(stage));
@@ -62,80 +76,144 @@ public class PlayerScreen extends Screen {
 
     public Pane createScreen(Stage stage) {
 
-        midiPlayer = new MidiPlayer();
-        startSliderUpdater();
-
-        List<String> musics = getAllMidiInResourceFolder("/musics");
+        List<String> musics = getAllMidiInResourceFolder();
 
         if (musics.isEmpty()) {
-            throw new IllegalStateException("Nenhuma música MIDI encontrada");
+            throw new IllegalStateException(
+                "Nenhuma música MIDI encontrada em: "
+                    + musicFolder
+            );
         }
 
-        Path midiPath = generatePathToResources("/musics/" + musics.getFirst());
+        Path midiPath = musicFolder.resolve(musics.getFirst());
 
         midiPlayer.load(midiPath);
-        sheetMusicNode = new SheetMusicNode(midiPath, midiPlayer.getSequencer());
+
+        sheetMusicNode = new SheetMusicNode(
+            midiPath,
+            midiPlayer.getSequencer()
+        );
 
         playButton = new ButtonNode("▶")
-                                    .onClick(e -> midiPlayer.play())
-                                    .onClick(e -> setCurrentButton(pauseButton))
-                                    .build();
+            .onClick(e -> {
+                midiPlayer.play();
+                setCurrentButton(pauseButton);
+            })
+            .build();
 
         pauseButton = new ButtonNode("⏸")
-                                    .onClick(e -> midiPlayer.pause())
-                                    .onClick(e -> setCurrentButton(playButton))
-                                    .build();
+            .onClick(e -> {
+                midiPlayer.pause();
+                setCurrentButton(playButton);
+            })
+            .build();
+
         currentButton = playButton;
 
         musicSelectionBox = new ComboBoxNode<String>()
-                                    .addAll(getAllMidiInResourceFolder("/musics"))
-                                    .setOnAction(e -> changeMusic(e.getValue()))
-                                    .apply(box -> box.getSelectionModel().selectFirst())
-                                    .build();
-            
+            .addAll(musics)
+            .build();
+
+        musicSelectionBox.getSelectionModel().selectFirst();
+
+        musicSelectionBox.setOnAction(e -> {
+            if (!updatingMusicList) {
+                changeMusic(musicSelectionBox.getValue());
+            }
+        });
+
         musicTitle = new Label(musicSelectionBox.getValue());
+
         timeSlider = createTimeSlider();
 
-
         playerButtons = new BoxNode<>(new HBox(25))
-                                    .addClass("player-buttons")
-                                    .add(new ButtonNode("⏮")
-                                        .onClick(e -> changeToPreviousMusic())
-                                        .build())
-                                    .add(currentButton)
-                                    .add(new ButtonNode("⏭")
-                                        .onClick(e -> changeToNextMusic())
-                                        .build())
-                                    .build();
+            .addClass("player-buttons")
+            .add(
+                new ButtonNode("⏮")
+                    .onClick(e -> changeToPreviousMusic())
+                    .build()
+            )
+            .add(currentButton)
+            .add(
+                new ButtonNode("⏭")
+                    .onClick(e -> changeToNextMusic())
+                    .build()
+            )
+            .build();
 
-
-        VBox playerControler = new BoxNode<>(new VBox(25))
-                                    .addClass("player-controller")
-                                    .add(musicTitle)
-                                    .add(timeSlider)
-                                    .add(playerButtons)
-                                    .build();
+        VBox playerController = new BoxNode<>(new VBox(25))
+            .addClass("player-controller")
+            .add(musicTitle)
+            .add(timeSlider)
+            .add(playerButtons)
+            .build();
 
         VBox mainContent = new BoxNode<>(new VBox(25))
-                                    .setId("main")
-                                    .add(new Label("Player"))
-                                    .add(musicSelectionBox)
-                                    .add(sheetMusicNode.getSheetView())
-                                    .add(playerControler)
-                                    .build();
+            .setId("main")
+            .add(new Label("Player"))
+            .add(musicSelectionBox)
+            .add(sheetMusicNode.getSheetView())
+            .add(playerController)
+            .build();
+
+        startSliderUpdater();
+        startMusicFolderWatcher();
 
         return mainContent;
     }
 
-    private void endProgram() {
-        if (sheetMusicNode.getAnimation() != null) {
-            sheetMusicNode.getAnimation().stop();
+
+    private void changeMusic(String musicName) {
+        if (musicName == null) {
+            return;
         }
 
-        if (midiPlayer != null) {
-            midiPlayer.close();
+        Path path = musicFolder.resolve(musicName);
+
+        if (!Files.isRegularFile(path)) {
+            return;
+        }
+
+        try {
+            midiPlayer.stop();
+            midiPlayer.load(path);
+
+            sheetMusicNode.getSheetView().setScore(
+                ScoreFile.load(path)
+            );
+
+            musicTitle.setText(musicName);
+
+            timeSlider.setMax(midiPlayer.getDuration());
+            timeSlider.setValue(0);
+
+            setCurrentButton(playButton);
+
+        } catch (Exception e) {
+            System.err.println(
+                "Erro ao carregar música: " + musicName
+            );
+            e.printStackTrace();
         }
     }
+
+    private void changeToNextMusic() {
+        musicSelectionBox.getSelectionModel().selectNext();
+    }
+
+    private void changeToPreviousMusic() {
+        musicSelectionBox.getSelectionModel().selectPrevious();
+    }
+
+    private void setCurrentButton(Button button) {
+        if (playerButtons == null || button == null) {
+            return;
+        }
+
+        currentButton = button;
+        playerButtons.getChildren().set(1, button);
+    }
+
 
     private Slider createTimeSlider() {
 
@@ -154,10 +232,13 @@ public class PlayerScreen extends Screen {
         return slider;
     }
 
-
     private void startSliderUpdater() {
+
         sliderUpdater = new Timeline(
-            new KeyFrame(Duration.millis(1), e -> updateTimeSlider())
+            new KeyFrame(
+                Duration.millis(100),
+                e -> updateTimeSlider()
+            )
         );
 
         sliderUpdater.setCycleCount(Animation.INDEFINITE);
@@ -165,6 +246,11 @@ public class PlayerScreen extends Screen {
     }
 
     private void updateTimeSlider() {
+
+        if (timeSlider == null) {
+            return;
+        }
+
         if (timeSlider.isValueChanging() || timeSlider.isPressed()) {
             return;
         }
@@ -172,61 +258,198 @@ public class PlayerScreen extends Screen {
         timeSlider.setValue(midiPlayer.getCurrentTime());
     }
 
-    private void changeMusic(String musicName) {
-            if (musicName == null) return;
 
-            Path path = generatePathToResources("/musics/" + musicName);
+    private List<String> getAllMidiInResourceFolder() {
 
-            musicTitle.setText(musicName);
-            midiPlayer.stop();
-            midiPlayer.load(path);
+        try (Stream<Path> files = Files.list(musicFolder)) {
 
-            sheetMusicNode.getSheetView().setScore(ScoreFile.load(path));
+            return files
+                .filter(Files::isRegularFile)
+                .map(path -> path.getFileName().toString())
+                .filter(this::isMidiFile)
+                .sorted()
+                .toList();
 
-            timeSlider.setMax(midiPlayer.getDuration());
-            timeSlider.setValue(0);
-    }
-
-    private void changeToNextMusic() {
-        musicSelectionBox.getSelectionModel().selectNext();
-    }
-
-    private void changeToPreviousMusic() {
-        musicSelectionBox.getSelectionModel().selectPrevious();
-    }
-
-    private List<String> getAllMidiInResourceFolder(String string) {
-
-        Path folder = generatePathToResources(string);
-
-        try (Stream<Path> files = Files.list(folder)) {
-
-            List<String> musics = files
-                    .filter(Files::isRegularFile)
-                    .map(path -> path.getFileName().toString())
-                    .filter(name -> name.endsWith(".mid") || name.endsWith(".midi"))
-                    .sorted()
-                    .toList();
-
-            return musics;
-                    
         } catch (IOException e) {
-            throw new IllegalStateException("Erro ao listar músicas", e);
+            throw new IllegalStateException(
+                "Erro ao listar músicas", e
+            );
         }
     }
 
-    private Path generatePathToResources(String string) {
+    private boolean isMidiFile(String name) {
+
+        String lowerName = name.toLowerCase(Locale.ROOT);
+
+        return lowerName.endsWith(".mid")
+            || lowerName.endsWith(".midi");
+    }
+
+    private Path generatePathToResources(String resourcePath) {
+
         URL resource = Objects.requireNonNull(
-            getClass().getResource(string)
+            getClass().getResource(resourcePath),
+            "Recurso não encontrado: " + resourcePath
         );
 
-        return Path.of(URI.create(resource.toExternalForm()));
+        try {
+            return Path.of(resource.toURI());
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                "Não foi possível acessar a pasta: "
+                    + resourcePath,
+                e
+            );
+        }
     }
 
-    private void setCurrentButton(Button button) {
-        currentButton = button;
-        playerButtons.getChildren().set(1, button);
+
+    private void startMusicFolderWatcher() {
+
+        try {
+            watchService = FileSystems
+                .getDefault()
+                .newWatchService();
+
+            musicFolder.register(
+                watchService,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_DELETE,
+                StandardWatchEventKinds.ENTRY_MODIFY
+            );
+
+            folderWatcherThread = new Thread(() -> {
+
+                try {
+                    while (!Thread.currentThread().isInterrupted()) {
+
+                        WatchKey key = watchService.take();
+
+                        boolean changed = false;
+
+                        for (WatchEvent<?> event : key.pollEvents()) {
+
+                            if (event.kind() ==
+                                    StandardWatchEventKinds.OVERFLOW) {
+                                changed = true;
+                                continue;
+                            }
+
+                            Path changedFile =
+                                (Path) event.context();
+
+                            if (isMidiFile(changedFile.toString())) {
+                                changed = true;
+                            }
+                        }
+
+                        boolean valid = key.reset();
+
+                        if (changed) {
+                            Platform.runLater(
+                                this::refreshMusicList
+                            );
+                        }
+
+                        if (!valid) {
+                            break;
+                        }
+                    }
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+
+                } catch (ClosedWatchServiceException e) {
+                    // Monitoramento encerrado normalmente.
+                }
+
+            }, "music-folder-watcher");
+
+            folderWatcherThread.setDaemon(true);
+            folderWatcherThread.start();
+
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                "Erro ao monitorar pasta de músicas", e
+            );
+        }
     }
 
- 
+    private void refreshMusicList() {
+
+        List<String> musics = getAllMidiInResourceFolder();
+
+        String selectedMusic = musicSelectionBox.getValue();
+
+        // Não atualiza se a lista não mudou.
+        if (musicSelectionBox.getItems().equals(musics)) {
+            return;
+        }
+
+        updatingMusicList = true;
+
+        try {
+            musicSelectionBox.getItems().setAll(musics);
+
+            if (selectedMusic != null
+                    && musics.contains(selectedMusic)) {
+
+                musicSelectionBox.setValue(selectedMusic);
+                return;
+            }
+
+            if (musics.isEmpty()) {
+
+                musicSelectionBox.getSelectionModel()
+                    .clearSelection();
+
+                midiPlayer.stop();
+
+                musicTitle.setText(
+                    "Nenhuma música disponível"
+                );
+
+                timeSlider.setValue(0);
+                timeSlider.setMax(0);
+
+                setCurrentButton(playButton);
+                return;
+            }
+
+            musicSelectionBox.getSelectionModel().selectFirst();
+
+        } finally {
+            updatingMusicList = false;
+        }
+
+        changeMusic(musicSelectionBox.getValue());
+    }
+
+
+    private void endProgram() {
+
+        if (sliderUpdater != null) {
+            sliderUpdater.stop();
+        }
+
+        if (folderWatcherThread != null) {
+            folderWatcherThread.interrupt();
+        }
+
+        if (watchService != null) {
+            try {
+                watchService.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (sheetMusicNode != null
+                && sheetMusicNode.getAnimation() != null) {
+
+            sheetMusicNode.getAnimation().stop();
+        }
+
+        midiPlayer.close();
+    }
 }

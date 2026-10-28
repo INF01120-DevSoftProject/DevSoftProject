@@ -1,4 +1,5 @@
-.text-area {
+.text-area,
+.text-field {
     -fx-background-color: #F8FAF9;
     -fx-background-radius: 8px;
 
@@ -18,7 +19,8 @@
 }
 
 /* Fundo interno do TextArea */
-.text-area .content {
+.text-area .content,
+.text-field .content {
     -fx-background-color: #F8FAF9;
     -fx-background-radius: 8px;
     -fx-padding: 12px;
@@ -26,12 +28,15 @@
 
 /* Área de rolagem */
 .text-area .scroll-pane,
-.text-area .scroll-pane .viewport {
+.text-field .scroll-pane,
+.text-area .scroll-pane .viewport
+.text-field  .scroll-pane .viewport {
     -fx-background-color: transparent;
 }
 
 /* Quando estiver selecionado */
-.text-area:focused {
+.text-area:focused,
+.text-field:focused {
     -fx-border-color: #108B72;
     -fx-effect: dropshadow(
         gaussian,

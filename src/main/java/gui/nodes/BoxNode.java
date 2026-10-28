@@ -30,7 +30,7 @@ public class BoxNode<T extends Pane> {
         return this;
     }
 
-    public BoxNode<T>  setId(String idName) {
+    public BoxNode<T> setId(String idName) {
         if (idName == null) throw new NullPointerException("idName can't be null");
         box.setId("main");
 

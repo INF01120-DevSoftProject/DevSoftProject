@@ -1,7 +1,5 @@
 package gui;
 
-import gui.screens.CompositionScreen;
-import gui.screens.MapperScreen;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -21,6 +19,7 @@ public class ScreenManager extends Application {
 
     private CompositionScreen compositionScreen;
     private MapperScreen mapperScreen;
+    private PlayerScreen playerScreen;
 
     private Stage stage;
     private BorderPane layout;
@@ -31,6 +30,7 @@ public class ScreenManager extends Application {
 
         compositionScreen = new CompositionScreen(stage);
         mapperScreen = new MapperScreen(stage);
+        playerScreen = new PlayerScreen(stage);
 
         VBox sideBar = new BoxNode<>(new VBox(10))
                             .addClass("sidebar")
@@ -40,7 +40,9 @@ public class ScreenManager extends Application {
                             .add(new ButtonNode("Mapeamento")
                                     .onClick(e -> setScreen(mapperScreen))
                                     .build())
-                            .add(new ButtonNode("Player").build())
+                            .add(new ButtonNode("Player")
+                                    .onClick(e -> setScreen(playerScreen))
+                                    .build())
                             .build();
 
         layout = new BorderNode()
@@ -54,6 +56,7 @@ public class ScreenManager extends Application {
         addCSStoScene(scene, "/styles/comboBox.css");
         addCSStoScene(scene, "/styles/slider.css");
         addCSStoScene(scene, "/styles/textArea.css");
+        addCSStoScene(scene, "/styles/scrollPane.css");
     }
 
     private void setScreen(Screen screen) {

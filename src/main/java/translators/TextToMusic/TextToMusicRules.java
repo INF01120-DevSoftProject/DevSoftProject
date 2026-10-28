@@ -1,5 +1,6 @@
 package translators.TextToMusic;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,16 @@ public class TextToMusicRules {
             durationTimeRules.put(newChar, durationTimeRules.remove(oldChar));
         if (elementType.equals("accidental"))
             accidentalsRules.put(newChar, accidentalsRules.remove(oldChar));
+    }
+
+    public static List<String> getMappingCharacters(String type) {
+        String mapping = elementsMapping.get(type);
+
+        if (mapping == null) {
+            return List.of();
+        }
+
+        return Arrays.asList(mapping.split(""));
     }
 
     //Verifica se o char já está associado a alguém (números ficam de fora)

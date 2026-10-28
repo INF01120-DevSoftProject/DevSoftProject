@@ -1,9 +1,11 @@
 package gui.nodes;
 
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Region;
@@ -12,14 +14,26 @@ import java.util.List;
 
 public class ControlFactory {
 
-    public static Slider createSlider(int minValue, int maxValue) {
+    public static Slider createSlider(int minValue, int maxValue, int value) {
         Slider slider = new Slider();
         slider.setMin(minValue);      
         slider.setMax(maxValue);  
-        slider.setValue(minValue + (maxValue - minValue) / 2.0);
+        slider.setValue(value);
         slider.setShowTickLabels(true); // Show numbers
 
         return slider;
+    }
+
+    public static ScrollPane createScrollPane(Pane pane) {
+        ScrollPane scrollPane = new ScrollPane(pane);
+
+        scrollPane.setFitToWidth(true);
+        scrollPane.setMinHeight(0);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        return scrollPane;
+
     }
 
     public static TextArea createTextArea(int rows, String promptText) {

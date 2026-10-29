@@ -1,4 +1,4 @@
-package gui.nodes.voicePresets;
+package gui.nodes.voicePresetNodes;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,25 +1,28 @@
 package input;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
-public class TXTInputReader implements InputReader {
+public class TXTInputReader extends InputReader {
 
-    private final Path filePath;
-
-    public TXTInputReader(Path filePath) {
-
-        if (filePath == null) {
+    public List<String> readLines(Path path) throws IOException {
+        if (path == null) {
             throw new IllegalArgumentException("O caminho do arquivo não pode ser nulo.");
         }
-        this.filePath = filePath;
+
+        return Files.readAllLines(path, StandardCharsets.UTF_8);
     }
 
-    @Override
-    public String readInput() throws IOException {
+    public String readInput(Path path) throws IOException {
+        if (path == null) {
+            throw new IllegalArgumentException(
+                "O caminho do arquivo não pode ser nulo."
+            );
+        }
 
-        return Files.readString(this.filePath);
+        return Files.readString(path, StandardCharsets.UTF_8);
     }
-
 }

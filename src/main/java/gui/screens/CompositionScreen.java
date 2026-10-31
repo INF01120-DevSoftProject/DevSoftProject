@@ -2,34 +2,23 @@ package gui.screens;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
 import javax.sound.midi.Sequence;
 import exporters.MIDIFileExporter;
-import gui.nodes.BoxNode;
-import gui.nodes.ButtonNode;
-import gui.nodes.ControlFactory;
-import gui.nodes.VoiceNode;
-import gui.nodes.voicePresetNodes.VoicePresetKeysNode;
-import gui.nodes.voicePresetNodes.VoicePresetNode;
-import gui.nodes.voicePresetNodes.VoicePresetPercussionNode;
-import gui.nodes.voicePresetNodes.VoicePresetPluckedNode;
-import gui.nodes.voicePresetNodes.VoicePresetStringsNode;
-import gui.nodes.voicePresetNodes.VoicePresetWindsNode;
+import gui.ControlFactory;
+import gui.builders.BoxBuilder;
+import gui.builders.ButtonBuilder;
+import gui.widgets.VoiceWidget;
+import gui.widgets.voicePresetWidget.*;
+import input.TXTInputReader;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import music.Music;
 import parsers.MusicToMIDIParser;
 import translators.TextToMusic.TextToMusicTranslator;
@@ -37,43 +26,51 @@ import music.VoicePreset;
 
 public class CompositionScreen extends Screen {
 
-    public CompositionScreen(Stage stage) {
-        setScreenNode(createScreen(stage)); 
-    }
+    private static final int MAX_VOICES = 15;
+    private static final int NUM_OF_VOICE_PRESETS = 5;
 
-    private VBox voicesContainer;
+    private final VBox voicesContainer;
+    private final TextToMusicTranslator translator;
+    private final MusicToMIDIParser parser;
+    private final MIDIFileExporter exporter;
+    private final TXTInputReader reader;
 
-    public Pane createScreen(Stage stage) {
-        VoiceNode.restartCurrentVoiceNum();
+    public CompositionScreen() {
+        translator = new TextToMusicTranslator();
+        parser = new MusicToMIDIParser();
+        exporter = new MIDIFileExporter();
+        reader = new TXTInputReader();
 
-        voicesContainer = new BoxNode<>(new VBox(20))
-                                    .add(createVoiceWithVoicePresset())
+        VoiceWidget.restartCurrentVoiceNum();
+
+        voicesContainer = new BoxBuilder<>(new VBox(20))
+                                    .add(createVoiceWidget())
                                     .build();
 
         ScrollPane voicesContainerScroll = ControlFactory.createScrollPane(voicesContainer);
 
-        HBox plusMinusButtons = new BoxNode<>(new HBox(20))
+        HBox plusMinusButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("plus-minus-container")
-                                    .add(new ButtonNode("+")
-                                            .onClickAddToContainer(() -> createVoiceWithVoicePresset(), voicesContainer, 15)
+                                    .add(new ButtonBuilder("+")
+                                            .onClickAddToContainer(() -> createVoiceWidget(), voicesContainer, MAX_VOICES)
                                             .build())
-                                    .add(new ButtonNode("-")
+                                    .add(new ButtonBuilder("-")
                                             .onClickRemoveLastFromContainer(voicesContainer)
-                                            .onClick(e -> VoiceNode.decrementCurrentVoiceNum())
+                                            .onClick(e -> VoiceWidget.decrementCurrentVoiceNum())
                                             .build())
                                     .build();
 
-        HBox saveImportButtons = new BoxNode<>(new HBox(20))
+        HBox saveImportButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("save-import-container")
-                                    .add(new ButtonNode("Salvar música")
-                                            .onClick(b -> saveMIDI(stage))
+                                    .add(new ButtonBuilder("Salvar música")
+                                            .onClick(b -> saveMusic())
                                             .build())
-                                    .add(new ButtonNode("Importar música")
-                                            .onClick(b -> importMusic(stage))                                            
+                                    .add(new ButtonBuilder("Importar música")
+                                            .onClick(b -> importMusic())                                            
                                             .build())
                                     .build();
 
-        VBox mainContent = new BoxNode<>(new VBox(25))
+        VBox mainContent = new BoxBuilder<>(new VBox(25))
                                     .setId("main")
                                     .add(new Label("Composição"))
                                     .add(voicesContainerScroll)
@@ -82,136 +79,109 @@ public class CompositionScreen extends Screen {
                                     .add(saveImportButtons)
                                     .build();
         
-        return mainContent;
+        setScreenMainContent(mainContent);
     }
 
-    public void saveMIDI(Stage stage) {
+    private void saveMusic() {
+        File file = openFileImportWindow();
+        if (file == null) return;
+
+        Music music = translator.textToMusic(file.getName(), getTextFromAllVoicesWidgets(), getVoicesPresets());
+        Sequence sequence = parser.convertMusicToMIDI(music);
+
+        try {
+            exporter.save(sequence, file.toPath().getParent(), file.getName());
+        } catch (IOException e) {
+            createErrorMessage("Falha ao salvar o arquivo MIDI: " + e.getMessage());
+        }
+    }
+
+    private void importMusic() {
+        File file = openFileImportWindow();
+        if (file == null) return;
+
+        try {
+            List<String> lines = reader.readLines(file.toPath());
+
+            if (lines.stream().allMatch(String::isBlank)) {
+                throw new IllegalArgumentException("O arquivo está vazio.");
+            }
+
+            if (lines.size() > MAX_VOICES) {
+                throw new IllegalArgumentException("O arquivo possui mais de " + MAX_VOICES + " vozes.");
+            }
+
+            updateVoices(lines);
+
+        } catch (IOException e) {
+            createErrorMessage("Erro ao importar música: " + e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            createErrorMessage(e.getMessage());
+        }
+    }
+
+    private String getTextFromAllVoicesWidgets() {
         StringJoiner musicText = new StringJoiner("\n");
-        List<VoicePreset> voicePresets = new ArrayList<>();
 
         for (Node node : voicesContainer.getChildren()) {
-            VoiceNode voiceNode = (VoiceNode) node;
-            
-            voicePresets.add(new VoicePreset(voiceNode.getInstrument(), voiceNode.getVolume(), voiceNode.getOctave()));
+            VoiceWidget voiceNode = (VoiceWidget) node;
+            String voiceWidgetText = voiceNode.getVoiceText();
 
-            String text = voiceNode.getVoiceText();
-
-            if (text == null || text.isBlank()) {
+            if (voiceWidgetText == null || voiceWidgetText.isBlank()) {
                 continue;
             }
 
-            // Remove as quebras de linha
-            text = text.replace("\r", "").replace("\n", "");
-
-            musicText.add(text);
+            musicText.add(voiceWidgetText.replace("\r", "").replace("\n", ""));
         }
 
-        // Verifica se existe alguma música para salvar
-        if (musicText.toString().isBlank()) {
-            new Alert(
-                Alert.AlertType.ERROR,
-                "Não é possível salvar uma música vazia."
-            ).showAndWait();
-            return;
-        }
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Salvar MIDI");
-        fileChooser.setInitialFileName("musica.mid");
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("Arquivo MIDI (*.mid)", "*.mid")
-        );
-
-        File file = fileChooser.showSaveDialog(stage);
-        if (file == null) return;
-
-        try {
-            TextToMusicTranslator translator = new TextToMusicTranslator();
-            MusicToMIDIParser parser = new MusicToMIDIParser();
-            MIDIFileExporter exporter = new MIDIFileExporter(file.getParent());
-
-            Music music = translator.textToMusic(
-                "Default",
-                musicText.toString(),
-                voicePresets
-            );
-
-            Sequence sequence = parser.convertMusicToMIDI(music);
-
-            exporter.save(sequence, file.getName());
-
-        } catch (IOException e) {
-            new Alert(
-                Alert.AlertType.ERROR,
-                "Falha ao salvar o arquivo MIDI: " + e.getMessage()
-            ).showAndWait();
-        }
+        return musicText.toString();
     }
-    private void importMusic(Stage stage) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Importar música");
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("Arquivo TXT (*.txt)", "*.txt")
-        );
 
-        File file = fileChooser.showOpenDialog(stage);
-        if (file == null) return;
+    private List<VoicePreset> getVoicesPresets() {
+        List<VoicePreset> voicePresets = new ArrayList<>();
 
-        try {
-            List<String> lines = Files.readAllLines(
-                file.toPath(),
-                StandardCharsets.UTF_8
-            );
+        for (Node node : voicesContainer.getChildren()) {
+            VoiceWidget voiceNode = (VoiceWidget) node;
+            
+            voicePresets.add(new VoicePreset(voiceNode.getInstrument(), voiceNode.getVolume(), voiceNode.getOctave()));
+        }
 
-            if (lines.size() > 15) {
-                new Alert(
-                    Alert.AlertType.WARNING,
-                    "O arquivo possui mais de 15 vozes."
-                ).showAndWait();
-                return;
-            }
+        return voicePresets;
+    }
 
-            for (int i = 0; i < lines.size(); i++) {
-                VoiceNode voiceNode;
+    private void updateVoices(List<String> lines) {
+        int voiceCount = lines.size();
 
-                if (i < voicesContainer.getChildren().size()) {
-                    voiceNode = (VoiceNode) voicesContainer.getChildren().get(i);
-                } else {
-                    voiceNode = createVoiceWithVoicePresset();
-                    voicesContainer.getChildren().add(voiceNode);
-                }
+        while (voicesContainer.getChildren().size() < voiceCount) {
+            voicesContainer.getChildren().add(createVoiceWidget());
+        }
 
-                voiceNode.setVoiceText(lines.get(i));
-            }
+        while (voicesContainer.getChildren().size() > voiceCount) {
+            int lastIndex = voicesContainer.getChildren().size() - 1;
+            voicesContainer.getChildren().remove(lastIndex);
 
-        } catch (IOException e) {
-            new Alert(
-                Alert.AlertType.ERROR,
-                "Erro ao importar música: " + e.getMessage()
-            ).showAndWait();
+            VoiceWidget.decrementCurrentVoiceNum();
+        }
+
+        for (int i = 0; i < voiceCount; i++) {
+            VoiceWidget voice = (VoiceWidget) voicesContainer.getChildren().get(i);
+            voice.setVoiceText(lines.get(i));
         }
     }
 
-    private VoiceNode createVoiceWithVoicePresset() {
-        int currentPreset = (VoiceNode.getCurrentVoiceNum() + 1) % 5;
+    private VoiceWidget createVoiceWidget() {
+        int currentPreset = VoiceWidget.getCurrentVoiceNum() % NUM_OF_VOICE_PRESETS;
         
-        VoiceNode preset = switch (currentPreset) {
-            case 0 -> new VoiceNode(new VoicePresetKeysNode());
-            case 1 -> new VoiceNode(new VoicePresetPluckedNode());
-            case 2 -> new VoiceNode(new VoicePresetStringsNode());
-            case 3 -> new VoiceNode(new VoicePresetWindsNode());
-            case 4 -> new VoiceNode(new VoicePresetPercussionNode());
-            default -> new VoiceNode(new VoicePresetKeysNode());
+        VoiceWidget voiceWidget = switch (currentPreset) {
+            case 0 -> new VoiceWidget(new VoicePresetKeysWidget());
+            case 1 -> new VoiceWidget(new VoicePresetPluckedWidget());
+            case 2 -> new VoiceWidget(new VoicePresetStringsWidget());
+            case 3 -> new VoiceWidget(new VoicePresetWindsWidget());
+            case 4 -> new VoiceWidget(new VoicePresetPercussionWidget());
+            default -> new VoiceWidget(new VoicePresetKeysWidget());
         };
 
-        return preset;
+        return voiceWidget;
     }
-
-
-    public void playVoice() {
-        // FAZER
-    }
-
-
-
 }

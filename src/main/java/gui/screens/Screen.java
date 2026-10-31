@@ -1,20 +1,42 @@
 package gui.screens;
 
+import java.io.File;
+
+import javafx.scene.control.Alert;
 import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
-public abstract class Screen {
+public abstract class Screen extends Pane {
 
-    private Pane screenNode;
-
-    public Pane getScreenNode() {
-        return screenNode;
+    protected Window getCurrentWindow() {
+        return getScene().getWindow();
     }
-
-    public void setScreenNode(Pane screenNode) {
-        this.screenNode = screenNode;
-    }
-
-    public abstract Pane createScreen(Stage stage);
     
+    protected void setScreenMainContent(Pane content) {
+        getChildren().add(content);
+
+        content.prefWidthProperty().bind(widthProperty());
+        content.prefHeightProperty().bind(heightProperty());
+    }
+
+    protected  void createErrorMessage(String message) {
+        new Alert(
+            Alert.AlertType.ERROR,
+            message
+        ).showAndWait();
+    }
+
+    protected File openFileImportWindow() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Salvar MIDI");
+        fileChooser.setInitialFileName("musica.mid");
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Arquivo MIDI (*.mid)", "*.mid")
+        );
+
+        File file = fileChooser.showSaveDialog(getCurrentWindow());
+
+        return file;
+    }
 }

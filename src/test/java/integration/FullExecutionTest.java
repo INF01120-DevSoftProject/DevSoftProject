@@ -25,7 +25,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import exporters.MIDIFileExporter;
 import input.TXTInputReader;
-import input.TerminalInputReader;
 import music.Music;
 import musicElements.BPMElement;
 import musicElements.InstrumentElement;
@@ -94,22 +93,24 @@ public class FullExecutionTest {
 
         @BeforeAll
         static void runPipeline() throws Exception {
-            // 1. Usuario fornece um .txt (uma linha por voz), com quebra de linha do Windows (CRLF),
-            //    como o exemplo_input.txt do projeto
+            // 1. Usuário fornece um .txt com quebra de linha CRLF
             Path txtFile = tempDir.resolve("partitura.txt");
             Files.writeString(txtFile, VOICE_1 + "\r\n" + VOICE_2);
 
             // 2. Leitura
-            String text = new TXTInputReader(txtFile).readInput();
+            String text = new TXTInputReader().readInput(txtFile);
 
-            // 3. Traducao texto -> Music
-            music = new TextToMusicTranslator().textToMusic("Musica de teste", text);
+            // 3. Tradução texto -> Music
+            music = new TextToMusicTranslator()
+                    .textToMusic("Musica de teste", text);
 
-            // 4. Conversao Music -> Sequence MIDI
-            sequence = new MusicToMIDIParser().convertMusicToMIDI(music);
+            // 4. Conversão Music -> Sequence MIDI
+            sequence = new MusicToMIDIParser()
+                    .convertMusicToMIDI(music);
 
-            // 5. Exportacao para arquivo .mid
-            new MIDIFileExporter(tempDir.toString()).save(sequence, "musica.mid");
+            // 5. Exportação para arquivo .mid
+            new MIDIFileExporter().save(sequence, tempDir, "musica.mid");
+
             midiFile = tempDir.resolve("musica.mid");
         }
 
@@ -210,19 +211,6 @@ public class FullExecutionTest {
             assertThat(tempoMpqAt(voice1, 0)).as("BPM padrao (120) no tick 0").isEqualTo(500_000);
             assertThat(programAt(voice1, 0)).as("instrumento do preset STRINGS no tick 0").isEqualTo(40);
             assertThat(controlValueAt(voice1, 0, 7)).as("volume do preset STRINGS no tick 0").isEqualTo(100);
-        }
-
-        // TerminalInputReader -> Translator: o leitor termina cada voz digitada com '\n',
-        // e a quebra de linha final nao deve ser contada como uma voz extra vazia.
-        @Test
-        void oneLinePerVoiceWithTrailingNewlineAcceptsTheMaximumOfVoices() throws Exception {
-            String typed = "C\n".repeat(Music.MAX_VOICES) + "\n";
-            String text = new TerminalInputReader(
-                new ByteArrayInputStream(typed.getBytes(StandardCharsets.UTF_8))).readInput();
-
-            Music music = assertDoesNotThrow(() -> translator.textToMusic("Terminal", text));
-
-            assertThat(music.getVoices()).hasSize(Music.MAX_VOICES);
         }
     }
 

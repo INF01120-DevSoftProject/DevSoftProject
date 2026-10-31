@@ -1,3 +1,4 @@
+
 package exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +19,7 @@ public class MIDIFileExporterTest {
     Path tempDir;
 
     private MIDIFileExporter exporter() {
-        return new MIDIFileExporter(tempDir.toString());
+        return new MIDIFileExporter();
     }
 
     private Sequence sequenceWithOneNote()
@@ -42,21 +43,22 @@ public class MIDIFileExporterTest {
     }
 
     @Test
-    void rejectsNullFilePath() {
+    void rejectsNullFilePath() throws Exception {
+        Sequence sequence = sequenceWithOneNote();
+
         assertThrows(
             NullPointerException.class,
-            () -> new MIDIFileExporter(null)
+            () -> exporter().save(sequence, null, "music.mid")
         );
     }
 
     @Test
     void rejectsNullFileName() throws Exception {
-        MIDIFileExporter exporter = exporter();
         Sequence sequence = sequenceWithOneNote();
 
         assertThrows(
             NullPointerException.class,
-            () -> exporter.save(sequence, null)
+            () -> exporter().save(sequence, tempDir, null)
         );
     }
 
@@ -64,7 +66,7 @@ public class MIDIFileExporterTest {
     void rejectsNullSequence() {
         assertThrows(
             NullPointerException.class,
-            () -> exporter().save(null, "music.mid")
+            () -> exporter().save(null, tempDir, "music.mid")
         );
     }
 
@@ -72,7 +74,7 @@ public class MIDIFileExporterTest {
     void savesMidiFile() throws Exception {
         Path file = tempDir.resolve("music.mid");
 
-        exporter().save(sequenceWithOneNote(), "music.mid");
+        exporter().save(sequenceWithOneNote(), tempDir, "music.mid");
 
         assertThat(file).exists().isRegularFile();
         assertThat(Files.size(file)).isPositive();
@@ -82,9 +84,14 @@ public class MIDIFileExporterTest {
     void savesValidMidiFile() throws Exception {
         Path file = tempDir.resolve("music.mid");
 
-        exporter().save(sequenceWithOneNote(), "music.mid");
+        exporter().save(sequenceWithOneNote(), tempDir, "music.mid");
 
         Sequence imported = MidiSystem.getSequence(file.toFile());
+
+        assertThat(imported.getTracks()).hasSize(1);
+        assertThat(imported.getResolution()).isEqualTo(480);
+        assertThat(imported.getDivisionType()).isEqualTo(Sequence.PPQ);
+
         Track track = imported.getTracks()[0];
 
         ShortMessage noteOn =
@@ -92,10 +99,6 @@ public class MIDIFileExporterTest {
 
         ShortMessage noteOff =
             (ShortMessage) track.get(1).getMessage();
-
-        assertThat(imported.getTracks()).hasSize(1);
-        assertThat(imported.getResolution()).isEqualTo(480);
-        assertThat(imported.getDivisionType()).isEqualTo(Sequence.PPQ);
 
         assertThat(noteOn.getCommand()).isEqualTo(ShortMessage.NOTE_ON);
         assertThat(noteOn.getData1()).isEqualTo(60);
@@ -110,7 +113,7 @@ public class MIDIFileExporterTest {
     void savesMidiFileAsTypeOne() throws Exception {
         Path file = tempDir.resolve("music.mid");
 
-        exporter().save(sequenceWithOneNote(), "music.mid");
+        exporter().save(sequenceWithOneNote(), tempDir, "music.mid");
 
         MidiFileFormat format =
             MidiSystem.getMidiFileFormat(file.toFile());
@@ -123,8 +126,8 @@ public class MIDIFileExporterTest {
         MIDIFileExporter exporter = exporter();
         Sequence sequence = sequenceWithOneNote();
 
-        exporter.save(sequence, "first.mid");
-        exporter.save(sequence, "second.mid");
+        exporter.save(sequence, tempDir, "first.mid");
+        exporter.save(sequence, tempDir, "second.mid");
 
         assertThat(tempDir.resolve("first.mid")).exists();
         assertThat(tempDir.resolve("second.mid")).exists();
@@ -136,15 +139,15 @@ public class MIDIFileExporterTest {
 
         Path nonexistentDirectory = tempDir.resolve("nonexistent");
 
-        MIDIFileExporter exporter = new MIDIFileExporter(
-            nonexistentDirectory.toString()
-        );
-
         Sequence sequence = sequenceWithOneNote();
 
         assertThrows(
             IOException.class,
-            () -> exporter.save(sequence, "music.mid")
+            () -> exporter().save(
+                sequence,
+                nonexistentDirectory,
+                "music.mid"
+            )
         );
     }
 }

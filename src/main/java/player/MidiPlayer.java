@@ -14,6 +14,9 @@ public class MidiPlayer implements Player {
     private final Sequencer sequencer;
     private boolean isLoaded;
 
+    private Path currentMusicPath;
+    private String currentMusicName;
+
     public MidiPlayer() {
         try {
             this.sequencer = MidiSystem.getSequencer();
@@ -59,6 +62,8 @@ public class MidiPlayer implements Player {
         } catch (InvalidMidiDataException | IOException e) {
             throw new RuntimeException("Failed to load MIDI file: " + path, e);
         }
+
+        setCurrentMusic(path);
     }
 
     @Override
@@ -128,6 +133,14 @@ public class MidiPlayer implements Player {
         this.isLoaded = false;
     }
 
+    public Path getCurrentMusicPath() {
+        return currentMusicPath;
+    }
+
+    public String getCurrentMusicName() {
+        return currentMusicName;
+    }
+
     private void ensureLoaded() {
         if (!this.sequencer.isOpen()) {
             throw new IllegalStateException("Player is closed.");
@@ -135,5 +148,10 @@ public class MidiPlayer implements Player {
         if (!this.isLoaded || this.sequencer.getSequence() == null) {
             throw new IllegalStateException("No MIDI sequence loaded.");
         }
+    }
+
+    private void setCurrentMusic(Path path) {
+        currentMusicPath = path;
+        currentMusicName = path.getFileName().toString();
     }
 }

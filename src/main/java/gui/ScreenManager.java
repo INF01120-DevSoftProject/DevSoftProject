@@ -6,9 +6,9 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import gui.nodes.BorderNode;
-import gui.nodes.BoxNode;
-import gui.nodes.ButtonNode;
+import gui.builders.BorderPaneBuilder;
+import gui.builders.BoxBuilder;
+import gui.builders.ButtonBuilder;
 import gui.screens.*;
 
 public class ScreenManager extends Application {
@@ -28,28 +28,28 @@ public class ScreenManager extends Application {
     public void start(Stage stage) {
         this.stage = stage;
 
-        compositionScreen = new CompositionScreen(stage);
-        mapperScreen = new MapperScreen(stage);
+        compositionScreen = new CompositionScreen();
+        mapperScreen = new MapperScreen();
         playerScreen = new PlayerScreen(stage);
 
-        VBox sideBar = new BoxNode<>(new VBox(10))
+        VBox sideBar = new BoxBuilder<>(new VBox(10))
                             .addClass("sidebar")
-                            .add(new ButtonNode("Composição")
-                                    .onClick(e -> setScreen(compositionScreen))
+                            .add(new ButtonBuilder("Composição")
+                                    .onClick(e -> layout.setCenter(compositionScreen))
                                     .build())
-                            .add(new ButtonNode("Mapeamento")
-                                    .onClick(e -> setScreen(mapperScreen))
+                            .add(new ButtonBuilder("Mapeamento")
+                                    .onClick(e -> layout.setCenter(mapperScreen))
                                     .build())
-                            .add(new ButtonNode("Player")
-                                    .onClick(e -> setScreen(playerScreen))
+                            .add(new ButtonBuilder("Player")
+                                    .onClick(e -> layout.setCenter(playerScreen))
                                     .build())
                             .build();
 
-        layout = new BorderNode()
+        layout = new BorderPaneBuilder()
                             .apply(b -> b.setLeft(sideBar))
                             .build();
 
-        setScreen(compositionScreen);
+        layout.setCenter(compositionScreen);
 
         Scene scene = createScene(layout);
         addCSStoScene(scene, "/styles/style.css");
@@ -57,10 +57,6 @@ public class ScreenManager extends Application {
         addCSStoScene(scene, "/styles/slider.css");
         addCSStoScene(scene, "/styles/textArea.css");
         addCSStoScene(scene, "/styles/scrollPane.css");
-    }
-
-    private void setScreen(Screen screen) {
-        layout.setCenter(screen.getScreenNode());
     }
 
     private Scene createScene(Parent layout) { 

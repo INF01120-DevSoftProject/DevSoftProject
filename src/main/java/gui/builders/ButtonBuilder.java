@@ -1,0 +1,65 @@
+package gui.builders;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import javafx.event.ActionEvent;
+import javafx.scene.control.Button;
+import javafx.scene.Node;
+import javafx.scene.layout.Pane;
+
+public class ButtonBuilder {
+
+    private final Button button;
+
+    public ButtonBuilder(String buttonText) {
+
+        if (buttonText == null) throw new NullPointerException("button text can't be null");
+
+        button = new Button(buttonText);
+    }
+
+    public ButtonBuilder addClass(String className) {
+
+        button.getStyleClass().add(className);
+        return this;
+    }
+
+    public ButtonBuilder onClick(Consumer<ActionEvent> action) {
+        button.addEventHandler(ActionEvent.ACTION, event -> action.accept(event));
+        return this;
+    }
+
+    public ButtonBuilder onClickAddToContainer(Supplier<? extends Node> component, Pane container) {
+        button.addEventHandler(ActionEvent.ACTION, event -> container.getChildren().add(component.get()));
+        return this;
+    }
+
+    public ButtonBuilder onClickAddToContainer(Supplier<? extends Node> component, Pane container, int maxElements) {
+        button.addEventHandler(ActionEvent.ACTION, event -> {
+            if (container.getChildren().size() < maxElements) {
+                container.getChildren().add(component.get());
+            }
+        });
+
+        return this;
+    }
+
+    public ButtonBuilder onClickRemoveLastFromContainer(Pane container) {
+        button.addEventHandler(ActionEvent.ACTION, event -> {
+            var children = container.getChildren();
+
+            if (children.size() > 1) {
+                
+                children.remove(children.size() - 1);
+            }
+        });
+        return this;
+    }
+
+    public Button build() {
+        return button;
+    }
+
+
+}

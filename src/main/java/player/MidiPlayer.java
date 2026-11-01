@@ -133,12 +133,19 @@ public class MidiPlayer implements Player {
         this.isLoaded = false;
     }
 
+   @Override
     public Path getCurrentMusicPath() {
         return currentMusicPath;
     }
 
+   @Override
     public String getCurrentMusicName() {
         return currentMusicName;
+    }
+
+    private void setCurrentMusic(Path path) {
+        currentMusicPath = path;
+        currentMusicName = path.getFileName().toString();
     }
 
     private void ensureLoaded() {
@@ -150,8 +157,4 @@ public class MidiPlayer implements Player {
         }
     }
 
-    private void setCurrentMusic(Path path) {
-        currentMusicPath = path;
-        currentMusicName = path.getFileName().toString();
-    }
 }

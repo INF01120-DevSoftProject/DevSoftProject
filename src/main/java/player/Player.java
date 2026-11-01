@@ -24,6 +24,11 @@ public interface Player extends AutoCloseable {
 
     Sequencer getSequencer();
 
+    String getCurrentMusicName();
+
+    Path getCurrentMusicPath();
+
+
     @Override
     void close();
 }

@@ -6,23 +6,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
-import javax.sound.midi.Sequence;
-import exporters.MIDIFileExporter;
-import gui.ControlFactory;
-import gui.builders.BoxBuilder;
-import gui.builders.ButtonBuilder;
-import gui.widgets.VoiceWidget;
-import gui.widgets.voicePresetWidget.*;
-import input.TXTInputReader;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javax.sound.midi.Sequence;
+
 import music.Music;
+import music.VoicePreset;
 import parsers.MusicToMIDIParser;
 import translators.TextToMusic.TextToMusicTranslator;
-import music.VoicePreset;
+import exporters.FileExporter;
+import gui.ControlFactory;
+import gui.builders.BoxBuilder;
+import gui.builders.ButtonBuilder;
+import gui.widgets.VoiceWidget;
+import gui.widgets.voicePresetWidget.*;
+import input.InputReader;
 
 public class CompositionScreen extends Screen {
 
@@ -32,14 +33,15 @@ public class CompositionScreen extends Screen {
     private final VBox voicesContainer;
     private final TextToMusicTranslator translator;
     private final MusicToMIDIParser parser;
-    private final MIDIFileExporter exporter;
-    private final TXTInputReader reader;
+    private final FileExporter<Sequence>  exporter;
+    private final InputReader reader;
 
-    public CompositionScreen() {
+    public CompositionScreen(InputReader reader, FileExporter<Sequence> exporter) {
         translator = new TextToMusicTranslator();
         parser = new MusicToMIDIParser();
-        exporter = new MIDIFileExporter();
-        reader = new TXTInputReader();
+        
+        this.exporter = exporter;
+        this.reader = reader;
 
         VoiceWidget.restartCurrentVoiceNum();
 
@@ -83,21 +85,35 @@ public class CompositionScreen extends Screen {
     }
 
     private void saveMusic() {
-        File file = openFileImportWindow();
+        File file = openFileChooserWindow();
         if (file == null) return;
 
-        Music music = translator.textToMusic(file.getName(), getTextFromAllVoicesWidgets(), getVoicesPresets());
-        Sequence sequence = parser.convertMusicToMIDI(music);
-
         try {
-            exporter.save(sequence, file.toPath().getParent(), file.getName());
-        } catch (IOException e) {
-            createErrorMessage("Falha ao salvar o arquivo MIDI: " + e.getMessage());
+            VoiceWidgetData data = getVoiceWidgetData();
+
+            if (data.text().isBlank()) throw new IllegalArgumentException("A composição está vazia.");
+
+            Music music = translator.textToMusic(
+                file.getName(),
+                data.text(),
+                data.presets()
+            );
+
+            Sequence sequence = parser.convertMusicToMIDI(music);
+
+            exporter.save(
+                sequence,
+                file.toPath().getParent(), //File folder path
+                file.getName()
+            );
+
+        } catch (IOException | IllegalArgumentException e) {
+            showErrorMessage("Falha ao salvar o arquivo MIDI: " + e.getMessage());
         }
     }
 
     private void importMusic() {
-        File file = openFileImportWindow();
+        File file = openFileChooserWindow();
         if (file == null) return;
 
         try {
@@ -111,46 +127,47 @@ public class CompositionScreen extends Screen {
                 throw new IllegalArgumentException("O arquivo possui mais de " + MAX_VOICES + " vozes.");
             }
 
-            updateVoices(lines);
+            updateVoiceWidgets(lines);
 
         } catch (IOException e) {
-            createErrorMessage("Erro ao importar música: " + e.getMessage());
+            showErrorMessage("Erro ao importar música: " + e.getMessage());
 
         } catch (IllegalArgumentException e) {
-            createErrorMessage(e.getMessage());
+            showErrorMessage(e.getMessage());
         }
     }
 
-    private String getTextFromAllVoicesWidgets() {
+    private record VoiceWidgetData (
+        String text,
+        List<VoicePreset> presets
+    ) {}
+    
+    private VoiceWidgetData getVoiceWidgetData() {
+        // TODO: Fazer ele pegar do mapeamento
         StringJoiner musicText = new StringJoiner("\n");
-
-        for (Node node : voicesContainer.getChildren()) {
-            VoiceWidget voiceNode = (VoiceWidget) node;
-            String voiceWidgetText = voiceNode.getVoiceText();
-
-            if (voiceWidgetText == null || voiceWidgetText.isBlank()) {
-                continue;
-            }
-
-            musicText.add(voiceWidgetText.replace("\r", "").replace("\n", ""));
-        }
-
-        return musicText.toString();
-    }
-
-    private List<VoicePreset> getVoicesPresets() {
         List<VoicePreset> voicePresets = new ArrayList<>();
 
         for (Node node : voicesContainer.getChildren()) {
             VoiceWidget voiceNode = (VoiceWidget) node;
-            
-            voicePresets.add(new VoicePreset(voiceNode.getInstrument(), voiceNode.getVolume(), voiceNode.getOctave()));
+            String voiceText = voiceNode.getVoiceText();
+
+            if (voiceText == null || voiceText.isBlank()) {
+                continue;
+            }
+
+            musicText.add(voiceText.replace("\r", "").replace("\n", ""));
+
+            voicePresets.add(new VoicePreset(
+                voiceNode.getInstrument(),
+                voiceNode.getVolume(),
+                voiceNode.getOctave()
+            ));
         }
 
-        return voicePresets;
+        return new VoiceWidgetData(musicText.toString(), voicePresets);
     }
 
-    private void updateVoices(List<String> lines) {
+    private void updateVoiceWidgets(List<String> lines) {
         int voiceCount = lines.size();
 
         while (voicesContainer.getChildren().size() < voiceCount) {
@@ -160,7 +177,6 @@ public class CompositionScreen extends Screen {
         while (voicesContainer.getChildren().size() > voiceCount) {
             int lastIndex = voicesContainer.getChildren().size() - 1;
             voicesContainer.getChildren().remove(lastIndex);
-
             VoiceWidget.decrementCurrentVoiceNum();
         }
 
@@ -171,6 +187,7 @@ public class CompositionScreen extends Screen {
     }
 
     private VoiceWidget createVoiceWidget() {
+        // TODO: Fazer ele iterar por uma lista sem ter que passar o NUM_PRESET, alguem vai esquecer de atualizar isso
         int currentPreset = VoiceWidget.getCurrentVoiceNum() % NUM_OF_VOICE_PRESETS;
         
         VoiceWidget voiceWidget = switch (currentPreset) {

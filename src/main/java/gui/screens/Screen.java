@@ -20,14 +20,14 @@ public abstract class Screen extends Pane {
         content.prefHeightProperty().bind(heightProperty());
     }
 
-    protected  void createErrorMessage(String message) {
+    protected void showErrorMessage(String message) {
         new Alert(
             Alert.AlertType.ERROR,
             message
         ).showAndWait();
     }
 
-    protected File openFileImportWindow() {
+    protected File openFileChooserWindow() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Salvar MIDI");
         fileChooser.setInitialFileName("musica.mid");

@@ -6,17 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class TXTInputReader extends InputReader {
+public class TXTInputReader implements InputReader { 
 
-    public List<String> readLines(Path path) throws IOException {
-        if (path == null) {
-            throw new IllegalArgumentException("O caminho do arquivo não pode ser nulo.");
-        }
-
-        return Files.readAllLines(path, StandardCharsets.UTF_8);
-    }
-
-    public String readInput(Path path) throws IOException {
+    @Override 
+    public String readFile(Path path) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException(
                 "O caminho do arquivo não pode ser nulo."
@@ -24,5 +17,14 @@ public class TXTInputReader extends InputReader {
         }
 
         return Files.readString(path, StandardCharsets.UTF_8);
+    }
+
+    @Override 
+    public List<String> readLines(Path path) throws IOException {
+        if (path == null) {
+            throw new IllegalArgumentException("O caminho do arquivo não pode ser nulo.");
+        }
+
+        return Files.readAllLines(path, StandardCharsets.UTF_8);
     }
 }

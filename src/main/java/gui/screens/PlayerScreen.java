@@ -1,14 +1,14 @@
 
 package gui.screens;
 
+import java.nio.file.Path;
+
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.widgets.MusicPlayButtonWidget;
 import gui.widgets.MusicSelectionWidget;
 import gui.widgets.MusicSliderWidget;
 import gui.widgets.SheetMusicWidget;
-import input.MIDIInputReader;
-import player.MidiPlayer;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -16,13 +16,15 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.nio.file.Path;
+import input.MIDIPathUtils;
+import player.Player;
+
 
 
 public class PlayerScreen extends Screen {
 
-    private final MidiPlayer midiPlayer;
-    private final MIDIInputReader midiInputReader;
+    private final Player player;
+    private final MIDIPathUtils midiPathUtils;
 
     private final Label musicTitle;
 
@@ -31,22 +33,21 @@ public class PlayerScreen extends Screen {
     private final MusicSelectionWidget musicSelectionBox;
     private final MusicPlayButtonWidget playPauseButton;
 
-
-    public PlayerScreen(Stage stage) {
-        midiPlayer = new MidiPlayer();
-        midiInputReader = new MIDIInputReader();
+    public PlayerScreen(Stage stage, Player player) {
+        this.player = player;
+        midiPathUtils = new MIDIPathUtils();
         
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e -> endProgram());
 
-        midiPlayer.load(midiInputReader.getAllMidiInResourceFolder().getFirst());
+        player.load(midiPathUtils.getAllMidiPathInResources().getFirst());
+        sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player.getSequencer());
 
-        sheetMusicWidget = new SheetMusicWidget(midiPlayer);
-        playPauseButton = new MusicPlayButtonWidget(midiPlayer);
-        musicSelectionBox = new MusicSelectionWidget(midiInputReader);
+        playPauseButton = new MusicPlayButtonWidget(player);
+        musicSelectionBox = new MusicSelectionWidget(midiPathUtils);
         musicSelectionBox.setOnAction(e -> selectMusic());
 
         musicTitle = new Label(musicSelectionBox.getValue());
-        musicSlider = new MusicSliderWidget(midiPlayer);
+        musicSlider = new MusicSliderWidget(player);
 
         HBox playerButtons = new BoxBuilder<>(new HBox(25))
                         .addClass("player-buttons")
@@ -79,34 +80,45 @@ public class PlayerScreen extends Screen {
 
     private void selectMusic() {
         String musicName = musicSelectionBox.getValue();
+        if (musicName == null || musicName.equals(player.getCurrentMusicName())) return;
 
-        if (musicName == null || musicName.equals(midiPlayer.getCurrentMusicName())) return;
-
-        changeMusic(midiInputReader.getMidiFilePathFromName(musicName));
+        try {
+            changeMusic(midiPathUtils.getMidiFilePathFromName(musicName));
+        } catch(IllegalArgumentException e) {
+            showErrorMessage(e.getMessage());
+        }
     }
 
     private void changeMusic(Path path) {
         if (path == null) return;
 
-        midiPlayer.load(path);
+        try {
+            player.load(path);
+        } catch (RuntimeException e) {
+            showErrorMessage(e.getMessage());
+        }
 
-        sheetMusicWidget.loadMusic(midiPlayer);
+        updatePlayerUI();
+    }
 
-        musicTitle.setText(midiPlayer.getCurrentMusicName());
+    private void updatePlayerUI() {
+        sheetMusicWidget.loadMusic(player.getCurrentMusicPath());
 
-        musicSlider.setMax(midiPlayer.getDuration());
+        musicTitle.setText(player.getCurrentMusicName());
+
+        musicSlider.setMax(player.getDuration());
         musicSlider.setValue(0);
 
         playPauseButton.setCurrentButtonToPlay();
     }
 
     private void changeToNextMusic() {
-        changeMusic(midiInputReader.getNextMidiFilePath(midiPlayer.getCurrentMusicPath()));
+        changeMusic(midiPathUtils.getNextMidiFilePath(player.getCurrentMusicPath()));
         musicSelectionBox.getSelectionModel().selectNext();
     }
 
     private void changeToPreviousMusic() {
-        changeMusic(midiInputReader.getPreviousMidiFilePath(midiPlayer.getCurrentMusicPath()));
+        changeMusic(midiPathUtils.getPreviousMidiFilePath(player.getCurrentMusicPath()));
         musicSelectionBox.getSelectionModel().selectPrevious();
     }
 
@@ -114,6 +126,6 @@ public class PlayerScreen extends Screen {
         musicSlider.stopUpdater();
         musicSelectionBox.stopUpdater();
         sheetMusicWidget.stopAnimation();
-        midiPlayer.close();
+        player.close();
     }
 }

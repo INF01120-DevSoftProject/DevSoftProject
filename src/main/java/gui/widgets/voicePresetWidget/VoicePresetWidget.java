@@ -15,8 +15,8 @@ import javafx.scene.Node;
 
 public abstract class VoicePresetWidget {
     protected  ComboBox<String> instrumentController;
-    protected Slider volumeController;
     protected ComboBox<String> octaveController;
+    protected Slider volumeController;
 
     public HBox createVoicePresetContainer() {
         instrumentController = ControlFactory.createComboBox("Insira seu instrumento", getInstrumentsNames());
@@ -45,24 +45,13 @@ public abstract class VoicePresetWidget {
 
     protected abstract Map<String, Integer> createInstrumentTypes();
     protected abstract Map<String, Integer> createOctaveTypes();
+
     public abstract String getDefaultOctave();
     public abstract int getDefaultVolume();
     public abstract String getDefaultInstrument();
 
     public List<String> getOctaveNames() {
         return List.copyOf(createOctaveTypes().keySet());
-    }
-
-    private  List<String> getInstrumentsNames() {
-        return List.copyOf(createInstrumentTypes().keySet());
-    }
-
-
-    private static VBox createControlWithLabel(Node control, String title) {
-        return new BoxBuilder<>(new VBox(0))
-            .add(new Label(title))
-            .add(control)
-            .build();
     }
 
     public double getVolume() {
@@ -75,5 +64,16 @@ public abstract class VoicePresetWidget {
 
     public int getOctave() {
         return createOctaveTypes().get(octaveController.getValue());
+    }
+
+    private  List<String> getInstrumentsNames() {
+        return List.copyOf(createInstrumentTypes().keySet());
+    }
+
+    private static VBox createControlWithLabel(Node control, String title) {
+        return new BoxBuilder<>(new VBox(0))
+            .add(new Label(title))
+            .add(control)
+            .build();
     }
 }

@@ -14,8 +14,6 @@ public class MappingWidget extends VBox {
     private final TextField textField;
 
     public MappingWidget(String mappingRuleType, String nodeName, String character) {
-        super(10);
-
         this.mappingRuleType = mappingRuleType;
         this.oldCaracter = character;
 
@@ -38,11 +36,7 @@ public class MappingWidget extends VBox {
             return;
         }
 
-        TextToMusicRules.replaceChar(
-            mappingRuleType,
-            oldCaracter,
-            newCaracter
-        );
+        TextToMusicRules.replaceChar(mappingRuleType, oldCaracter, newCaracter);
 
         oldCaracter = newCaracter;
     }

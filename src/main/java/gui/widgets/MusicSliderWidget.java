@@ -3,30 +3,29 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.control.Slider;
-import player.MidiPlayer;
-
+import player.Player;
 import javafx.util.Duration;
 
 public class MusicSliderWidget extends Slider {
 
     private Timeline sliderUpdater;
-    private MidiPlayer midiPlayer;
+    private Player player;
 
-    public MusicSliderWidget(MidiPlayer midiPlayer) {
-        this.midiPlayer = midiPlayer;
+    public MusicSliderWidget(Player player) {
+        this.player = player;
         
-        long duration = midiPlayer.getDuration();
+        long duration = player.getDuration();
 
         setMin(0);
         setMax(duration);
         setValue(0);
 
         setOnMouseReleased(e ->
-            midiPlayer.seek(Math.round(getValue()))
+            player.seek(Math.round(getValue()))
         );
 
         setOnKeyReleased(e ->
-            midiPlayer.seek(Math.round(getValue()))
+            player.seek(Math.round(getValue()))
         );
 
         startSliderUpdater();
@@ -55,7 +54,7 @@ public class MusicSliderWidget extends Slider {
             return;
         }
 
-        setValue(midiPlayer.getCurrentTime());
+        setValue(player.getCurrentTime());
     }
 
 }

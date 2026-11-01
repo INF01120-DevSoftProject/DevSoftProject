@@ -2,7 +2,7 @@ package gui.widgets;
 
 import java.util.List;
 
-import input.MIDIInputReader;
+import input.MIDIPathUtils;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -13,12 +13,12 @@ import javafx.util.Duration;
 
 public class MusicSelectionWidget extends ComboBox<String> {
 
-    private MIDIInputReader midiInputReader;
+    private MIDIPathUtils midiInputReader;
     private Timeline musicListUpdater;
 
-    public MusicSelectionWidget(MIDIInputReader midiInputReader) {
-        this.midiInputReader = midiInputReader;
-        List<String> musics = midiInputReader.getFileNamesFromPaths(midiInputReader.getAllMidiInResourceFolder());
+    public MusicSelectionWidget(MIDIPathUtils midiPathUtils) {
+        this.midiInputReader = midiPathUtils;
+        List<String> musics = midiPathUtils.getFileNamesFromPaths(midiPathUtils.getAllMidiPathInResources());
 
         getItems().addAll(musics);
         getSelectionModel().selectFirst();
@@ -42,7 +42,7 @@ public class MusicSelectionWidget extends ComboBox<String> {
     }
 
     private void refreshMusicList() {
-        List<Path> paths = midiInputReader.getAllMidiInResourceFolder();
+        List<Path> paths = midiInputReader.getAllMidiPathInResources();
         List<String> musics = midiInputReader.getFileNamesFromPaths(paths);
 
         if (getItems().equals(musics)) return;

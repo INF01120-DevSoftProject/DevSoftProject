@@ -7,16 +7,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-public class MIDIInputReader extends InputReader  {
+public class MIDIPathUtils extends PathUtils  {
 
     private static final String MidiFolderName = "musics";
-
 
     public Path getMidiFolderPath() {
         return getResourcesFolderPath(MidiFolderName);
     }
 
-    public List<Path> getAllMidiInResourceFolder() {
+    public List<Path> getAllMidiPathInResources() {
         try (Stream<Path> files = Files.list(getMidiFolderPath())) {
             return files
                     .filter(Files::isRegularFile)
@@ -30,7 +29,7 @@ public class MIDIInputReader extends InputReader  {
     }
 
     public Path getPreviousMidiFilePath(Path currentPath) {
-        List<Path> musics = getAllMidiInResourceFolder();
+        List<Path> musics = getAllMidiPathInResources();
 
         int index = musics.indexOf(currentPath);
 
@@ -40,7 +39,7 @@ public class MIDIInputReader extends InputReader  {
     }
 
     public Path getNextMidiFilePath(Path currentPath) {
-        List<Path> musics = getAllMidiInResourceFolder();
+        List<Path> musics = getAllMidiPathInResources();
 
         int index = musics.indexOf(currentPath);
 
@@ -55,9 +54,7 @@ public class MIDIInputReader extends InputReader  {
                     .normalize();
 
         if (!path.startsWith(getMidiFolderPath()) || !Files.isRegularFile(path)) {
-            throw new IllegalArgumentException(
-                    "Arquivo MIDI não encontrado: " + fileName
-            );
+            throw new IllegalArgumentException("Arquivo MIDI não encontrado: " + fileName);
         }
 
         return path;
@@ -68,5 +65,4 @@ public class MIDIInputReader extends InputReader  {
 
         return lowerName.endsWith(".mid") || lowerName.endsWith(".midi");
     }
-    
 }

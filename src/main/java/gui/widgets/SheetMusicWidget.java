@@ -12,8 +12,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import java.nio.file.Path;
 
-import player.MidiPlayer;
-
 public class SheetMusicWidget extends StackPane {
 
     private StripSheetView sheetView;
@@ -23,15 +21,15 @@ public class SheetMusicWidget extends StackPane {
     private static final double STRIP_SPACING = 1.0;
     private static final double CURSOR_POSITION = 0.25;
 
-    public SheetMusicWidget(MidiPlayer midiPlayer) {
-        sheetView = createSheetView(midiPlayer.getCurrentMusicPath());
-        animation = createAnimation(midiPlayer.getSequencer());
+    private long lastTick = -1;
+
+    public SheetMusicWidget(Path midiPath, Sequencer sequencer) {
+        sheetView = createSheetView(midiPath);
+        animation = createAnimation(sequencer);
         animation.start();
     }
 
-    public void loadMusic(MidiPlayer midiPlayer) {
-        Path path = midiPlayer.getCurrentMusicPath();
-
+    public void loadMusic(Path path) {
         sheetView.setScore(ScoreFile.load(path));
         sheetView.cursorTimeProperty().set(0);
     }
@@ -66,34 +64,30 @@ public class SheetMusicWidget extends StackPane {
     }
 
     private AnimationTimer createAnimation(Sequencer sequencer) {
+        return new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                moveSheetByTick(sequencer);
+            }
+        };
+    }
+
+    private void moveSheetByTick(Sequencer sequencer) {
+        long tick = sequencer.getTickPosition();
+
+        if (tick == lastTick) return;
+
         Sequence sequence = sequencer.getSequence();
 
         if (sequence == null || sequence.getDivisionType() != Sequence.PPQ) {
-            throw new IllegalStateException("MIDI PPQ não carregado");
+            return;
         }
 
-        AnimationTimer animation = new AnimationTimer() {
+        lastTick = tick;
 
-            private long lastTick = -1;
+        double resolution = sequence.getResolution();
+        double position = tick / resolution;
 
-            @Override
-            public void handle(long now) {                 
-                moveSheetByTick(sequencer, lastTick);
-            }
-        };
-        return animation;
-    }
-
-    private void moveSheetByTick(Sequencer sequencer, long lastTick) {
-        long tick = sequencer.getTickPosition();
-
-        if (tick != lastTick) {
-            lastTick = tick;
-
-            double resolution = sequencer.getSequence().getResolution();
-            double position = tick / resolution;
-
-            sheetView.cursorTimeProperty().set(position);
-        }
+        sheetView.cursorTimeProperty().set(position);
     }
 }

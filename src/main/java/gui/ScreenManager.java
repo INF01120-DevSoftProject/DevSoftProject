@@ -6,10 +6,13 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import player.MidiPlayer;
+import exporters.MIDIFileExporter;
 import gui.builders.BorderPaneBuilder;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.screens.*;
+import input.TXTInputReader;
 
 public class ScreenManager extends Application {
 
@@ -28,9 +31,9 @@ public class ScreenManager extends Application {
     public void start(Stage stage) {
         this.stage = stage;
 
-        compositionScreen = new CompositionScreen();
+        compositionScreen = new CompositionScreen(new TXTInputReader(), new MIDIFileExporter());
         mapperScreen = new MapperScreen();
-        playerScreen = new PlayerScreen(stage);
+        playerScreen = new PlayerScreen(stage, new MidiPlayer());
 
         VBox sideBar = new BoxBuilder<>(new VBox(10))
                             .addClass("sidebar")
@@ -52,7 +55,13 @@ public class ScreenManager extends Application {
         layout.setCenter(compositionScreen);
 
         Scene scene = createScene(layout);
-        addCSStoScene(scene, "/styles/style.css");
+        addCSStoScene(scene, "/styles/base.css");
+
+        addCSStoScene(scene, "/styles/composition.css");
+        addCSStoScene(scene, "/styles/mapper.css");
+        addCSStoScene(scene, "/styles/player.css");
+
+        addCSStoScene(scene, "/styles/button.css");
         addCSStoScene(scene, "/styles/comboBox.css");
         addCSStoScene(scene, "/styles/slider.css");
         addCSStoScene(scene, "/styles/textArea.css");

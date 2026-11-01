@@ -3,24 +3,24 @@ package gui.widgets;
 import gui.builders.ButtonBuilder;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
-import player.MidiPlayer;
+import player.Player;
 
 public class MusicPlayButtonWidget extends StackPane {
 
     private Button playButton;
     private Button pauseButton;
 
-    public MusicPlayButtonWidget(MidiPlayer midiPlayer) {
+    public MusicPlayButtonWidget(Player player) {
         
         playButton = new ButtonBuilder("▶")
             .onClick(e -> {
-                midiPlayer.play();
+                player.play();
                 setCurrentButton(pauseButton);})
             .build();
 
         pauseButton = new ButtonBuilder("⏸")
             .onClick(e -> {
-                midiPlayer.pause();
+                player.pause();
                 setCurrentButton(playButton);})
             .build();
 

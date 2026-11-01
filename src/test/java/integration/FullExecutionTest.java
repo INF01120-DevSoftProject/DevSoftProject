@@ -98,7 +98,7 @@ public class FullExecutionTest {
             Files.writeString(txtFile, VOICE_1 + "\r\n" + VOICE_2);
 
             // 2. Leitura
-            String text = new TXTInputReader().readInput(txtFile);
+            String text = new TXTInputReader().readFile(txtFile);
 
             // 3. Tradução texto -> Music
             music = new TextToMusicTranslator()

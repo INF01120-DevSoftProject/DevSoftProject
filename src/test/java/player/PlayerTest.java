@@ -13,6 +13,9 @@ public class PlayerTest {
         private boolean closed = false;
         private Sequencer sequencer;
 
+        private Path currentMusicPath;
+        private String currentMusicName;
+
         @Override
         public void load(Path path) {
         }
@@ -60,6 +63,15 @@ public class PlayerTest {
         @Override
         public void close() {
             this.closed = true;
+        }
+
+        @Override
+        public String getCurrentMusicName() {
+            return currentMusicName;
+        }
+
+        public Path getCurrentMusicPath() {
+            return currentMusicPath;
         }
 
         public boolean isClosed() {

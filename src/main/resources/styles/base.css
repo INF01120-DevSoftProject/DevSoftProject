@@ -1,0 +1,26 @@
+@font-face {
+    src: url("../fonts/Inter-Regular.ttf");
+}
+
+.sidebar {
+    -fx-padding: 64px 10px;
+    -fx-background-color: #184D40;
+    -fx-pref-width: 150px;
+    -fx-alignment: top-center;
+}
+
+
+.root {
+    -fx-font-family: "Inter";
+    -fx-background-color: #EDE6E4;
+}
+
+#main {
+    -fx-padding: 8px 24px;
+}
+
+.label {
+    -fx-font-size: 40px;
+    -fx-padding: 32px 0px 12px 0px;
+    -fx-font-weight: 900;
+}

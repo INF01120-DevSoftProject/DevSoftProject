@@ -18,7 +18,6 @@
     -fx-faint-focus-color: transparent;
 }
 
-/* Fundo interno do TextArea */
 .text-area .content,
 .text-field .content {
     -fx-background-color: #F8FAF9;
@@ -26,7 +25,6 @@
     -fx-padding: 12px;
 }
 
-/* Área de rolagem */
 .text-area .scroll-pane,
 .text-field .scroll-pane,
 .text-area .scroll-pane .viewport
@@ -34,7 +32,6 @@
     -fx-background-color: transparent;
 }
 
-/* Quando estiver selecionado */
 .text-area:focused,
 .text-field:focused {
     -fx-border-color: #108B72;

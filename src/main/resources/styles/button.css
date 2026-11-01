@@ -1,0 +1,19 @@
+.button {
+    -fx-background-color: #15876A;
+    -fx-background-radius: 10px;
+    -fx-font-size: 16px;
+    -fx-max-width: 99999px;
+}
+
+.button:hover {
+    -fx-background-color: #D0F48F;
+}
+
+.plus-minus-container .button {
+    -fx-min-width: 40px;
+    -fx-font-size: 16px;
+}
+
+.save-import-container .button {
+    -fx-pref-width: 99999px;
+}

@@ -2,10 +2,7 @@ package integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -106,7 +103,7 @@ public class FullExecutionTest {
 
             // 4. Conversão Music -> Sequence MIDI
             sequence = new MusicToMIDIParser()
-                    .convertMusicToMIDI(music);
+                    .convertMusicToFile(music);
 
             // 5. Exportação para arquivo .mid
             new MIDIFileExporter().save(sequence, tempDir, "musica.mid");
@@ -206,7 +203,7 @@ public class FullExecutionTest {
         @Test
         void voicePresetIsAppliedToTheMidiTrack() {
             Music music = translator.textToMusic("Preset", "C");
-            Track voice1 = new MusicToMIDIParser().convertMusicToMIDI(music).getTracks()[0];
+            Track voice1 = new MusicToMIDIParser().convertMusicToFile(music).getTracks()[0];
 
             assertThat(tempoMpqAt(voice1, 0)).as("BPM padrao (120) no tick 0").isEqualTo(500_000);
             assertThat(programAt(voice1, 0)).as("instrumento do preset STRINGS no tick 0").isEqualTo(40);

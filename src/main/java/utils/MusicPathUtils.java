@@ -1,4 +1,4 @@
-package input;
+package utils;
 
 import java.nio.file.Path;
 import java.util.List;

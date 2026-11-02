@@ -6,18 +6,17 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import parsers.MusicToMIDIParser;
+import parsers.MusicToMidiParser;
 import player.MidiPlayer;
 import translators.TextToMusic.TextToMusicTranslator;
+import utils.MidiMusicPathUtils;
 import gui.builders.BorderPaneBuilder;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.screens.*;
-
-import input.MidiMusicPathUtils;
 import input.TXTInputReader;
 import exporters.MusicExportPipeline;
-import exporters.MIDIFileExporter;
+import exporters.MidiFileExporter;
 
 public class ScreenManager extends Application {
     private static final int SCENE_WIDTH = 600;
@@ -36,7 +35,7 @@ public class ScreenManager extends Application {
 
         compositionScreen = new CompositionScreen(
             new TXTInputReader(),
-            new MusicExportPipeline<>(new TextToMusicTranslator(), new MusicToMIDIParser(), new MIDIFileExporter())
+            new MusicExportPipeline<>(new TextToMusicTranslator(), new MusicToMidiParser(), new MidiFileExporter())
         );
 
         mapperScreen = new MapperScreen();

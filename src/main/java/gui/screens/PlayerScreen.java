@@ -15,8 +15,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import input.MusicPathUtils;
 import player.Player;
+import utils.MusicPathUtils;
 
 
 

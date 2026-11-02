@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import exporters.MIDIFileExporter;
+import exporters.MidiFileExporter;
 import input.TXTInputReader;
 import music.Music;
 import musicElements.BPMElement;
@@ -29,7 +29,7 @@ import musicElements.MusicElement;
 import musicElements.NoteElement;
 import musicElements.PauseElement;
 import musicElements.VolumeElement;
-import parsers.MusicToMIDIParser;
+import parsers.MusicToMidiParser;
 import player.MidiPlayer;
 import translators.TextToMusic.TextToMusicTranslator;
 
@@ -102,11 +102,11 @@ public class FullExecutionTest {
                     .textToMusic("Musica de teste", text);
 
             // 4. Conversão Music -> Sequence MIDI
-            sequence = new MusicToMIDIParser()
+            sequence = new MusicToMidiParser()
                     .convertMusicToFile(music);
 
             // 5. Exportação para arquivo .mid
-            new MIDIFileExporter().save(sequence, tempDir, "musica.mid");
+            new MidiFileExporter().save(sequence, tempDir, "musica.mid");
 
             midiFile = tempDir.resolve("musica.mid");
         }
@@ -203,7 +203,7 @@ public class FullExecutionTest {
         @Test
         void voicePresetIsAppliedToTheMidiTrack() {
             Music music = translator.textToMusic("Preset", "C");
-            Track voice1 = new MusicToMIDIParser().convertMusicToFile(music).getTracks()[0];
+            Track voice1 = new MusicToMidiParser().convertMusicToFile(music).getTracks()[0];
 
             assertThat(tempoMpqAt(voice1, 0)).as("BPM padrao (120) no tick 0").isEqualTo(500_000);
             assertThat(programAt(voice1, 0)).as("instrumento do preset STRINGS no tick 0").isEqualTo(40);

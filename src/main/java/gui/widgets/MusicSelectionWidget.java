@@ -2,7 +2,6 @@ package gui.widgets;
 
 import java.util.List;
 
-import input.MusicPathUtils;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -10,6 +9,7 @@ import javafx.scene.control.ComboBox;
 import java.nio.file.Path;
 
 import javafx.util.Duration;
+import utils.MusicPathUtils;
 
 public class MusicSelectionWidget extends ComboBox<String> {
 

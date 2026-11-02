@@ -3,8 +3,8 @@ package gui.widgets.voicePresetWidget;
 import java.util.List;
 import java.util.Map;
 
-import gui.ControlFactory;
 import gui.builders.BoxBuilder;
+import gui.factory.ControlFactory;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;

@@ -18,8 +18,8 @@ public class MIDIFileExporterTest {
     @TempDir
     Path tempDir;
 
-    private MIDIFileExporter exporter() {
-        return new MIDIFileExporter();
+    private MidiFileExporter exporter() {
+        return new MidiFileExporter();
     }
 
     private Sequence sequenceWithOneNote()
@@ -123,7 +123,7 @@ public class MIDIFileExporterTest {
 
     @Test
     void savesFilesWithDifferentNames() throws Exception {
-        MIDIFileExporter exporter = exporter();
+        MidiFileExporter exporter = exporter();
         Sequence sequence = sequenceWithOneNote();
 
         exporter.save(sequence, tempDir, "first.mid");

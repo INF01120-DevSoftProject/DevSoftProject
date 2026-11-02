@@ -3,9 +3,9 @@ package gui.widgets;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import gui.ControlFactory;
 import gui.builders.BorderPaneBuilder;
 import gui.builders.BoxBuilder;
+import gui.factory.ControlFactory;
 import gui.widgets.voicePresetWidget.VoicePresetWidget;
 import javafx.scene.control.*;
 

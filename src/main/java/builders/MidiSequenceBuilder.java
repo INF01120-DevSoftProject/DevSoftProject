@@ -3,7 +3,7 @@ package builders;
 import javax.sound.midi.*;
 import musicElements.*;
 
-public class MIDIBuilder {
+public class MidiSequenceBuilder {
 
     private final Sequence sequence;
     private Track currentTrack;
@@ -25,7 +25,7 @@ public class MIDIBuilder {
     private static final int PPQ_RESOLUTION = 480;
     private static final int PERCUSSION_CHANNEL = 9;
 
-    public MIDIBuilder() {
+    public MidiSequenceBuilder() {
 
         try {
             sequence = new Sequence(Sequence.PPQ, PPQ_RESOLUTION);
@@ -34,7 +34,7 @@ public class MIDIBuilder {
         }
     }
 
-    public MIDIBuilder addTrack() {
+    public MidiSequenceBuilder addTrack() {
 
         if (sequence.getTracks().length > (MAX_CHANNEL - 1)) // The -1 is because of the percussion channel not being used
             throw new IllegalArgumentException("Numero maximo de tracks excedidos");
@@ -47,7 +47,7 @@ public class MIDIBuilder {
     }
 
 
-    public MIDIBuilder addNote(NoteElement note) {
+    public MidiSequenceBuilder addNote(NoteElement note) {
         if (note == null) throw new NullPointerException("Nota nao pode ser nula");
 
         addShortMessageToTrack(ShortMessage.NOTE_ON, currentChannel, getMIDINoteNumber(note), DEFAULT_VELOCITY);
@@ -59,7 +59,7 @@ public class MIDIBuilder {
         return this;
     }
 
-    public MIDIBuilder addPause(PauseElement pause) {
+    public MidiSequenceBuilder addPause(PauseElement pause) {
         if (pause == null) throw new NullPointerException("Pause nao pode ser nulo");
         if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
 
@@ -69,7 +69,7 @@ public class MIDIBuilder {
         return this;
     }
 
-    public MIDIBuilder setInstrument(InstrumentElement instrument) {
+    public MidiSequenceBuilder setInstrument(InstrumentElement instrument) {
         if (instrument == null) throw new NullPointerException("Instrumento nao pode ser nulo");
 
         addShortMessageToTrack(ShortMessage.PROGRAM_CHANGE, currentChannel, instrument.getInstrument(), 0);
@@ -77,7 +77,7 @@ public class MIDIBuilder {
         return this;
     }
 
-    public MIDIBuilder setVolume(VolumeElement volume) {
+    public MidiSequenceBuilder setVolume(VolumeElement volume) {
         if (volume == null) throw new NullPointerException("Volume nao pode ser nulo");
 
         addShortMessageToTrack(ShortMessage.CONTROL_CHANGE, currentChannel, VOLUME_CONTROLLER, volume.getVolume());
@@ -85,7 +85,7 @@ public class MIDIBuilder {
         return this;
     }
 
-    public MIDIBuilder setBPM(BPMElement bpm) {
+    public MidiSequenceBuilder setBPM(BPMElement bpm) {
         if (bpm == null) throw new NullPointerException("BPM nao pode ser nulo");
 
         int mpq; // Microseconds Per Quarter Note
@@ -106,7 +106,7 @@ public class MIDIBuilder {
         return this;
     }
 
-    public MIDIBuilder setCurrentChannel(int channel) {
+    public MidiSequenceBuilder setCurrentChannel(int channel) {
 
         if (channel < MIN_CHANNEL || channel > MAX_CHANNEL) {
             throw new IllegalArgumentException("Canal invalido");

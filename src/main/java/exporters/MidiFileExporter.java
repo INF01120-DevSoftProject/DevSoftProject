@@ -7,7 +7,7 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 import java.nio.file.Path;
 
-public class MIDIFileExporter implements FileExporter<Sequence> {
+public class MidiFileExporter implements FileExporter<Sequence> {
 
     @Override 
     public void save(Sequence data, Path filePath, String fileName) throws IOException {

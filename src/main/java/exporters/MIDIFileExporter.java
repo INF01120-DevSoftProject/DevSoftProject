@@ -9,7 +9,6 @@ import java.nio.file.Path;
 
 public class MIDIFileExporter implements FileExporter<Sequence> {
 
-
     @Override 
     public void save(Sequence data, Path filePath, String fileName) throws IOException {
         if (fileName == null) throw new NullPointerException("file name can't be null");

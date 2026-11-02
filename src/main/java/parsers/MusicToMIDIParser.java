@@ -7,11 +7,11 @@ import builders.MIDIBuilder;
 import javax.sound.midi.*;
 
 
-public class MusicToMIDIParser {
+public class MusicToMIDIParser implements MusicParser<Sequence> {
 
     private MIDIBuilder midiBuilder;
 
-    public Sequence convertMusicToMIDI(Music music) {
+    public Sequence convertMusicToFile(Music music) {
         if (music == null) throw new NullPointerException("music can't be null") ; 
         
         midiBuilder = new MIDIBuilder();

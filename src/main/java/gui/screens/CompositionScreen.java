@@ -11,35 +11,25 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javax.sound.midi.Sequence;
-
-import music.Music;
 import music.VoicePreset;
-import parsers.MusicToMIDIParser;
-import translators.TextToMusic.TextToMusicTranslator;
-import exporters.FileExporter;
 import gui.ControlFactory;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.widgets.VoiceWidget;
 import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
+import exporters.MusicExportPipeline;
 
 public class CompositionScreen extends Screen {
 
     private static final int MAX_VOICES = 15;
-    private static final int NUM_OF_VOICE_PRESETS = 5;
 
     private final VBox voicesContainer;
-    private final TextToMusicTranslator translator;
-    private final MusicToMIDIParser parser;
-    private final FileExporter<Sequence>  exporter;
+    
+    private final MusicExportPipeline<?> exporter;
     private final InputReader reader;
 
-    public CompositionScreen(InputReader reader, FileExporter<Sequence> exporter) {
-        translator = new TextToMusicTranslator();
-        parser = new MusicToMIDIParser();
-        
+    public CompositionScreen(InputReader reader, MusicExportPipeline<?> exporter) {
         this.exporter = exporter;
         this.reader = reader;
 
@@ -89,23 +79,8 @@ public class CompositionScreen extends Screen {
         if (file == null) return;
 
         try {
-            VoiceWidgetData data = getVoiceWidgetData();
-
-            if (data.text().isBlank()) throw new IllegalArgumentException("A composição está vazia.");
-
-            Music music = translator.textToMusic(
-                file.getName(),
-                data.text(),
-                data.presets()
-            );
-
-            Sequence sequence = parser.convertMusicToMIDI(music);
-
-            exporter.save(
-                sequence,
-                file.toPath().getParent(), //File folder path
-                file.getName()
-            );
+            MusicInputData data = getMusicInputData();
+            exporter.exportMusic(file, data.text(), data.presets());
 
         } catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao salvar o arquivo MIDI: " + e.getMessage());
@@ -137,14 +112,13 @@ public class CompositionScreen extends Screen {
         }
     }
 
-    private record VoiceWidgetData (
+    private record MusicInputData (
         String text,
         List<VoicePreset> presets
     ) {}
     
-    private VoiceWidgetData getVoiceWidgetData() {
-        // TODO: Fazer ele pegar do mapeamento
-        StringJoiner musicText = new StringJoiner("\n");
+    private MusicInputData getMusicInputData() {
+        StringJoiner musicText = new StringJoiner(System.lineSeparator());
         List<VoicePreset> voicePresets = new ArrayList<>();
 
         for (Node node : voicesContainer.getChildren()) {
@@ -164,7 +138,7 @@ public class CompositionScreen extends Screen {
             ));
         }
 
-        return new VoiceWidgetData(musicText.toString(), voicePresets);
+        return new MusicInputData(musicText.toString(), voicePresets);
     }
 
     private void updateVoiceWidgets(List<String> lines) {
@@ -187,18 +161,16 @@ public class CompositionScreen extends Screen {
     }
 
     private VoiceWidget createVoiceWidget() {
-        // TODO: Fazer ele iterar por uma lista sem ter que passar o NUM_PRESET, alguem vai esquecer de atualizar isso
-        int currentPreset = VoiceWidget.getCurrentVoiceNum() % NUM_OF_VOICE_PRESETS;
-        
-        VoiceWidget voiceWidget = switch (currentPreset) {
-            case 0 -> new VoiceWidget(new VoicePresetKeysWidget());
-            case 1 -> new VoiceWidget(new VoicePresetPluckedWidget());
-            case 2 -> new VoiceWidget(new VoicePresetStringsWidget());
-            case 3 -> new VoiceWidget(new VoicePresetWindsWidget());
-            case 4 -> new VoiceWidget(new VoicePresetPercussionWidget());
-            default -> new VoiceWidget(new VoicePresetKeysWidget());
-        };
+        List<VoicePresetWidget> presets = List.of(
+            new VoicePresetKeysWidget(),
+            new VoicePresetPluckedWidget(),
+            new VoicePresetStringsWidget(),
+            new VoicePresetWindsWidget(),
+            new VoicePresetPercussionWidget()
+        );
 
-        return voiceWidget;
+        int currentPreset = VoiceWidget.getCurrentVoiceNum() % presets.size();
+
+        return new VoiceWidget(presets.get(currentPreset));
     }
 }

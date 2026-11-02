@@ -15,8 +15,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-
-import input.MIDIPathUtils;
+import input.MusicPathUtils;
 import player.Player;
 
 
@@ -24,7 +23,7 @@ import player.Player;
 public class PlayerScreen extends Screen {
 
     private final Player player;
-    private final MIDIPathUtils midiPathUtils;
+    private final MusicPathUtils musicPathUtils;
 
     private final Label musicTitle;
 
@@ -33,17 +32,17 @@ public class PlayerScreen extends Screen {
     private final MusicSelectionWidget musicSelectionBox;
     private final MusicPlayButtonWidget playPauseButton;
 
-    public PlayerScreen(Stage stage, Player player) {
+    public PlayerScreen(Stage stage, Player player, MusicPathUtils musicPathUtils) {
         this.player = player;
-        midiPathUtils = new MIDIPathUtils();
+        this.musicPathUtils = musicPathUtils;
         
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e -> endProgram());
 
-        player.load(midiPathUtils.getAllMidiPathInResources().getFirst());
+        player.load(musicPathUtils.getAllMusicsPathInResources().getFirst());
         sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player.getSequencer());
 
         playPauseButton = new MusicPlayButtonWidget(player);
-        musicSelectionBox = new MusicSelectionWidget(midiPathUtils);
+        musicSelectionBox = new MusicSelectionWidget(musicPathUtils);
         musicSelectionBox.setOnAction(e -> selectMusic());
 
         musicTitle = new Label(musicSelectionBox.getValue());
@@ -83,7 +82,7 @@ public class PlayerScreen extends Screen {
         if (musicName == null || musicName.equals(player.getCurrentMusicName())) return;
 
         try {
-            changeMusic(midiPathUtils.getMidiFilePathFromName(musicName));
+            changeMusic(musicPathUtils.getMusicPathFromName(musicName));
         } catch(IllegalArgumentException e) {
             showErrorMessage(e.getMessage());
         }
@@ -113,12 +112,12 @@ public class PlayerScreen extends Screen {
     }
 
     private void changeToNextMusic() {
-        changeMusic(midiPathUtils.getNextMidiFilePath(player.getCurrentMusicPath()));
+        changeMusic(musicPathUtils.getNextMusicPath(player.getCurrentMusicPath()));
         musicSelectionBox.getSelectionModel().selectNext();
     }
 
     private void changeToPreviousMusic() {
-        changeMusic(midiPathUtils.getPreviousMidiFilePath(player.getCurrentMusicPath()));
+        changeMusic(musicPathUtils.getPreviousMusicPath(player.getCurrentMusicPath()));
         musicSelectionBox.getSelectionModel().selectPrevious();
     }
 

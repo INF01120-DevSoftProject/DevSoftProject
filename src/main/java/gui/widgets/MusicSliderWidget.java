@@ -31,6 +31,10 @@ public class MusicSliderWidget extends Slider {
         startSliderUpdater();
     }
 
+    public void stopUpdater() {
+        sliderUpdater.stop();
+    }
+
     private void startSliderUpdater() {
         sliderUpdater = new Timeline(
             new KeyFrame(
@@ -43,11 +47,6 @@ public class MusicSliderWidget extends Slider {
         sliderUpdater.play();
     }
 
-
-    public void stopUpdater() {
-        sliderUpdater.stop();
-    }
-
     private void updateTimeSlider() {
 
         if (this.isValueChanging() || this.isPressed()) {
@@ -56,5 +55,4 @@ public class MusicSliderWidget extends Slider {
 
         setValue(player.getCurrentTime());
     }
-
 }

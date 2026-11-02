@@ -7,16 +7,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-public class MIDIPathUtils extends PathUtils  {
+public class MidiMusicPathUtils extends MusicPathUtils  {
 
     private static final String MidiFolderName = "musics";
 
-    public Path getMidiFolderPath() {
+    @Override 
+    public Path getMusicsFolderPath() {
         return getResourcesFolderPath(MidiFolderName);
     }
 
-    public List<Path> getAllMidiPathInResources() {
-        try (Stream<Path> files = Files.list(getMidiFolderPath())) {
+    @Override 
+    public List<Path> getAllMusicsPathInResources() {
+        try (Stream<Path> files = Files.list(getMusicsFolderPath())) {
             return files
                     .filter(Files::isRegularFile)
                     .filter(path -> isMidiFile(path.getFileName().toString()))
@@ -28,8 +30,9 @@ public class MIDIPathUtils extends PathUtils  {
         }
     }
 
-    public Path getPreviousMidiFilePath(Path currentPath) {
-        List<Path> musics = getAllMidiPathInResources();
+    @Override 
+    public Path getPreviousMusicPath(Path currentPath) {
+        List<Path> musics = getAllMusicsPathInResources();
 
         int index = musics.indexOf(currentPath);
 
@@ -38,8 +41,9 @@ public class MIDIPathUtils extends PathUtils  {
         return musics.get(index - 1);
     }
 
-    public Path getNextMidiFilePath(Path currentPath) {
-        List<Path> musics = getAllMidiPathInResources();
+    @Override 
+    public Path getNextMusicPath(Path currentPath) {
+        List<Path> musics = getAllMusicsPathInResources();
 
         int index = musics.indexOf(currentPath);
 
@@ -48,12 +52,13 @@ public class MIDIPathUtils extends PathUtils  {
         return musics.get(index + 1);
     }
 
-    public Path getMidiFilePathFromName(String fileName) {
-        Path path = getMidiFolderPath()
+    @Override 
+    public Path getMusicPathFromName(String fileName) {
+        Path path = getMusicsFolderPath()
                     .resolve(fileName)
                     .normalize();
 
-        if (!path.startsWith(getMidiFolderPath()) || !Files.isRegularFile(path)) {
+        if (!path.startsWith(getMusicsFolderPath()) || !Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Arquivo MIDI não encontrado: " + fileName);
         }
 

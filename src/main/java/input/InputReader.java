@@ -1,7 +1,10 @@
 package input;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface InputReader {
-    String readInput() throws IOException;
+    
+    String readFile(Path path) throws IOException;
+
 }

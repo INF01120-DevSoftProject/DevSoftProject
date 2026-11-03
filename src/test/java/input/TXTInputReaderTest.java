@@ -18,27 +18,30 @@ public class TXTInputReaderTest {
         String content = "Line 1: A B C\nLine 2: D E F\n";
         Files.writeString(filePath, content);
 
-        TXTInputReader reader = new TXTInputReader(filePath);
+        TXTInputReader reader = new TXTInputReader();
 
-        assertThat(reader.readInput()).isEqualTo(content);
+        assertThat(reader.readFile(filePath)).isEqualTo(content);
     }
 
     @Test
     void throwsExceptionWhenPathIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> new TXTInputReader(null));
+        TXTInputReader reader = new TXTInputReader();
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> reader.readFile(null)
+        );
     }
 
     @Test
     void throwsIOExceptionWhenFileNotFound(@TempDir Path tempDir) {
         Path nonExistentPath = tempDir.resolve("missing_file.txt");
-        TXTInputReader reader = new TXTInputReader(nonExistentPath);
+        TXTInputReader reader = new TXTInputReader();
 
-        assertThrows(IOException.class, reader::readInput);
+        assertThrows(
+            IOException.class,
+            () -> reader.readFile(nonExistentPath)
+        );
     }
 
-    @Test
-    void isAnInputReader(@TempDir Path tempDir) {
-        Path dummyPath = tempDir.resolve("dummy.txt");
-        assertThat(new TXTInputReader(dummyPath)).isInstanceOf(InputReader.class);
-    }
 }

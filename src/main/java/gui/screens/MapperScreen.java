@@ -2,83 +2,76 @@ package gui.screens;
 
 import java.util.List;
 
-import gui.nodes.BorderNode;
-import gui.nodes.BoxNode;
-import gui.nodes.ButtonNode;
-import gui.nodes.MappingNode;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.stage.Stage;
-import translators.TextToMusic.TextToMusicRules;
 import javafx.scene.Node;
+
+import gui.builders.BorderPaneBuilder;
+import gui.builders.BoxBuilder;
+import gui.builders.ButtonBuilder;
+import gui.widgets.MappingWidget;
+
+import translators.TextToMusic.TextToMusicRules;
 
 public class MapperScreen extends Screen {
 
-    public MapperScreen(Stage stage) {
-        setScreenNode(createScreen(stage)); 
-    }
-    
     private BorderPane mainContent;
+    
     private FlowPane pauseMappingContainer;
     private FlowPane noteMappingContainer;
     private FlowPane accidentalMappingContainer;
     private FlowPane musicControlsMappingContainer;
 
-    public Pane createScreen(Stage stage) {
+    public MapperScreen() {
 
         restoreMappingContainers();
 
-        HBox mappingCategories = new BoxNode<>(new HBox(20))
-								.addClass("plus-minus-container") // Concertar nome
-								.add(new ButtonNode("Notas")
-										.onClick(e -> mainContent.setCenter(noteMappingContainer))
+        HBox mappingCategories = new BoxBuilder<>(new HBox(20))
+								.addClass("fixed-button-container") // Concertar nome
+								.add(new ButtonBuilder("Notas")
+										.onClick(e -> showMapping(noteMappingContainer))
 										.build())
-								.add(new ButtonNode("Pausas")
-										.onClick(e -> mainContent.setCenter(pauseMappingContainer))
+								.add(new ButtonBuilder("Pausas")
+										.onClick(e -> showMapping(pauseMappingContainer))
 										.build())
-								.add(new ButtonNode("Acidentes")
-										.onClick(e -> mainContent.setCenter(accidentalMappingContainer))
+								.add(new ButtonBuilder("Acidentes")
+										.onClick(e -> showMapping(accidentalMappingContainer))
 										.build())
-								.add(new ButtonNode("Outros")
-										.onClick(e -> mainContent.setCenter(musicControlsMappingContainer))
+								.add(new ButtonBuilder("Outros")
+										.onClick(e -> showMapping(musicControlsMappingContainer))
 										.build())
 								.build();
 
-        VBox mappingHeader = new BoxNode<>(new VBox(25))
+        VBox mappingHeader = new BoxBuilder<>(new VBox(25))
 								.add(new Label("Mapeamento"))
 								.add(mappingCategories)
 								.build();
 
-
-
-        HBox saveResetButtons = new BoxNode<>(new HBox(20))
-								.addClass("save-import-container") // Concertar nome
-								.add(new ButtonNode("Salvar Mapeamento")
+        HBox saveResetButtons = new BoxBuilder<>(new HBox(20))
+								.addClass("fill-button-container") // Concertar nome
+								.add(new ButtonBuilder("Salvar Mapeamento")
 										.onClick(e -> applyAllMappings())
                                         .build())
-								.add(new ButtonNode("Restaurar ao Padrão")
+								.add(new ButtonBuilder("Restaurar ao Padrão")
                                         .onClick(e -> restoreMappingContainers())
                                         .build())
 								.build();
 
-
-        mainContent = new BorderNode()
+        mainContent = new BorderPaneBuilder()
 								.setId("main")
 								.apply(b -> b.setTop(mappingHeader))
 								.apply(b -> b.setCenter(noteMappingContainer))
 								.apply(b -> b.setBottom(saveResetButtons))
 								.build();
 
+        setScreenMainContent(mainContent);
+    }
 
-        
-        return mainContent;
+    private void showMapping(FlowPane container) {
+        mainContent.setCenter(container);
     }
 
     private void restoreMappingContainers() {
@@ -95,90 +88,76 @@ public class MapperScreen extends Screen {
     }
 
     private void applyAllMappings() {
-        applyMappings(noteMappingContainer);
-        applyMappings(pauseMappingContainer);
-        applyMappings(musicControlsMappingContainer);
-        applyMappings(accidentalMappingContainer);
+        try {
+            applyMappings(noteMappingContainer);
+            applyMappings(pauseMappingContainer);
+            applyMappings(musicControlsMappingContainer);
+            applyMappings(accidentalMappingContainer);
+            
+        } catch(IllegalArgumentException e) {
+            showErrorMessage("Erro ao salvar mapeamento: " + e.getMessage());
+        }
     }
 
     private void applyMappings(FlowPane container) {
         for (Node node : container.getChildren()) {
-            if (node instanceof MappingNode mappingNode) {
+            if (node instanceof MappingWidget mappingNode) {
                 mappingNode.saveChange();
             }
         }
     }
 
-
-    private FlowPane createNoteMappingContainer() {
-        String[] notes = {"Dó", "Ré", "Mi", "Fá", "Sol", "Lá", "Si"};
-
-        BoxNode<FlowPane> noteMappingContainer = new BoxNode<>(new FlowPane())
+    private BoxBuilder<FlowPane> createMappingContainer() {
+        BoxBuilder<FlowPane> noteMappingContainer = new BoxBuilder<>(new FlowPane())
             .addClass("mapping-container")
             .apply(b -> b.setHgap(20))
             .apply(b -> b.setVgap(20));
 
-        List<String> characters = TextToMusicRules.getMappingCharacters("note");
+        return noteMappingContainer;
+    }
 
-        for (int i = 0; i < notes.length; i++) {
-            noteMappingContainer.add(
-                new MappingNode("note", notes[i], characters.get(i))
-            );
+    private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String text) {
+        for (String c : TextToMusicRules.getMappingCharacters(type)) {
+            container.add(new MappingWidget(type, text, c));
         }
+    }
+
+    private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String[] texts) {
+        List<String> characters = TextToMusicRules.getMappingCharacters(type);
+
+        if (characters.size() != texts.length) {
+            throw new IllegalStateException("Quantidade de caracteres incompatível com o tipo de mapeamento: " + type);
+        }
+
+        for (int i = 0; i < texts.length; i++) {
+            container.add(new MappingWidget(type, texts[i], characters.get(i)));
+        }
+    }
+
+    private FlowPane createNoteMappingContainer() {
+        String[] notes = {"Dó", "Ré", "Mi", "Fá", "Sol", "Lá", "Si"};
+
+        BoxBuilder<FlowPane> noteMappingContainer = createMappingContainer();
+        assingMappingWidgetToContainer(noteMappingContainer, "note", notes);
 
         return noteMappingContainer.build();
     }
 
     private FlowPane createPauseMappingContainer() {
-        BoxNode<FlowPane> pauseMappingContainer = new BoxNode<>(new FlowPane())
-            .addClass("mapping-container")
-            .apply(b -> b.setHgap(20))
-            .apply(b -> b.setVgap(20));
-
-        for (String c : TextToMusicRules.getMappingCharacters("pause")) {
-            pauseMappingContainer.add(
-                new MappingNode("pause", "Pausa", c)
-            );
-        }
+        BoxBuilder<FlowPane> pauseMappingContainer = createMappingContainer();
+        assingMappingWidgetToContainer(pauseMappingContainer, "pause",  "Pausa");
 
         return pauseMappingContainer.build();
     }
 
     private FlowPane createMusicControlsMappingContainer() {
-        BoxNode<FlowPane> musicControlsMappingContainer = new BoxNode<>(new FlowPane())
-            .addClass("mapping-container")
-            .apply(b -> b.setHgap(20))
-            .apply(b -> b.setVgap(20));
+        BoxBuilder<FlowPane> musicControlsMappingContainer = createMappingContainer();
 
-        for (String c : TextToMusicRules.getMappingCharacters("octaveUp")) {
-            musicControlsMappingContainer.add(
-                new MappingNode("octaveUp", "Aumentar Oitava", c)
-            );
-        }
-
-        for (String c : TextToMusicRules.getMappingCharacters("octaveDown")) {
-            musicControlsMappingContainer.add(
-                new MappingNode("octaveDown", "Diminuir Oitava", c)
-            );
-        }
-
-        for (String c : TextToMusicRules.getMappingCharacters("bpmUp")) {
-            musicControlsMappingContainer.add(
-                new MappingNode("bpmUp", "Aumentar BPM", c)
-            );
-        }
-
-        for (String c : TextToMusicRules.getMappingCharacters("bpmDown")) {
-            musicControlsMappingContainer.add(
-                new MappingNode("bpmDown", "Diminuir BPM", c)
-            );
-        }
-
-        for (String c : TextToMusicRules.getMappingCharacters("doubleVolume")) {
-            musicControlsMappingContainer.add(
-                new MappingNode("doubleVolume", "Dobrar Volume", c)
-            );
-        }
+        assingMappingWidgetToContainer(musicControlsMappingContainer, "octaveUp",  "Aumentar Oitava");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, "octaveDown",  "Diminuir Oitava");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, "bpmUp",  "Aumentar BPM");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, "bpmDown",  "Diminuir BPM");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, "doubleVolume",  "Dobrar Volume");
 
         return musicControlsMappingContainer.build();
     }
@@ -186,18 +165,8 @@ public class MapperScreen extends Screen {
     private FlowPane createAccidentalMappingContainer() {
         String[] accidentals = {"Sustenido", "Bemol"};
 
-        BoxNode<FlowPane> accidentalMappingContainer = new BoxNode<>(new FlowPane())
-            .addClass("mapping-container")
-            .apply(b -> b.setHgap(20))
-            .apply(b -> b.setVgap(20));
-
-        List<String> characters = TextToMusicRules.getMappingCharacters("accidental");
-
-        for (int i = 0; i < accidentals.length; i++) {
-            accidentalMappingContainer.add(
-                new MappingNode("accidental", accidentals[i], characters.get(i))
-            );
-        }
+        BoxBuilder<FlowPane> accidentalMappingContainer = createMappingContainer();
+        assingMappingWidgetToContainer(accidentalMappingContainer, "accidental", accidentals);
 
         return accidentalMappingContainer.build();
     }

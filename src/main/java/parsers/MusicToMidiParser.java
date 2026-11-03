@@ -2,19 +2,19 @@ package parsers;
 
 import musicElements.*;
 import music.*;
-import builders.MIDIBuilder;
+import builders.MidiSequenceBuilder;
 
 import javax.sound.midi.*;
 
 
-public class MusicToMIDIParser {
+public class MusicToMidiParser implements MusicParser<Sequence> {
 
-    private MIDIBuilder midiBuilder;
+    private MidiSequenceBuilder midiBuilder;
 
-    public Sequence convertMusicToMIDI(Music music) {
+    public Sequence convertMusicToFile(Music music) {
         if (music == null) throw new NullPointerException("music can't be null") ; 
         
-        midiBuilder = new MIDIBuilder();
+        midiBuilder = new MidiSequenceBuilder();
 
         for (Voice voice : music.getVoices()) {
             midiBuilder.addTrack();

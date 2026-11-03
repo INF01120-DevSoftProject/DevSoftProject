@@ -1,4 +1,4 @@
-package gui.nodes;
+package gui.factory;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;

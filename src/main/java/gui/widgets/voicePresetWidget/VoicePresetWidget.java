@@ -1,10 +1,10 @@
-package gui.nodes.voicePresetNodes;
+package gui.widgets.voicePresetWidget;
 
 import java.util.List;
 import java.util.Map;
 
-import gui.nodes.BoxNode;
-import gui.nodes.ControlFactory;
+import gui.builders.BoxBuilder;
+import gui.factory.ControlFactory;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -13,10 +13,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.Node;
 
-public abstract class VoicePresetNode {
+public abstract class VoicePresetWidget {
     protected  ComboBox<String> instrumentController;
-    protected Slider volumeController;
     protected ComboBox<String> octaveController;
+    protected Slider volumeController;
 
     public HBox createVoicePresetContainer() {
         instrumentController = ControlFactory.createComboBox("Insira seu instrumento", getInstrumentsNames());
@@ -30,7 +30,7 @@ public abstract class VoicePresetNode {
         VBox volumeContainer = createControlWithLabel(volumeController, "Volume");
         VBox octaveContainer = createControlWithLabel(octaveController, "Oitava");
 
-        HBox voicePresetContainer = new BoxNode<>(new HBox(15))
+        HBox voicePresetContainer = new BoxBuilder<>(new HBox(15))
                                     .addClass("voice-preset-container")
                                     .add(instrumentContainer)
                                     .add(ControlFactory.createHorizontalGrower())
@@ -45,24 +45,13 @@ public abstract class VoicePresetNode {
 
     protected abstract Map<String, Integer> createInstrumentTypes();
     protected abstract Map<String, Integer> createOctaveTypes();
+
     public abstract String getDefaultOctave();
     public abstract int getDefaultVolume();
     public abstract String getDefaultInstrument();
 
     public List<String> getOctaveNames() {
         return List.copyOf(createOctaveTypes().keySet());
-    }
-
-    private  List<String> getInstrumentsNames() {
-        return List.copyOf(createInstrumentTypes().keySet());
-    }
-
-
-    private static VBox createControlWithLabel(Node control, String title) {
-        return new BoxNode<>(new VBox(0))
-            .add(new Label(title))
-            .add(control)
-            .build();
     }
 
     public double getVolume() {
@@ -75,5 +64,16 @@ public abstract class VoicePresetNode {
 
     public int getOctave() {
         return createOctaveTypes().get(octaveController.getValue());
+    }
+
+    private  List<String> getInstrumentsNames() {
+        return List.copyOf(createInstrumentTypes().keySet());
+    }
+
+    private static VBox createControlWithLabel(Node control, String title) {
+        return new BoxBuilder<>(new VBox(0))
+            .add(new Label(title))
+            .add(control)
+            .build();
     }
 }

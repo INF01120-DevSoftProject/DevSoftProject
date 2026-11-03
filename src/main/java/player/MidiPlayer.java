@@ -9,10 +9,13 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 
-public class MidiPlayer implements Player {
+public class MidiPlayer implements Player<Sequencer> {
 
     private final Sequencer sequencer;
     private boolean isLoaded;
+
+    private Path currentMusicPath;
+    private String currentMusicName;
 
     public MidiPlayer() {
         try {
@@ -59,6 +62,8 @@ public class MidiPlayer implements Player {
         } catch (InvalidMidiDataException | IOException e) {
             throw new RuntimeException("Failed to load MIDI file: " + path, e);
         }
+
+        setCurrentMusic(path);
     }
 
     @Override
@@ -73,7 +78,7 @@ public class MidiPlayer implements Player {
     }
 
     @Override 
-    public Sequencer getSequencer() {
+    public Sequencer getMusicData() {
         return this.sequencer;
     }
 
@@ -128,6 +133,33 @@ public class MidiPlayer implements Player {
         this.isLoaded = false;
     }
 
+   @Override
+    public Path getCurrentMusicPath() {
+        return currentMusicPath;
+    }
+
+   @Override
+    public String getCurrentMusicName() {
+        return currentMusicName;
+    }
+
+    @Override
+    public double getMusicPosition() {
+        Sequence sequence = sequencer.getSequence();
+
+        if (sequence == null ||
+            sequence.getDivisionType() != Sequence.PPQ) {
+            return Double.NaN;
+        }
+
+        return (double) sequencer.getTickPosition() / sequence.getResolution();
+    }
+
+    private void setCurrentMusic(Path path) {
+        currentMusicPath = path;
+        currentMusicName = path.getFileName().toString();
+    }
+
     private void ensureLoaded() {
         if (!this.sequencer.isOpen()) {
             throw new IllegalStateException("Player is closed.");
@@ -136,4 +168,5 @@ public class MidiPlayer implements Player {
             throw new IllegalStateException("No MIDI sequence loaded.");
         }
     }
+
 }

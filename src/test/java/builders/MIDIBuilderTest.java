@@ -83,7 +83,7 @@ public class MIDIBuilderTest {
 
     @Test
     void buildsSequenceWithCorrectResolution() {
-        Sequence sequence = new MIDIBuilder().build();
+        Sequence sequence = new MidiSequenceBuilder().build();
 
         assertThat(sequence.getDivisionType()).isEqualTo(Sequence.PPQ);
         assertThat(sequence.getResolution()).isEqualTo(480);
@@ -91,14 +91,14 @@ public class MIDIBuilderTest {
 
     @Test
     void createsSingleTrack() {
-        Sequence sequence = new MIDIBuilder().addTrack().build();
+        Sequence sequence = new MidiSequenceBuilder().addTrack().build();
 
         assertThat(sequence.getTracks()).hasSize(1);
     }
 
     @Test
     void createsMultipleTracks() {
-        Sequence sequence = new MIDIBuilder()
+        Sequence sequence = new MidiSequenceBuilder()
             .addTrack()
             .addTrack()
             .addTrack()
@@ -111,7 +111,7 @@ public class MIDIBuilderTest {
 
     @Test
     void addsNoteWithCorrectMidiValue() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .addNote(cSharp4Quarter())
             .build().getTracks()[0];
@@ -128,7 +128,7 @@ public class MIDIBuilderTest {
 
     @Test
     void matchesNoteOnAndNoteOff() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .addNote(cSharp4Quarter())
             .build().getTracks()[0];
@@ -150,7 +150,7 @@ public class MIDIBuilderTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Duração ausente: 1/" + divisor));
 
-            Track track = new MIDIBuilder()
+            Track track = new MidiSequenceBuilder()
                 .addTrack()
                 .addNote(note(Notes.C, 4, duration, Accidentals.SHARP))
                 .build().getTracks()[0];
@@ -163,7 +163,7 @@ public class MIDIBuilderTest {
 
     @Test
     void addsPauseBetweenNotes() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .addNote(cSharp4Quarter())
             .addPause(pause(DurationTime.QUARTER))
@@ -179,7 +179,7 @@ public class MIDIBuilderTest {
 
     @Test
     void preservesTrailingPause() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .addNote(cSharp4Quarter())
             .addPause(pause(DurationTime.QUARTER))
@@ -190,7 +190,7 @@ public class MIDIBuilderTest {
 
     @Test
     void setsInstrumentCorrectly() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .setInstrument(instrument(40))
             .build().getTracks()[0];
@@ -203,7 +203,7 @@ public class MIDIBuilderTest {
 
     @Test
     void setsVolumeCorrectly() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .setVolume(volume(80))
             .build().getTracks()[0];
@@ -216,7 +216,7 @@ public class MIDIBuilderTest {
 
     @Test
     void setsInitialBpmCorrectly() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .setBPM(new BPMElement(120))
             .build().getTracks()[0];
@@ -228,7 +228,7 @@ public class MIDIBuilderTest {
 
     @Test
     void changesBpmDuringMusic() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .setBPM(new BPMElement(120))
             .addNote(cSharp4Quarter())
@@ -249,7 +249,7 @@ public class MIDIBuilderTest {
 
     @Test
     void addsTempoChangesToDifferentTracks() {
-        Sequence sequence = new MIDIBuilder()
+        Sequence sequence = new MidiSequenceBuilder()
             .addTrack()
             .setBPM(new BPMElement(120))
             .addTrack()
@@ -264,7 +264,7 @@ public class MIDIBuilderTest {
 
     @Test
     void addsControlEventsAtCorrectTick() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .addNote(cSharp4Quarter())
             .setInstrument(instrument(40))
@@ -280,20 +280,20 @@ public class MIDIBuilderTest {
     @Test
     void rejectsElementsWithoutTrack() {
         assertThrows(NullPointerException.class,
-            () -> new MIDIBuilder().addNote(cSharp4Quarter()));
+            () -> new MidiSequenceBuilder().addNote(cSharp4Quarter()));
         assertThrows(NullPointerException.class,
-            () -> new MIDIBuilder().addPause(pause(DurationTime.QUARTER)));
+            () -> new MidiSequenceBuilder().addPause(pause(DurationTime.QUARTER)));
         assertThrows(NullPointerException.class,
-            () -> new MIDIBuilder().setInstrument(instrument(40)));
+            () -> new MidiSequenceBuilder().setInstrument(instrument(40)));
         assertThrows(NullPointerException.class,
-            () -> new MIDIBuilder().setVolume(volume(80)));
+            () -> new MidiSequenceBuilder().setVolume(volume(80)));
         assertThrows(NullPointerException.class,
-            () -> new MIDIBuilder().setBPM(new BPMElement(120)));
+            () -> new MidiSequenceBuilder().setBPM(new BPMElement(120)));
     }
 
     @Test
     void rejectsNullElements() {
-        MIDIBuilder builder = new MIDIBuilder().addTrack();
+        MidiSequenceBuilder builder = new MidiSequenceBuilder().addTrack();
 
         assertThrows(NullPointerException.class, () -> builder.addNote(null));
         assertThrows(NullPointerException.class, () -> builder.addPause(null));
@@ -306,23 +306,23 @@ public class MIDIBuilderTest {
     void rejectsInvalidBpm() {
         for (int bpm : new int[] {0, -1, 3, 60_000_001}) {
             assertThrows(IllegalArgumentException.class,
-                () -> new MIDIBuilder().addTrack().setBPM(new BPMElement(bpm)));
+                () -> new MidiSequenceBuilder().addTrack().setBPM(new BPMElement(bpm)));
         }
     }
 
     @Test
     void rejectsInvalidMidiNote() {
         assertThrows(IllegalArgumentException.class,
-            () -> new MIDIBuilder().addTrack()
+            () -> new MidiSequenceBuilder().addTrack()
                 .addNote(note(Notes.C, 10, DurationTime.QUARTER, Accidentals.SHARP)));
         assertThrows(IllegalArgumentException.class,
-            () -> new MIDIBuilder().addTrack()
+            () -> new MidiSequenceBuilder().addTrack()
                 .addNote(note(Notes.C, -3, DurationTime.QUARTER, Accidentals.SHARP)));
     }
 
     @Test
     void rejectsInvalidMidiChannel() {
-        MIDIBuilder builder = new MIDIBuilder();
+        MidiSequenceBuilder builder = new MidiSequenceBuilder();
 
         assertThrows(IllegalArgumentException.class, () -> builder.setCurrentChannel(-1));
         assertThrows(IllegalArgumentException.class, () -> builder.setCurrentChannel(16));
@@ -330,7 +330,7 @@ public class MIDIBuilderTest {
 
     @Test
     void skipsPercussionChannel() {
-        MIDIBuilder builder = new MIDIBuilder();
+        MidiSequenceBuilder builder = new MidiSequenceBuilder();
         for (int i = 0; i < 10; i++) {
             builder.addTrack().addNote(cSharp4Quarter());
         }
@@ -345,7 +345,7 @@ public class MIDIBuilderTest {
 
     @Test
     void redirectsPercussionChannel() {
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .setCurrentChannel(9)
             .addNote(cSharp4Quarter())
@@ -356,7 +356,7 @@ public class MIDIBuilderTest {
 
     @Test
     void assignsDifferentChannelToEachTrack() {
-        Sequence sequence = new MIDIBuilder()
+        Sequence sequence = new MidiSequenceBuilder()
             .addTrack().addNote(cSharp4Quarter())
             .addTrack().addNote(cSharp4Quarter())
             .addTrack().addNote(cSharp4Quarter())
@@ -372,7 +372,7 @@ public class MIDIBuilderTest {
 
     @Test
     void rejectsTrackWhenChannelLimitIsReached() {
-        MIDIBuilder builder = new MIDIBuilder();
+        MidiSequenceBuilder builder = new MidiSequenceBuilder();
         for (int i = 0; i < 15; i++) {
             builder.addTrack();
         }
@@ -383,7 +383,7 @@ public class MIDIBuilderTest {
 
     @Test
     void addsNotesToDifferentTracks() {
-        Sequence sequence = new MIDIBuilder()
+        Sequence sequence = new MidiSequenceBuilder()
             .addTrack().addNote(cSharp4Quarter())
             .addTrack().addNote(dSharp4Quarter())
             .build();
@@ -401,7 +401,7 @@ public class MIDIBuilderTest {
 
     @Test
     void resetsTickForEachNewTrack() {
-        Sequence sequence = new MIDIBuilder()
+        Sequence sequence = new MidiSequenceBuilder()
             .addTrack()
             .addNote(cSharp4Quarter())
             .addNote(cSharp4Quarter())
@@ -417,7 +417,7 @@ public class MIDIBuilderTest {
 
     @Test
     void buildsSequenceWithMultipleTracksAndEvents() {
-        Sequence sequence = new MIDIBuilder()
+        Sequence sequence = new MidiSequenceBuilder()
             .addTrack()
             .setInstrument(instrument(0))
             .setVolume(volume(90))
@@ -457,7 +457,7 @@ public class MIDIBuilderTest {
         assertThat(quarterPause.getDuration().getDivisor())
             .isEqualTo(4);
 
-        Track track = new MIDIBuilder()
+        Track track = new MidiSequenceBuilder()
             .addTrack()
             .addPause(quarterPause)
             .addNote(cSharp4Quarter())

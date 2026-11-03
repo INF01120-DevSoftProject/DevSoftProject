@@ -1,19 +1,22 @@
-package gui.nodes;
+package gui.widgets;
 
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import gui.nodes.voicePresetNodes.VoicePresetNode;
+import gui.builders.BorderPaneBuilder;
+import gui.builders.BoxBuilder;
+import gui.factory.ControlFactory;
+import gui.widgets.voicePresetWidget.VoicePresetWidget;
 import javafx.scene.control.*;
 
-public class VoiceNode extends BorderPane {
+public class VoiceWidget extends BorderPane {
 
     private static int currentVoiceNum;
 
     private final TextArea inputBox;
-    private final VoicePresetNode voicePresetNode;
+    private final VoicePresetWidget voicePresetNode;
         
-    public VoiceNode(VoicePresetNode voicePresetNode) {
+    public VoiceWidget(VoicePresetWidget voicePresetNode) {
         this.voicePresetNode = voicePresetNode;
         currentVoiceNum++;
 
@@ -23,14 +26,14 @@ public class VoiceNode extends BorderPane {
 
         inputBox = ControlFactory.createTextArea(3, "Digite sua partitura");
 
-        VBox voiceMain = new BoxNode<>(new VBox())
+        VBox voiceMain = new BoxBuilder<>(new VBox())
                                     .addClass("voice-main-container")
                                     .add(voicePresetContainer)
                                     .add(inputBox)
                                     .build();
 
 
-        BorderPane voiceLabelContainer = new BorderNode()
+        BorderPane voiceLabelContainer = new BorderPaneBuilder()
                                     .addClass("voice-label-container")
                                     .apply(b -> b.setCenter(new Label("Voz " + currentVoiceNum)))
                                     .build();
@@ -59,7 +62,6 @@ public class VoiceNode extends BorderPane {
     public static int getCurrentVoiceNum() {
         return currentVoiceNum;
     }
-
 
     public static void restartCurrentVoiceNum() {
         currentVoiceNum = 0;

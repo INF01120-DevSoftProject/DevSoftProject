@@ -1,11 +1,11 @@
-package gui.nodes.voicePresetNodes;
+package gui.widgets.voicePresetWidget;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VoicePresetPluckedNode extends VoicePresetNode {
+public class VoicePresetPluckedWidget extends VoicePresetWidget {
 
     public Map<String, Integer> createInstrumentTypes() {
         Map<String, Integer> instruments = new LinkedHashMap<>();
@@ -46,7 +46,7 @@ public class VoicePresetPluckedNode extends VoicePresetNode {
     }
 
     public int getDefaultVolume() {
-        return 32;
+        return 72;
 
     }
 

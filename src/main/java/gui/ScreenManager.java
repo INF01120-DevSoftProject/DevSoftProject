@@ -6,14 +6,19 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import gui.nodes.BorderNode;
-import gui.nodes.BoxNode;
-import gui.nodes.ButtonNode;
+import parsers.MusicToMidiParser;
+import player.MidiPlayer;
+import translators.TextToMusic.TextToMusicTranslator;
+import utils.MidiMusicPathUtils;
+import gui.builders.BorderPaneBuilder;
+import gui.builders.BoxBuilder;
+import gui.builders.ButtonBuilder;
 import gui.screens.*;
+import input.TXTInputReader;
+import exporters.MusicExportPipeline;
+import exporters.MidiFileExporter;
 
 public class ScreenManager extends Application {
-
-
     private static final int SCENE_WIDTH = 600;
     private static final int SCENE_HEIGHT= 400;
 
@@ -28,39 +33,40 @@ public class ScreenManager extends Application {
     public void start(Stage stage) {
         this.stage = stage;
 
-        compositionScreen = new CompositionScreen(stage);
-        mapperScreen = new MapperScreen(stage);
-        playerScreen = new PlayerScreen(stage);
+        compositionScreen = new CompositionScreen(
+            new TXTInputReader(),
+            new MidiMusicPathUtils(),
+            new MusicExportPipeline<>(new TextToMusicTranslator(), new MusicToMidiParser(), new MidiFileExporter())
+        );
 
-        VBox sideBar = new BoxNode<>(new VBox(10))
+        mapperScreen = new MapperScreen();
+        
+        playerScreen = new PlayerScreen(
+            stage, new MidiPlayer(), 
+            new MidiMusicPathUtils()
+        );
+
+        VBox sideBar = new BoxBuilder<>(new VBox(10))
                             .addClass("sidebar")
-                            .add(new ButtonNode("Composição")
-                                    .onClick(e -> setScreen(compositionScreen))
+                            .add(new ButtonBuilder("Composição")
+                                    .onClick(e -> layout.setCenter(compositionScreen))
                                     .build())
-                            .add(new ButtonNode("Mapeamento")
-                                    .onClick(e -> setScreen(mapperScreen))
+                            .add(new ButtonBuilder("Mapeamento")
+                                    .onClick(e -> layout.setCenter(mapperScreen))
                                     .build())
-                            .add(new ButtonNode("Player")
-                                    .onClick(e -> setScreen(playerScreen))
+                            .add(new ButtonBuilder("Player")
+                                    .onClick(e -> layout.setCenter(playerScreen))
                                     .build())
                             .build();
 
-        layout = new BorderNode()
+        layout = new BorderPaneBuilder()
                             .apply(b -> b.setLeft(sideBar))
                             .build();
 
-        setScreen(compositionScreen);
+        layout.setCenter(compositionScreen);
 
         Scene scene = createScene(layout);
-        addCSStoScene(scene, "/styles/style.css");
-        addCSStoScene(scene, "/styles/comboBox.css");
-        addCSStoScene(scene, "/styles/slider.css");
-        addCSStoScene(scene, "/styles/textArea.css");
-        addCSStoScene(scene, "/styles/scrollPane.css");
-    }
-
-    private void setScreen(Screen screen) {
-        layout.setCenter(screen.getScreenNode());
+        addAllCSS(scene);
     }
 
     private Scene createScene(Parent layout) { 
@@ -69,6 +75,23 @@ public class ScreenManager extends Application {
         stage.show();
 
         return scene;
+    }
+
+    private void addAllCSS(Scene scene) {
+        // Base style
+        addCSStoScene(scene, "/styles/base.css");
+
+        // Screen style
+        addCSStoScene(scene, "/styles/composition.css");
+        addCSStoScene(scene, "/styles/mapper.css");
+        addCSStoScene(scene, "/styles/player.css");
+
+        // Components base style
+        addCSStoScene(scene, "/styles/button.css");
+        addCSStoScene(scene, "/styles/slider.css");
+        addCSStoScene(scene, "/styles/comboBox.css");
+        addCSStoScene(scene, "/styles/textArea.css");
+        addCSStoScene(scene, "/styles/scrollPane.css");
     }
 
     private void addCSStoScene(Scene scene, String path) {

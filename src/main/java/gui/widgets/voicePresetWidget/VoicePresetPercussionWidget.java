@@ -1,11 +1,11 @@
-package gui.nodes.voicePresetNodes;
+package gui.widgets.voicePresetWidget;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VoicePresetPercussionNode extends VoicePresetNode {
+public class VoicePresetPercussionWidget extends VoicePresetWidget {
 
     public Map<String, Integer> createInstrumentTypes() {
         Map<String, Integer> instruments = new LinkedHashMap<>();
@@ -18,7 +18,6 @@ public class VoicePresetPercussionNode extends VoicePresetNode {
         instruments.put("Lead 6 (Voz)", 85);
         instruments.put("Lead 7 (Quintas)", 86);
         instruments.put("Lead 8 (Baixo e Lead)", 87);
-
         instruments.put("Pad 1 (New Age)", 88);
         instruments.put("Pad 2 (Quente)", 89);
         instruments.put("Pad 3 (Polissintetizador)", 90);
@@ -27,7 +26,6 @@ public class VoicePresetPercussionNode extends VoicePresetNode {
         instruments.put("Pad 6 (Metálico)", 93);
         instruments.put("Pad 7 (Halo)", 94);
         instruments.put("Pad 8 (Sweep)", 95);
-
         instruments.put("FX 1 (Chuva)", 96);
         instruments.put("FX 2 (Trilha Sonora)", 97);
         instruments.put("FX 3 (Cristal)", 98);
@@ -36,7 +34,6 @@ public class VoicePresetPercussionNode extends VoicePresetNode {
         instruments.put("FX 6 (Goblins)", 101);
         instruments.put("FX 7 (Ecos)", 102);
         instruments.put("FX 8 (Ficção Científica)", 103);
-
         instruments.put("Sitar", 104);
         instruments.put("Banjo", 105);
         instruments.put("Shamisen", 106);
@@ -45,7 +42,6 @@ public class VoicePresetPercussionNode extends VoicePresetNode {
         instruments.put("Gaita de Foles", 109);
         instruments.put("Rabeca", 110);
         instruments.put("Shanai", 111);
-
         instruments.put("Sino", 112);
         instruments.put("Agogô", 113);
         instruments.put("Tambor de Aço", 114);
@@ -54,7 +50,6 @@ public class VoicePresetPercussionNode extends VoicePresetNode {
         instruments.put("Tom Melódico", 117);
         instruments.put("Tambor Sintetizado", 118);
         instruments.put("Prato Reverso", 119);
-
         instruments.put("Ruído de Traste de Guitarra", 120);
         instruments.put("Som de Respiração", 121);
         instruments.put("Som de Ondas do Mar", 122);
@@ -83,7 +78,7 @@ public class VoicePresetPercussionNode extends VoicePresetNode {
     }
 
     public int getDefaultVolume() {
-        return 32;
+        return 82;
 
     }
 

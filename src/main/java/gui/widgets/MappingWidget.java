@@ -1,4 +1,4 @@
-package gui.nodes;
+package gui.widgets;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -8,14 +8,12 @@ import javafx.scene.layout.Region;
 
 import translators.TextToMusic.TextToMusicRules;
 
-public class MappingNode extends VBox {
+public class MappingWidget extends VBox {
     private final String mappingRuleType;
     private String oldCaracter;
     private final TextField textField;
 
-    public MappingNode(String mappingRuleType, String nodeName, String character) {
-        super(10);
-
+    public MappingWidget(String mappingRuleType, String nodeName, String character) {
         this.mappingRuleType = mappingRuleType;
         this.oldCaracter = character;
 
@@ -38,11 +36,7 @@ public class MappingNode extends VBox {
             return;
         }
 
-        TextToMusicRules.replaceChar(
-            mappingRuleType,
-            oldCaracter,
-            newCaracter
-        );
+        TextToMusicRules.replaceChar(mappingRuleType, oldCaracter, newCaracter);
 
         oldCaracter = newCaracter;
     }

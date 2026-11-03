@@ -1,4 +1,4 @@
-package gui.nodes;
+package gui.builders;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -8,34 +8,34 @@ import javafx.scene.control.Button;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 
-public class ButtonNode {
+public class ButtonBuilder {
 
     private final Button button;
 
-    public ButtonNode(String buttonText) {
+    public ButtonBuilder(String buttonText) {
 
         if (buttonText == null) throw new NullPointerException("button text can't be null");
 
         button = new Button(buttonText);
     }
 
-    public ButtonNode addClass(String className) {
+    public ButtonBuilder addClass(String className) {
 
         button.getStyleClass().add(className);
         return this;
     }
 
-    public ButtonNode onClick(Consumer<ActionEvent> action) {
+    public ButtonBuilder onClick(Consumer<ActionEvent> action) {
         button.addEventHandler(ActionEvent.ACTION, event -> action.accept(event));
         return this;
     }
 
-    public ButtonNode onClickAddToContainer(Supplier<? extends Node> component, Pane container) {
+    public ButtonBuilder onClickAddToContainer(Supplier<? extends Node> component, Pane container) {
         button.addEventHandler(ActionEvent.ACTION, event -> container.getChildren().add(component.get()));
         return this;
     }
 
-    public ButtonNode onClickAddToContainer(Supplier<? extends Node> component, Pane container, int maxElements) {
+    public ButtonBuilder onClickAddToContainer(Supplier<? extends Node> component, Pane container, int maxElements) {
         button.addEventHandler(ActionEvent.ACTION, event -> {
             if (container.getChildren().size() < maxElements) {
                 container.getChildren().add(component.get());
@@ -45,7 +45,7 @@ public class ButtonNode {
         return this;
     }
 
-    public ButtonNode onClickRemoveLastFromContainer(Pane container) {
+    public ButtonBuilder onClickRemoveLastFromContainer(Pane container) {
         button.addEventHandler(ActionEvent.ACTION, event -> {
             var children = container.getChildren();
 

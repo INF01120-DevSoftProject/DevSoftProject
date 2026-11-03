@@ -1,0 +1,10 @@
+.player-controller {
+    -fx-background-color: #f5f5f5;
+    -fx-alignment: center;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px 24px;
+}
+
+.player-buttons {
+    -fx-alignment: center;
+}

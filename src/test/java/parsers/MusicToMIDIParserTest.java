@@ -73,7 +73,7 @@ class MusicToMIDIParserTest {
 
     private Sequence convert(MusicElement[]... sheets) {
         Music music = musicWith(sheets);
-        return new MusicToMIDIParser().convertMusicToMIDI(music);
+        return new MusicToMidiParser().convertMusicToFile(music);
     }
 
     private List<MidiEvent> shortEvents(Track track, int command) {
@@ -269,16 +269,16 @@ class MusicToMIDIParserTest {
     @Test
     void rejectsNullMusic() {
         assertThrows(NullPointerException.class,
-            () -> new MusicToMIDIParser().convertMusicToMIDI(null));
+            () -> new MusicToMidiParser().convertMusicToFile(null));
     }
 
     @Test
     void startsEachConversionWithANewSequence() {
-        MusicToMIDIParser parser = new MusicToMIDIParser();
-        Sequence first = parser.convertMusicToMIDI(musicWith(
+        MusicToMidiParser parser = new MusicToMidiParser();
+        Sequence first = parser.convertMusicToFile(musicWith(
             sheetWith(cSharpQuarter()), sheetWith(dSharpQuarter())
         ));
-        Sequence second = parser.convertMusicToMIDI(musicWith(
+        Sequence second = parser.convertMusicToFile(musicWith(
             sheetWith(volume(70))
         ));
 

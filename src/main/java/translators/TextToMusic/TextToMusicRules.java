@@ -258,10 +258,6 @@ public class TextToMusicRules {
         }
     }
 
-    private String semNull(String s) {
-        return s == null ? "" : s;
-    }
-
     public String getElementChars(String elementType) {
         // o quote serve pra caracteres como ] e ^ não quebrarem o REGEX
         return Pattern.quote(elementsMapping.get(elementType));

@@ -1,31 +1,31 @@
-package gui.nodes;
+package gui.builders;
 
 import javafx.scene.layout.BorderPane;
 
 import java.util.function.Consumer;
 
-public class BorderNode {
+public class BorderPaneBuilder {
 
     private final BorderPane border;
 
-    public BorderNode() {
+    public BorderPaneBuilder() {
         this.border = new BorderPane();
     }
 
-    public BorderNode addClass(String className) {
+    public BorderPaneBuilder addClass(String className) {
         if (className == null) throw new NullPointerException("className can't be null");
         border.getStyleClass().add(className);
 
         return this;
     }
 
-    public BorderNode apply(Consumer<BorderPane> action) {
+    public BorderPaneBuilder apply(Consumer<BorderPane> action) {
         action.accept(border);
         return this;
     }
 
 
-    public BorderNode  setId(String idName) {
+    public BorderPaneBuilder  setId(String idName) {
         if (idName == null) throw new NullPointerException("idName can't be null");
         border.setId("main");
 

@@ -27,7 +27,10 @@ public class TXTInputReaderTest {
     void throwsExceptionWhenPathIsNull() {
         TXTInputReader reader = new TXTInputReader();
 
-        assertThrows(IllegalArgumentException.class, () -> reader.readLines(null));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> reader.readFile(null)
+        );
     }
 
     @Test
@@ -35,7 +38,10 @@ public class TXTInputReaderTest {
         Path nonExistentPath = tempDir.resolve("missing_file.txt");
         TXTInputReader reader = new TXTInputReader();
 
-        assertThrows(IOException.class, () -> reader.readLines(nonExistentPath));
+        assertThrows(
+            IOException.class,
+            () -> reader.readFile(nonExistentPath)
+        );
     }
 
 }

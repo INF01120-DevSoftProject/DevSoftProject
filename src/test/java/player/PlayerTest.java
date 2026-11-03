@@ -40,8 +40,13 @@ public class PlayerTest {
         }
 
         @Override
-        public Sequencer getSequencer() {
+        public Sequencer getMusicData() {
             return this.sequencer;
+        }
+
+        @Override 
+        public double getMusicPosition() {
+            return 0;
         }
 
 

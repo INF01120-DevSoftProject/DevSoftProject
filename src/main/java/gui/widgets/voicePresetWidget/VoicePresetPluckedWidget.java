@@ -46,7 +46,7 @@ public class VoicePresetPluckedWidget extends VoicePresetWidget {
     }
 
     public int getDefaultVolume() {
-        return 32;
+        return 72;
 
     }
 

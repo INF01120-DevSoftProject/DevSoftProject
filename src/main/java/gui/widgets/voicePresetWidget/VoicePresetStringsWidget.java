@@ -46,7 +46,7 @@ public class VoicePresetStringsWidget extends VoicePresetWidget {
     }
 
     public int getDefaultVolume() {
-        return 32;
+        return 83;
     }
 
     public String getDefaultInstrument() {

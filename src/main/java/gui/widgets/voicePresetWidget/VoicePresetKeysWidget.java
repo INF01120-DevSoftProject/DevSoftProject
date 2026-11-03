@@ -37,7 +37,7 @@ public class VoicePresetKeysWidget extends VoicePresetWidget {
     }
 
     public int getDefaultVolume() {
-        return 56;
+        return 66;
 
     }
 

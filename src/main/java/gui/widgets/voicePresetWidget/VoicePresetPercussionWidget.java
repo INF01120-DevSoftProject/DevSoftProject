@@ -78,7 +78,7 @@ public class VoicePresetPercussionWidget extends VoicePresetWidget {
     }
 
     public int getDefaultVolume() {
-        return 32;
+        return 82;
 
     }
 

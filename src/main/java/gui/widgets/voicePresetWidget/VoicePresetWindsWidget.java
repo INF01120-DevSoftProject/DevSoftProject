@@ -54,7 +54,7 @@ public class VoicePresetWindsWidget extends VoicePresetWidget {
     }
 
     public int getDefaultVolume() {
-        return 32;
+        return 83;
 
     }
 

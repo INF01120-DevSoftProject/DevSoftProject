@@ -144,7 +144,7 @@ public class MidiPlayer implements Player<Sequencer> {
     }
 
     @Override
-    public double getMusicalPosition() {
+    public double getMusicPosition() {
         Sequence sequence = sequencer.getSequence();
 
         if (sequence == null ||

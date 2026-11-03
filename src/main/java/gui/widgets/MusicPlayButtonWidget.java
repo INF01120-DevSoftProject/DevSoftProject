@@ -10,7 +10,7 @@ public class MusicPlayButtonWidget extends StackPane {
     private Button playButton;
     private Button pauseButton;
 
-    public MusicPlayButtonWidget(Player player) {
+    public MusicPlayButtonWidget(Player<?> player) {
         
         playButton = new ButtonBuilder("▶")
             .onClick(e -> {

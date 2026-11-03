@@ -9,9 +9,9 @@ import javafx.util.Duration;
 public class MusicSliderWidget extends Slider {
 
     private Timeline sliderUpdater;
-    private Player player;
+    private Player<?> player;
 
-    public MusicSliderWidget(Player player) {
+    public MusicSliderWidget(Player<?> player) {
         this.player = player;
         
         long duration = player.getDuration();

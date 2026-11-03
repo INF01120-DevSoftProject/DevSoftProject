@@ -19,7 +19,7 @@ public interface Player<T> extends AutoCloseable {
 
     boolean isPlaying();
 
-    double getMusicalPosition();
+    double getMusicPosition();
 
     T getMusicData();
 

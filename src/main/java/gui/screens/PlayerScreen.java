@@ -38,7 +38,7 @@ public class PlayerScreen extends Screen {
 
         player.load(musicPathUtils.getAllMusicsPathInResources().getFirst());
 
-        sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicalPosition);
+        sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicPosition);
 
         playPauseButton = new MusicPlayButtonWidget(player);
         musicSelectionBox = new MusicSelectionWidget(musicPathUtils);

@@ -1,12 +1,10 @@
 package input;
 
 import java.io.IOException;
-import java.util.List;
 import java.nio.file.Path;
 
 public interface InputReader {
     
     String readFile(Path path) throws IOException;
 
-    List<String> readLines(Path path) throws IOException;
 }

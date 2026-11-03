@@ -35,6 +35,7 @@ public class ScreenManager extends Application {
 
         compositionScreen = new CompositionScreen(
             new TXTInputReader(),
+            new MidiMusicPathUtils(),
             new MusicExportPipeline<>(new TextToMusicTranslator(), new MusicToMidiParser(), new MidiFileExporter())
         );
 

@@ -1,6 +1,8 @@
 package gui.screens;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Pane;
@@ -27,16 +29,16 @@ public abstract class Screen extends Pane {
         ).showAndWait();
     }
 
-    protected File openFileChooserWindow() {
+    protected File openFileChooserWindow(Path initialDirectory) {
         FileChooser fileChooser = new FileChooser();
+
         fileChooser.setTitle("Salvar MIDI");
         fileChooser.setInitialFileName("musica.mid");
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("Arquivo MIDI (*.mid)", "*.mid")
-        );
 
-        File file = fileChooser.showSaveDialog(getCurrentWindow());
+        if (initialDirectory != null && Files.isDirectory(initialDirectory)) {
+            fileChooser.setInitialDirectory(initialDirectory.toFile());
+        }
 
-        return file;
+        return fileChooser.showSaveDialog(getCurrentWindow());
     }
 }

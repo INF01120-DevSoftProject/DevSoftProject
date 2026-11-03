@@ -12,6 +12,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import music.VoicePreset;
+import utils.MusicPathUtils;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.factory.ControlFactory;
@@ -28,10 +29,12 @@ public class CompositionScreen extends Screen {
     
     private final MusicExportPipeline<?> exporter;
     private final InputReader reader;
+    private final MusicPathUtils pathUtils;
 
-    public CompositionScreen(InputReader reader, MusicExportPipeline<?> exporter) {
+    public CompositionScreen(InputReader reader, MusicPathUtils pathUtils, MusicExportPipeline<?> exporter) {
         this.exporter = exporter;
         this.reader = reader;
+        this.pathUtils = pathUtils;
 
         VoiceWidget.restartCurrentVoiceNum();
 
@@ -75,7 +78,7 @@ public class CompositionScreen extends Screen {
     }
 
     private void saveMusic() {
-        File file = openFileChooserWindow();
+        File file = openFileChooserWindow(pathUtils.getMusicsFolderPath());
         if (file == null) return;
 
         try {
@@ -88,7 +91,7 @@ public class CompositionScreen extends Screen {
     }
 
     private void importMusic() {
-        File file = openFileChooserWindow();
+        File file = openFileChooserWindow(null);
         if (file == null) return;
 
         try {

@@ -1,10 +1,7 @@
 package player;
 
 import java.nio.file.Path;
-
-import javax.sound.midi.Sequencer;
-
-public interface Player extends AutoCloseable {
+public interface Player<T> extends AutoCloseable {
 
     void load(Path path);
 
@@ -22,7 +19,9 @@ public interface Player extends AutoCloseable {
 
     boolean isPlaying();
 
-    Sequencer getSequencer();
+    double getMusicalPosition();
+
+    T getMusicData();
 
     String getCurrentMusicName();
 

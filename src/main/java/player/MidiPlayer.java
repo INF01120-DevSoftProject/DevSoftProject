@@ -9,7 +9,7 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 
-public class MidiPlayer implements Player {
+public class MidiPlayer implements Player<Sequencer> {
 
     private final Sequencer sequencer;
     private boolean isLoaded;
@@ -78,7 +78,7 @@ public class MidiPlayer implements Player {
     }
 
     @Override 
-    public Sequencer getSequencer() {
+    public Sequencer getMusicData() {
         return this.sequencer;
     }
 
@@ -141,6 +141,18 @@ public class MidiPlayer implements Player {
    @Override
     public String getCurrentMusicName() {
         return currentMusicName;
+    }
+
+    @Override
+    public double getMusicalPosition() {
+        Sequence sequence = sequencer.getSequence();
+
+        if (sequence == null ||
+            sequence.getDivisionType() != Sequence.PPQ) {
+            return Double.NaN;
+        }
+
+        return (double) sequencer.getTickPosition() / sequence.getResolution();
     }
 
     private void setCurrentMusic(Path path) {

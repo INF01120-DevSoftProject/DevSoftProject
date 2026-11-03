@@ -1,8 +1,5 @@
 package gui.widgets;
 
-import javax.sound.midi.Sequence;
-import javax.sound.midi.Sequencer;
-
 import com.sheetmusic4j.core.io.ScoreFile;
 import com.sheetmusic4j.core.model.Score;
 import com.sheetmusic4j.fxviewer.StripSheetView;
@@ -11,6 +8,7 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import java.nio.file.Path;
+import java.util.function.DoubleSupplier;
 
 public class SheetMusicWidget extends StackPane {
 
@@ -21,11 +19,9 @@ public class SheetMusicWidget extends StackPane {
     private static final double STRIP_SPACING = 1.0;
     private static final double CURSOR_POSITION = 0.25;
 
-    private long lastTick = -1;
-
-    public SheetMusicWidget(Path midiPath, Sequencer sequencer) {
+    public SheetMusicWidget(Path midiPath, DoubleSupplier positionSupplier) {
         sheetView = createSheetView(midiPath);
-        animation = createAnimation(sequencer);
+        animation = createAnimation(positionSupplier);
         animation.start();
     }
 
@@ -63,30 +59,19 @@ public class SheetMusicWidget extends StackPane {
         getSheetViewAnimation().stop();
     }
 
-    private AnimationTimer createAnimation(Sequencer sequencer) {
+    private AnimationTimer createAnimation(DoubleSupplier positionSupplier) {
         return new AnimationTimer() {
             @Override
             public void handle(long now) {
-                moveSheetByTick(sequencer);
+                moveSheetByTick(positionSupplier);
             }
         };
     }
 
-    private void moveSheetByTick(Sequencer sequencer) {
-        long tick = sequencer.getTickPosition();
+    private void moveSheetByTick(DoubleSupplier positionSupplier) {
+        double position = positionSupplier.getAsDouble();
 
-        if (tick == lastTick) return;
-
-        Sequence sequence = sequencer.getSequence();
-
-        if (sequence == null || sequence.getDivisionType() != Sequence.PPQ) {
-            return;
-        }
-
-        lastTick = tick;
-
-        double resolution = sequence.getResolution();
-        double position = tick / resolution;
+        if (!Double.isFinite(position)) return;
 
         sheetView.cursorTimeProperty().set(position);
     }

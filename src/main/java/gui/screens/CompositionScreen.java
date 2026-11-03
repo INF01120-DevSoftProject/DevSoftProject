@@ -92,7 +92,7 @@ public class CompositionScreen extends Screen {
         if (file == null) return;
 
         try {
-            List<String> lines = reader.readLines(file.toPath());
+            List<String> lines = reader.readFile(file.toPath()).lines().toList();
 
             if (lines.stream().allMatch(String::isBlank)) {
                 throw new IllegalArgumentException("O arquivo está vazio.");

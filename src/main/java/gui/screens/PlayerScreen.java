@@ -18,11 +18,9 @@ import javafx.stage.WindowEvent;
 import player.Player;
 import utils.MusicPathUtils;
 
-
-
 public class PlayerScreen extends Screen {
 
-    private final Player player;
+    private final Player<?> player;
     private final MusicPathUtils musicPathUtils;
 
     private final Label musicTitle;
@@ -32,14 +30,15 @@ public class PlayerScreen extends Screen {
     private final MusicSelectionWidget musicSelectionBox;
     private final MusicPlayButtonWidget playPauseButton;
 
-    public PlayerScreen(Stage stage, Player player, MusicPathUtils musicPathUtils) {
+    public PlayerScreen(Stage stage, Player<?> player, MusicPathUtils musicPathUtils) {
         this.player = player;
         this.musicPathUtils = musicPathUtils;
         
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e -> endProgram());
 
         player.load(musicPathUtils.getAllMusicsPathInResources().getFirst());
-        sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player.getSequencer());
+
+        sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicalPosition);
 
         playPauseButton = new MusicPlayButtonWidget(player);
         musicSelectionBox = new MusicSelectionWidget(musicPathUtils);
@@ -93,11 +92,11 @@ public class PlayerScreen extends Screen {
 
         try {
             player.load(path);
+            updatePlayerUI();
         } catch (RuntimeException e) {
             showErrorMessage(e.getMessage());
         }
 
-        updatePlayerUI();
     }
 
     private void updatePlayerUI() {

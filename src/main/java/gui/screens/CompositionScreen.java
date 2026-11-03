@@ -45,7 +45,7 @@ public class CompositionScreen extends Screen {
         ScrollPane voicesContainerScroll = ControlFactory.createScrollPane(voicesContainer);
 
         HBox plusMinusButtons = new BoxBuilder<>(new HBox(20))
-                                    .addClass("plus-minus-container")
+                                    .addClass("fixed-button-container")
                                     .add(new ButtonBuilder("+")
                                             .onClickAddToContainer(() -> createVoiceWidget(), voicesContainer, MAX_VOICES)
                                             .build())
@@ -56,7 +56,7 @@ public class CompositionScreen extends Screen {
                                     .build();
 
         HBox saveImportButtons = new BoxBuilder<>(new HBox(20))
-                                    .addClass("save-import-container")
+                                    .addClass("fill-button-container")
                                     .add(new ButtonBuilder("Salvar música")
                                             .onClick(b -> saveMusic())
                                             .build())

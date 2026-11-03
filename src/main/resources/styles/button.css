@@ -9,11 +9,11 @@
     -fx-background-color: #D0F48F;
 }
 
-.plus-minus-container .button {
+.fixed-button-container .button {
     -fx-min-width: 40px;
     -fx-font-size: 16px;
 }
 
-.save-import-container .button {
+.fill-button-container .button {
     -fx-pref-width: 99999px;
 }

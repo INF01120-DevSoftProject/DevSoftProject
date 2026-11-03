@@ -30,7 +30,7 @@ public class MapperScreen extends Screen {
         restoreMappingContainers();
 
         HBox mappingCategories = new BoxBuilder<>(new HBox(20))
-								.addClass("plus-minus-container") // Concertar nome
+								.addClass("fixed-button-container") // Concertar nome
 								.add(new ButtonBuilder("Notas")
 										.onClick(e -> showMapping(noteMappingContainer))
 										.build())
@@ -51,7 +51,7 @@ public class MapperScreen extends Screen {
 								.build();
 
         HBox saveResetButtons = new BoxBuilder<>(new HBox(20))
-								.addClass("save-import-container") // Concertar nome
+								.addClass("fill-button-container") // Concertar nome
 								.add(new ButtonBuilder("Salvar Mapeamento")
 										.onClick(e -> applyAllMappings())
                                         .build())

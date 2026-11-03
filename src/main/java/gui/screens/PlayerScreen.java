@@ -5,12 +5,14 @@ import java.nio.file.Path;
 
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
+import gui.factory.ControlFactory;
 import gui.widgets.MusicPlayButtonWidget;
 import gui.widgets.MusicSelectionWidget;
 import gui.widgets.MusicSliderWidget;
 import gui.widgets.SheetMusicWidget;
 
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -39,6 +41,7 @@ public class PlayerScreen extends Screen {
         player.load(musicPathUtils.getAllMusicsPathInResources().getFirst());
 
         sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicPosition);
+        ScrollPane sheetMusicWidgetScroll = ControlFactory.createScrollPane(sheetMusicWidget);
 
         playPauseButton = new MusicPlayButtonWidget(player);
         musicSelectionBox = new MusicSelectionWidget(musicPathUtils);
@@ -69,7 +72,7 @@ public class PlayerScreen extends Screen {
                         .setId("main")
                         .add(new Label("Player"))
                         .add(musicSelectionBox)
-                        .add(sheetMusicWidget)
+                        .add(sheetMusicWidgetScroll)
                         .add(playerController)
                         .build();
 

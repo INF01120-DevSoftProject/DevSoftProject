@@ -1,5 +1,7 @@
 package gui;
 
+import javax.sound.midi.Sequence;
+
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,6 +19,7 @@ import gui.screens.*;
 import input.TXTInputReader;
 import exporters.MusicExportPipeline;
 import exporters.MidiFileExporter;
+import exporters.TempMidiDraftService;
 
 public class ScreenManager extends Application {
     private static final int SCENE_WIDTH = 600;
@@ -33,17 +36,31 @@ public class ScreenManager extends Application {
     public void start(Stage stage) {
         this.stage = stage;
 
+        MusicExportPipeline<Sequence> exportPipeline = new MusicExportPipeline<>(
+            new TextToMusicTranslator(),
+            new MusicToMidiParser(),
+            new MidiFileExporter()
+        );
+        TempMidiDraftService draftService = new TempMidiDraftService(exportPipeline);
+
         compositionScreen = new CompositionScreen(
             new TXTInputReader(),
             new MidiMusicPathUtils(),
-            new MusicExportPipeline<>(new TextToMusicTranslator(), new MusicToMidiParser(), new MidiFileExporter())
+            exportPipeline,
+            draftService,
+            draftPath -> {
+                playerScreen.loadDraft(draftPath);
+                layout.setCenter(playerScreen);
+            }
         );
 
         mapperScreen = new MapperScreen();
         
         playerScreen = new PlayerScreen(
-            stage, new MidiPlayer(), 
-            new MidiMusicPathUtils()
+            stage,
+            new MidiPlayer(),
+            new MidiMusicPathUtils(),
+            draftService
         );
 
         VBox sideBar = new BoxBuilder<>(new VBox(10))
@@ -55,7 +72,10 @@ public class ScreenManager extends Application {
                                     .onClick(e -> layout.setCenter(mapperScreen))
                                     .build())
                             .add(new ButtonBuilder("Player")
-                                    .onClick(e -> layout.setCenter(playerScreen))
+                                    .onClick(e -> {
+                                        playerScreen.refreshMusicList();
+                                        layout.setCenter(playerScreen);
+                                    })
                                     .build())
                             .build();
 

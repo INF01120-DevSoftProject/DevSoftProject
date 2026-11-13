@@ -46,6 +46,31 @@ class MusicSelectionWidgetTest extends JavaFXTestBase {
         try {
             assertThat(widget.getItems()).containsExactly("songA.mid", "songB.mid");
             assertThat(widget.getValue()).isEqualTo("songA.mid");
+            assertThat(widget.getVisibleRowCount()).isEqualTo(5);
+        } finally {
+            widget.stopUpdater();
+        }
+    }
+
+    @Test
+    void refreshMusicListPreservesClearedSelectionWhenNewMusicAppears() {
+        List<Path> dynamicPaths = new java.util.ArrayList<>(List.of(Path.of("songA.mid"), Path.of("songB.mid")));
+        MusicPathUtils utils = new DummyMusicPathUtils() {
+            @Override
+            public List<Path> getAllMusicsPathInResources() {
+                return List.copyOf(dynamicPaths);
+            }
+        };
+
+        MusicSelectionWidget widget = new MusicSelectionWidget(utils);
+        try {
+            widget.getSelectionModel().clearSelection();
+            dynamicPaths.add(Path.of("songC.mid"));
+
+            widget.refreshMusicList();
+
+            assertThat(widget.getItems()).containsExactly("songA.mid", "songB.mid", "songC.mid");
+            assertThat(widget.getValue()).isNull();
         } finally {
             widget.stopUpdater();
         }

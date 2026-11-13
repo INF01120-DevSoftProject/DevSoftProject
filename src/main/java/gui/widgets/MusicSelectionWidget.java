@@ -13,6 +13,8 @@ import utils.MusicPathUtils;
 
 public class MusicSelectionWidget extends ComboBox<String> {
 
+    private static final int MAX_VISIBLE_ROWS = 5;
+
     private MusicPathUtils midiInputReader;
     private Timeline musicListUpdater;
 
@@ -20,6 +22,7 @@ public class MusicSelectionWidget extends ComboBox<String> {
         this.midiInputReader = midiPathUtils;
         List<String> musics = midiPathUtils.getMusicNamesFromPaths(midiPathUtils.getAllMusicsPathInResources());
 
+        setVisibleRowCount(MAX_VISIBLE_ROWS);
         getItems().addAll(musics);
         getSelectionModel().selectFirst();
         startMusicListUpdater();
@@ -41,19 +44,24 @@ public class MusicSelectionWidget extends ComboBox<String> {
         musicListUpdater.play();
     }
 
-    private void refreshMusicList() {
+    public void refreshMusicList() {
         List<Path> paths = midiInputReader.getAllMusicsPathInResources();
         List<String> musics = midiInputReader.getMusicNamesFromPaths(paths);
 
         if (getItems().equals(musics)) return;
 
+        boolean wasEmpty = getItems().isEmpty();
         String selectedMusic = getValue();
 
-
-       getItems().setAll(musics);
+        getItems().setAll(musics);
 
         if (selectedMusic != null && musics.contains(selectedMusic)) {
             setValue(selectedMusic);
+            return;
+        }
+
+        if (selectedMusic == null && !wasEmpty) {
+            getSelectionModel().clearSelection();
             return;
         }
 

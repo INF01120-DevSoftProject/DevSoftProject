@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import gui.JavaFXTestBase;
 import gui.widgets.voicePresetWidget.VoicePresetKeysWidget;
 
@@ -29,6 +30,7 @@ class VoiceWidgetTest extends JavaFXTestBase {
     void decrementsVoiceNumberOnlyAboveOne() {
         new VoiceWidget(new VoicePresetKeysWidget());
         new VoiceWidget(new VoicePresetKeysWidget());
+
         assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(2);
 
         VoiceWidget.decrementCurrentVoiceNum();
@@ -43,6 +45,7 @@ class VoiceWidgetTest extends JavaFXTestBase {
         VoiceWidget widget = new VoiceWidget(new VoicePresetKeysWidget());
 
         widget.setVoiceText("C D E F G");
+
         assertThat(widget.getVoiceText()).isEqualTo("C D E F G");
     }
 
@@ -51,9 +54,18 @@ class VoiceWidgetTest extends JavaFXTestBase {
         VoicePresetKeysWidget preset = new VoicePresetKeysWidget();
         VoiceWidget widget = new VoiceWidget(preset);
 
-        assertThat(widget.getInstrument()).isEqualTo(0);
-        assertThat(widget.getOctave()).isEqualTo(3);
-        assertThat(widget.getVolume()).isEqualTo(66);
+        assertThat(widget.getInstrument().getInstrument())
+            .isEqualTo(preset.getInstrument().getInstrument());
+
+        assertThat(widget.getInstrument().getType())
+            .isEqualTo(preset.getInstrument().getType());
+
+        assertThat(widget.getVolume().getVolume())
+            .isEqualTo(preset.getVolume().getVolume());
+
+        assertThat(widget.getOctave())
+            .usingRecursiveComparison()
+            .isEqualTo(preset.getOctave());
     }
 
     @Test

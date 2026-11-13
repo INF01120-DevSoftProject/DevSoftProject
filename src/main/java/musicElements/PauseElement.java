@@ -1,5 +1,7 @@
 package musicElements;
 
+import builders.MidiSequenceBuilder;
+
 public class PauseElement implements MusicElement{
     
     private final DurationTime duration;
@@ -9,6 +11,11 @@ public class PauseElement implements MusicElement{
         if (newDuration == null) throw new IllegalArgumentException("Duracao invalida");
 
         this.duration = newDuration;
+    }
+
+    @Override
+    public void addMusicElementToMIDI(MidiSequenceBuilder builder) {
+        builder.addPause(this);
     }
 
     public DurationTime getDuration(){

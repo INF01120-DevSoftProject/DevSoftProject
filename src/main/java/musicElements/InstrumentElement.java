@@ -1,5 +1,7 @@
 package musicElements;
 
+import builders.MidiSequenceBuilder;
+
 public class InstrumentElement implements MusicElement{
 
     private final int instrument;
@@ -21,6 +23,12 @@ public class InstrumentElement implements MusicElement{
         this.type = newType;
         this.instrument = newType.contains(newInstrument) ? newInstrument : newType.getDefaultInstrument();
     }
+
+    @Override
+    public void addMusicElementToMIDI(MidiSequenceBuilder builder) {
+        builder.setInstrument(this);
+    }
+
 
     public int getInstrument(){
         return this.instrument;

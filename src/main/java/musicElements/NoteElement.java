@@ -1,5 +1,7 @@
 package musicElements;
 
+import builders.MidiSequenceBuilder;
+
 public class NoteElement implements MusicElement {
 
     private final Notes note;
@@ -22,6 +24,11 @@ public class NoteElement implements MusicElement {
         this.duration = newDuration;
         this.accidental = newAccidental;
 
+    }
+
+    @Override
+    public void addMusicElementToMIDI(MidiSequenceBuilder builder) {
+        builder.addNote(this);
     }
 
     public Notes getNote(){

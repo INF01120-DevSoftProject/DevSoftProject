@@ -1,5 +1,7 @@
 package musicElements;
 
-public interface MusicElement {
+import builders.MidiSequenceBuilder;
 
+public interface MusicElement {
+    void addMusicElementToMIDI(MidiSequenceBuilder builder);
 }

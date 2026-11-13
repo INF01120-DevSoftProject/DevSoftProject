@@ -8,7 +8,7 @@ import javax.sound.midi.Sequencer;
 
 public class PlayerTest {
 
-    static class DummyPlayer implements Player {
+    static class DummyPlayer implements Player<Sequencer> {
         private boolean played = false;
         private boolean closed = false;
         private Sequencer sequencer;

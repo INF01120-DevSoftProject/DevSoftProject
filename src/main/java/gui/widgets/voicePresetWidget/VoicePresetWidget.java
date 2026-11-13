@@ -1,5 +1,6 @@
 package gui.widgets.voicePresetWidget;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,22 +12,42 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
+import musicElements.Octave;
+import musicElements.VolumeElement;
 import javafx.scene.Node;
 
 public abstract class VoicePresetWidget {
-    protected  ComboBox<String> instrumentController;
+    protected   ComboBox<String> instrumentSelector;
     protected ComboBox<String> octaveController;
     protected Slider volumeController;
 
-    public HBox createVoicePresetContainer() {
-        instrumentController = ControlFactory.createComboBox("Insira seu instrumento", getInstrumentsNames());
-        volumeController = ControlFactory.createSlider(0, 100, getDefaultVolume());
-        octaveController = ControlFactory.createComboBox("Insira sua oitava", getOctaveNames());
+    private static final int MAX_VOLUME = 100;
+    private static final int MIN_VOLUME = 0;
 
-        instrumentController.setValue(getDefaultInstrument());
+    public HBox createVoicePresetContainer() {
+        
+        instrumentSelector = ControlFactory.createComboBox(
+            "Insira seu instrumento",
+            getInstrumentsNames()
+        );
+
+        volumeController = ControlFactory.createVolumeSlider(
+            new VolumeElement(MIN_VOLUME), 
+            new VolumeElement(MAX_VOLUME), 
+            getDefaultVolume()
+        );
+
+        octaveController = ControlFactory.createComboBox(
+            "Insira sua oitava", 
+            getOctaveNames()
+        );
+
+        instrumentSelector.setValue(getDefaultInstrument());
         octaveController.setValue(getDefaultOctave());
 
-        VBox instrumentContainer = createControlWithLabel(instrumentController, "Instrumento");
+        VBox instrumentContainer = createControlWithLabel(instrumentSelector, "Instrumento");
         VBox volumeContainer = createControlWithLabel(volumeController, "Volume");
         VBox octaveContainer = createControlWithLabel(octaveController, "Oitava");
 
@@ -43,28 +64,35 @@ public abstract class VoicePresetWidget {
         return voicePresetContainer;
     }
 
-    protected abstract Map<String, Integer> createInstrumentTypes();
-    protected abstract Map<String, Integer> createOctaveTypes();
+    public VolumeElement getVolume() {
+        return new VolumeElement(
+            (int) Math.round(volumeController.getValue())
+        );
+    }
 
-    public abstract String getDefaultOctave();
-    public abstract int getDefaultVolume();
-    public abstract String getDefaultInstrument();
+    public InstrumentElement getInstrument() {
+        return createInstrumentTypes().get(instrumentSelector.getValue());
+    }
+
+    public Octave getOctave() {
+        return createOctaveTypes().get(octaveController.getValue());
+    }
 
     public List<String> getOctaveNames() {
         return List.copyOf(createOctaveTypes().keySet());
     }
 
-    public double getVolume() {
-        return volumeController.getValue();
+    public String getDefaultOctave() {
+        return new ArrayList<>(createOctaveTypes().keySet()).get(1);
     }
 
-    public int getInstrument() {
-        return createInstrumentTypes().get(instrumentController.getValue());
-    }
+    public abstract VolumeElement getDefaultVolume();
+    public abstract String getDefaultInstrument();
+    public abstract InstrumentType getInstrumentType();
 
-    public int getOctave() {
-        return createOctaveTypes().get(octaveController.getValue());
-    }
+    protected abstract Map<String, InstrumentElement> createInstrumentTypes();
+    protected abstract Map<String, Octave> createOctaveTypes();
+
 
     private  List<String> getInstrumentsNames() {
         return List.copyOf(createInstrumentTypes().keySet());

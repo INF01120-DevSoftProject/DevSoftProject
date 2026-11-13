@@ -1,69 +1,71 @@
 package gui.widgets.voicePresetWidget;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+
+import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
+import musicElements.Octave;
+import musicElements.VolumeElement;
 
 public class VoicePresetWindsWidget extends VoicePresetWidget {
 
-    public Map<String, Integer> createInstrumentTypes() {
-        Map<String, Integer> instruments = new LinkedHashMap<>();
+    @Override 
+    public Map<String, InstrumentElement> createInstrumentTypes() {
+        Map<String, InstrumentElement> instruments = new LinkedHashMap<>();
 
-        instruments.put("Trompete", 56);
-        instruments.put("Trombone", 57);
-        instruments.put("Tuba", 58);
-        instruments.put("Trompete com Surdina", 59);
-        instruments.put("Trompa", 60);
-        instruments.put("Seção de Metais", 61);
-        instruments.put("Metais Sintetizados 1", 62);
-        instruments.put("Metais Sintetizados 2", 63);
-        instruments.put("Saxofone Soprano", 64);
-        instruments.put("Saxofone Alto", 65);
-        instruments.put("Saxofone Tenor", 66);
-        instruments.put("Saxofone Barítono", 67);
-        instruments.put("Oboé", 68);
-        instruments.put("Corne Inglês", 69);
-        instruments.put("Fagote", 70);
-        instruments.put("Clarinete", 71);
-        instruments.put("Piccolo", 72);
-        instruments.put("Flauta", 73);
-        instruments.put("Flauta Doce", 74);
-        instruments.put("Flauta de Pã", 75);
-        instruments.put("Sopro em Garrafa", 76);
-        instruments.put("Shakuhachi", 77);
-        instruments.put("Apito", 78);
-        instruments.put("Ocarina", 79);
+        instruments.put("Trompete", new InstrumentElement(56, getInstrumentType()));
+        instruments.put("Trombone", new InstrumentElement(57, getInstrumentType()));
+        instruments.put("Tuba", new InstrumentElement(58, getInstrumentType()));
+        instruments.put("Trompete com Surdina", new InstrumentElement(59, getInstrumentType()));
+        instruments.put("Trompa", new InstrumentElement(60, getInstrumentType()));
+        instruments.put("Seção de Metais", new InstrumentElement(61, getInstrumentType()));
+        instruments.put("Metais Sintetizados 1", new InstrumentElement(62, getInstrumentType()));
+        instruments.put("Metais Sintetizados 2", new InstrumentElement(63, getInstrumentType()));
+        instruments.put("Saxofone Soprano", new InstrumentElement(64, getInstrumentType()));
+        instruments.put("Saxofone Alto", new InstrumentElement(65, getInstrumentType()));
+        instruments.put("Saxofone Tenor", new InstrumentElement(66, getInstrumentType()));
+        instruments.put("Saxofone Barítono", new InstrumentElement(67, getInstrumentType()));
+        instruments.put("Oboé", new InstrumentElement(68, getInstrumentType()));
+        instruments.put("Corne Inglês", new InstrumentElement(69, getInstrumentType()));
+        instruments.put("Fagote", new InstrumentElement(70, getInstrumentType()));
+        instruments.put("Clarinete", new InstrumentElement(71, getInstrumentType()));
+        instruments.put("Piccolo", new InstrumentElement(72, getInstrumentType()));
+        instruments.put("Flauta", new InstrumentElement(73, getInstrumentType()));
+        instruments.put("Flauta Doce", new InstrumentElement(74, getInstrumentType()));
+        instruments.put("Flauta de Pã", new InstrumentElement(75, getInstrumentType()));
+        instruments.put("Sopro em Garrafa", new InstrumentElement(76, getInstrumentType()));
+        instruments.put("Shakuhachi", new InstrumentElement(77, getInstrumentType()));
+        instruments.put("Apito", new InstrumentElement(78, getInstrumentType()));
+        instruments.put("Ocarina", new InstrumentElement(79, getInstrumentType()));
 
         return instruments;
     }
 
-    public Map<String, Integer> createOctaveTypes() {
-        Map<String, Integer> octaves = new LinkedHashMap<>();
+    @Override 
+    public Map<String, Octave> createOctaveTypes() {
+        Map<String, Octave> octaves = new LinkedHashMap<>();
 
-        octaves.put("Primeira Oitava", 1);
-        octaves.put("Segunda Oitava", 2);
-        octaves.put("Terceira Oitava", 3);
-        octaves.put("Quarta Oitava", 4);
+        octaves.put("Primeira Oitava", new Octave(2));
+        octaves.put("Segunda Oitava", new Octave(2));
+        octaves.put("Terceira Oitava", new Octave(3));
+        octaves.put("Quarta Oitava", new Octave(4));
 
         return octaves;
     }
 
-    public String getDefaultOctave() {
-        return new ArrayList<>(createOctaveTypes().keySet()).get(1);
+    @Override 
+    public InstrumentType getInstrumentType() {
+        return InstrumentType.WINDS;
     }
 
-    public int getDefaultVolume() {
-        return 83;
-
+    @Override 
+    public VolumeElement getDefaultVolume() {
+        return new VolumeElement(83);
     }
 
+    @Override 
     public String getDefaultInstrument() {
         return createInstrumentTypes().keySet().iterator().next();
     }
-
-    public  List<String> getOctaveNames() {
-        return List.copyOf(createOctaveTypes().keySet());
-    }
-
 }

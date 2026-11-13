@@ -99,7 +99,6 @@ public class PlayerScreen extends Screen {
         } catch (RuntimeException e) {
             showErrorMessage(e.getMessage());
         }
-
     }
 
     private void updatePlayerUI() {

@@ -1,61 +1,63 @@
 package gui.widgets.voicePresetWidget;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+
+import musicElements.InstrumentElement;
+import musicElements.InstrumentType;
+import musicElements.Octave;
+import musicElements.VolumeElement;
 
 public class VoicePresetPluckedWidget extends VoicePresetWidget {
 
-    public Map<String, Integer> createInstrumentTypes() {
-        Map<String, Integer> instruments = new LinkedHashMap<>();
+    @Override 
+    public Map<String, InstrumentElement> createInstrumentTypes() {
+        Map<String, InstrumentElement> instruments = new LinkedHashMap<>();
 
-        instruments.put("Violão de Nylon", 24);
-        instruments.put("Violão de Aço", 25);
-        instruments.put("Guitarra Jazz", 26);
-        instruments.put("Guitarra Limpa", 27);
-        instruments.put("Guitarra Abafada", 28);
-        instruments.put("Guitarra Overdrive", 29);
-        instruments.put("Guitarra Distorcida", 30);
-        instruments.put("Harmônicos de Guitarra", 31);
-        instruments.put("Baixo Acústico", 32);
-        instruments.put("Baixo Elétrico com Dedos", 33);
-        instruments.put("Baixo Elétrico com Palheta", 34);
-        instruments.put("Baixo Fretless", 35);
-        instruments.put("Slap Bass 1", 36);
-        instruments.put("Slap Bass 2", 37);
-        instruments.put("Baixo Sintetizado 1", 38);
-        instruments.put("Baixo Sintetizado 2", 39);
+        instruments.put("Violão de Nylon", new InstrumentElement(24, getInstrumentType()));
+        instruments.put("Violão de Aço", new InstrumentElement(25, getInstrumentType()));
+        instruments.put("Guitarra Jazz", new InstrumentElement(26, getInstrumentType()));
+        instruments.put("Guitarra Limpa", new InstrumentElement(27, getInstrumentType()));
+        instruments.put("Guitarra Abafada", new InstrumentElement(28, getInstrumentType()));
+        instruments.put("Guitarra Overdrive", new InstrumentElement(29, getInstrumentType()));
+        instruments.put("Guitarra Distorcida", new InstrumentElement(30, getInstrumentType()));
+        instruments.put("Harmônicos de Guitarra", new InstrumentElement(31, getInstrumentType()));
+        instruments.put("Baixo Acústico", new InstrumentElement(32, getInstrumentType()));
+        instruments.put("Baixo Elétrico com Dedos", new InstrumentElement(33, getInstrumentType()));
+        instruments.put("Baixo Elétrico com Palheta", new InstrumentElement(34, getInstrumentType()));
+        instruments.put("Baixo Fretless", new InstrumentElement(35, getInstrumentType()));
+        instruments.put("Slap Bass 1", new InstrumentElement(36, getInstrumentType()));
+        instruments.put("Slap Bass 2", new InstrumentElement(37, getInstrumentType()));
+        instruments.put("Baixo Sintetizado 1", new InstrumentElement(38, getInstrumentType()));
+        instruments.put("Baixo Sintetizado 2", new InstrumentElement(39, getInstrumentType()));
 
         return instruments;
     }
 
-    public Map<String, Integer> createOctaveTypes() {
-        Map<String, Integer> octaves = new LinkedHashMap<>();
+    @Override 
+    public Map<String, Octave> createOctaveTypes() {
+        Map<String, Octave> octaves = new LinkedHashMap<>();
 
-        octaves.put("Primeira Oitava", 1);
-        octaves.put("Segunda Oitava", 2);
-        octaves.put("Terceira Oitava", 3);
-        octaves.put("Quarta Oitava", 4);
+        octaves.put("Primeira Oitava", new Octave(2));
+        octaves.put("Segunda Oitava", new Octave(2));
+        octaves.put("Terceira Oitava", new Octave(3));
+        octaves.put("Quarta Oitava", new Octave(4));
 
         return octaves;
     }
 
-    public String getDefaultOctave() {
-        return new ArrayList<>(createOctaveTypes().keySet()).get(1);
+    @Override 
+    public InstrumentType getInstrumentType() {
+        return InstrumentType.PLUCKED;
     }
 
-    public int getDefaultVolume() {
-        return 72;
-
+    @Override 
+    public VolumeElement getDefaultVolume() {
+        return new VolumeElement(72);
     }
 
+    @Override 
     public String getDefaultInstrument() {
         return createInstrumentTypes().keySet().iterator().next();
     }
-
-    public  List<String> getOctaveNames() {
-        return List.copyOf(createOctaveTypes().keySet());
-    }
-
 }

@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import musicElements.VolumeElement;
 import javafx.scene.layout.Region;
 
 import java.util.List;
@@ -19,6 +20,16 @@ public class ControlFactory {
         slider.setMin(minValue);      
         slider.setMax(maxValue);  
         slider.setValue(value);
+        slider.setShowTickLabels(true); // Show numbers
+
+        return slider;
+    }
+
+    public static Slider createVolumeSlider(VolumeElement minValue, VolumeElement maxValue, VolumeElement value) {
+        Slider slider = new Slider();
+        slider.setMin(minValue.getVolume());      
+        slider.setMax(maxValue.getVolume());  
+        slider.setValue(value.getVolume());
         slider.setShowTickLabels(true); // Show numbers
 
         return slider;

@@ -5,6 +5,16 @@ import player.Player;
 
 public class TestPlayer implements Player<Object> {
 
+    private Runnable endMusicAction;
+
+    public void finishPlayback() {
+        isPlaying = false;
+        currentTime = duration;
+        if (endMusicAction != null) endMusicAction.run();
+    }
+
+    public int loadCalls;
+
     public boolean playCalled = false;
     public boolean pauseCalled = false;
     public boolean stopCalled = false;
@@ -19,6 +29,7 @@ public class TestPlayer implements Player<Object> {
 
     @Override
     public void load(Path path) {
+        loadCalls++;
         this.currentMusicPath = path;
         this.currentMusicName = path != null && path.getFileName() != null ? path.getFileName().toString() : "test.mid";
     }
@@ -69,8 +80,8 @@ public class TestPlayer implements Player<Object> {
     }
 
     @Override
-    public Object getMusicData() {
-        return null;
+    public void addEndMusicEvent(Runnable action) {
+        this.endMusicAction = action;
     }
 
     @Override

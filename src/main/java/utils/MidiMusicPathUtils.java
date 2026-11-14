@@ -9,13 +9,6 @@ import java.util.stream.Stream;
 
 public class MidiMusicPathUtils extends MusicPathUtils {
 
-    private static final String MIDI_FOLDER_NAME = "musics";
-
-    @Override
-    public Path getMusicsFolderPath() {
-        return getResourceFolderPath(MIDI_FOLDER_NAME);
-    }
-
     @Override
     public List<Path> getAllMusicsPathInResources() {
         try (Stream<Path> files = Files.list(getMusicsFolderPath())) {
@@ -71,6 +64,11 @@ public class MidiMusicPathUtils extends MusicPathUtils {
                 .toLowerCase(Locale.ROOT);
 
         return fileName.endsWith(".mid") || fileName.endsWith(".midi");
+    }
+
+    @Override
+    public List<String> getSupportedExtensions() {
+        return List.of("*.mid", "*.midi");
     }
 
     @Override

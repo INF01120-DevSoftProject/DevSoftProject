@@ -5,7 +5,13 @@ import java.util.List;
 
 public abstract class MusicPathUtils {
 
-    public Path getResourceFolderPath(String folderName) {
+    private static final String MIDI_FOLDER_NAME = "musics";
+
+    public static Path getMusicsFolderPath() {
+        return getResourceFolderPath(MIDI_FOLDER_NAME);
+    }
+
+    public static Path getResourceFolderPath(String folderName) {
         if (folderName == null || folderName.isBlank()) {
             throw new IllegalArgumentException("Folder name cannot be null or blank.");
         }
@@ -33,7 +39,6 @@ public abstract class MusicPathUtils {
         return path.getFileName().toString();
     }
 
-    public abstract Path getMusicsFolderPath();
 
     public abstract String getDefaultExtension();
 
@@ -46,4 +51,6 @@ public abstract class MusicPathUtils {
     public abstract Path getMusicPathFromName(String fileName);
 
     public abstract boolean isSupportedFile(Path path);
+
+    public abstract List<String> getSupportedExtensions();
 }

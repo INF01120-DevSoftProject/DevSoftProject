@@ -92,11 +92,6 @@ public class MidiPlayer implements Player<Sequencer> {
     }
 
     @Override
-    public Sequencer getMusicData() {
-        return this.sequencer;
-    }
-
-    @Override
     public void pause() {
         ensureLoaded();
         this.sequencer.stop();

@@ -22,8 +22,6 @@ public interface Player<T> extends AutoCloseable {
 
     double getMusicPosition();
 
-    T getMusicData();
-
     String getCurrentMusicName();
 
     Path getCurrentMusicPath();

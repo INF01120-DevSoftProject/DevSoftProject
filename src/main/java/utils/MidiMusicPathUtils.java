@@ -7,30 +7,29 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-public class MidiMusicPathUtils extends MusicPathUtils  {
+public class MidiMusicPathUtils extends MusicPathUtils {
 
-    private static final String MidiFolderName = "musics";
+    private static final String MIDI_FOLDER_NAME = "musics";
 
-    @Override 
+    @Override
     public Path getMusicsFolderPath() {
-        return getResourcesFolderPath(MidiFolderName);
+        return getResourceFolderPath(MIDI_FOLDER_NAME);
     }
 
-    @Override 
+    @Override
     public List<Path> getAllMusicsPathInResources() {
         try (Stream<Path> files = Files.list(getMusicsFolderPath())) {
             return files
                     .filter(Files::isRegularFile)
-                    .filter(path -> isMidiFile(path.getFileName().toString()))
+                    .filter(this::isSupportedFile)
                     .sorted()
                     .toList();
-        }
-        catch (IOException e) {
-            throw new IllegalStateException("Erro ao listar arquivos MIDI", e);
+        } catch (IOException e) {
+            throw new IllegalStateException( "Erro ao listar arquivos MIDI", e);
         }
     }
 
-    @Override 
+    @Override
     public Path getPreviousMusicPath(Path currentPath) {
         List<Path> musics = getAllMusicsPathInResources();
 
@@ -41,7 +40,7 @@ public class MidiMusicPathUtils extends MusicPathUtils  {
         return musics.get(index - 1);
     }
 
-    @Override 
+    @Override
     public Path getNextMusicPath(Path currentPath) {
         List<Path> musics = getAllMusicsPathInResources();
 
@@ -52,11 +51,11 @@ public class MidiMusicPathUtils extends MusicPathUtils  {
         return musics.get(index + 1);
     }
 
-    @Override 
+    @Override
     public Path getMusicPathFromName(String fileName) {
         Path path = getMusicsFolderPath()
-                    .resolve(fileName)
-                    .normalize();
+                .resolve(fileName)
+                .normalize();
 
         if (!path.startsWith(getMusicsFolderPath()) || !Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Arquivo MIDI não encontrado: " + fileName);
@@ -65,9 +64,17 @@ public class MidiMusicPathUtils extends MusicPathUtils  {
         return path;
     }
 
-    private boolean isMidiFile(String name) {
-        String lowerName = name.toLowerCase(Locale.ROOT);
+    @Override
+    public boolean isSupportedFile(Path path) {
+        String fileName = path.getFileName()
+                .toString()
+                .toLowerCase(Locale.ROOT);
 
-        return lowerName.endsWith(".mid") || lowerName.endsWith(".midi");
+        return fileName.endsWith(".mid") || fileName.endsWith(".midi");
+    }
+
+    @Override
+    public String getDefaultExtension() {
+        return ".mid";
     }
 }

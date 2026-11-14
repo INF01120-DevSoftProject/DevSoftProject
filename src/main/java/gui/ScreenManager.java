@@ -43,7 +43,6 @@ public class ScreenManager extends Application {
 
         compositionScreen = new CompositionScreen(
             new TXTInputReader(),
-            new MidiMusicPathUtils(),
             exportPipeline,
             draftService,
             draftPath -> {

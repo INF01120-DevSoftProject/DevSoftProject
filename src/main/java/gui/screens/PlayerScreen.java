@@ -135,7 +135,7 @@ public class PlayerScreen extends Screen {
         Path currentPath = player.getCurrentMusicPath();
         if (!draftManager.isDraft(currentPath)) return;
 
-        File targetFile = openMidiSaveDialog(musicPathUtils.getMusicsFolderPath());
+        File targetFile = openMusicSaveDialog();
         if (targetFile == null) return;
 
         try {

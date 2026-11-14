@@ -15,7 +15,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import music.VoicePreset;
-import utils.MusicPathUtils;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.factory.ControlFactory;
@@ -24,7 +23,6 @@ import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
 import exporters.DraftMusicCreator;
 import exporters.MusicExportPipeline;
-import exporters.TempMidiDraftService;
 
 public class CompositionScreen extends Screen {
 
@@ -34,33 +32,25 @@ public class CompositionScreen extends Screen {
     
     private final MusicExportPipeline<?> exporter;
     private final InputReader reader;
-    private final MusicPathUtils pathUtils;
 
     private final DraftMusicCreator draftCreator;
     private final Consumer<Path> onListenDraft;
 
 
-    public CompositionScreen(InputReader reader, MusicPathUtils pathUtils, MusicExportPipeline<?> exporter) {
-        this(reader, pathUtils, exporter, new TempMidiDraftService(exporter), path -> {});
-    }   
-
     public CompositionScreen(
         InputReader reader, 
-        MusicPathUtils pathUtils, 
         MusicExportPipeline<?> exporter, 
         DraftMusicCreator draftCreator, 
         Consumer<Path> onListenDraft
     ) {
 
         if (reader == null)  throw new IllegalArgumentException("Reader cannot be null.");
-        if (pathUtils == null)  throw new IllegalArgumentException("Path utils cannot be null.");
         if (exporter == null)  throw new IllegalArgumentException("Exporter cannot be null.");
         if (draftCreator == null)  throw new IllegalArgumentException("Draft creator cannot be null.");
         if (onListenDraft == null)  throw new IllegalArgumentException("Consumer(onListenDraft) cannot be null.");
     
         this.exporter = exporter;
         this.reader = reader;
-        this.pathUtils = pathUtils;
 
         this.draftCreator = draftCreator;
         this.onListenDraft = onListenDraft;
@@ -111,7 +101,7 @@ public class CompositionScreen extends Screen {
     }
 
     private void saveMusic() {
-        File file = openMidiSaveDialog(pathUtils.getMusicsFolderPath());
+        File file = openMusicSaveDialog();
         if (file == null) return;
 
         try {
@@ -124,7 +114,7 @@ public class CompositionScreen extends Screen {
     }
 
     private void importMusic() {
-        File file = openFileChooserWindow(null);
+        File file = openFileChooserWindow();
         if (file == null) return;
 
         try {

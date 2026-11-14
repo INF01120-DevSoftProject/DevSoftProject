@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MetaEventListener;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+
+import javafx.application.Platform;
 
 
 public class MidiPlayer implements Player<Sequencer> {
@@ -17,6 +20,9 @@ public class MidiPlayer implements Player<Sequencer> {
 
     private Path currentMusicPath;
     private String currentMusicName;
+    private MetaEventListener endListener;
+
+    private static final int MUSIC_END_EVENT_NUM = 47;
 
     public MidiPlayer() {
         try {
@@ -166,6 +172,21 @@ public class MidiPlayer implements Player<Sequencer> {
         }
 
         return (double) sequencer.getTickPosition() / sequence.getResolution();
+    }
+
+    @Override 
+    public void addEndMusicEvent(Runnable action) {
+        if (endListener != null) {
+            sequencer.removeMetaEventListener(endListener);
+        }
+
+        endListener = meta -> {
+            if (meta.getType() == MUSIC_END_EVENT_NUM && sequencer.getTickPosition() >= sequencer.getTickLength()) {
+                Platform.runLater(action);
+            }
+        };
+
+        sequencer.addMetaEventListener(endListener);
     }
 
     private void setCurrentMusic(Path path) {

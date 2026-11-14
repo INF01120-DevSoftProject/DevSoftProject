@@ -28,6 +28,8 @@ public interface Player<T> extends AutoCloseable {
 
     Path getCurrentMusicPath();
 
+    void addEndMusicEvent(Runnable action);
+
     @Override
     void close();
 }

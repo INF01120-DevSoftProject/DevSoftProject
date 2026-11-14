@@ -360,8 +360,24 @@ class PlayerScreenTest extends JavaFXTestBase {
     private MusicPathUtils musicPathUtilsFor(Path musicsDir) {
         return new MidiMusicPathUtils() {
             @Override
-            public Path getMusicsFolderPath() {
-                return musicsDir;
+            public List<Path> getAllMusicsPathInResources() {
+                try (var files = Files.list(musicsDir)) {
+                    return files.filter(Files::isRegularFile)
+                            .filter(this::isSupportedFile)
+                            .sorted()
+                            .toList();
+                } catch (java.io.IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+            }
+
+            @Override
+            public Path getMusicPathFromName(String fileName) {
+                Path path = musicsDir.resolve(fileName).normalize();
+                if (!path.startsWith(musicsDir) || !Files.isRegularFile(path)) {
+                    throw new IllegalArgumentException("Arquivo MIDI não encontrado: " + fileName);
+                }
+                return path;
             }
         };
     }

@@ -8,3 +8,10 @@
 .player-buttons {
     -fx-alignment: center;
 }
+
+.draft-status-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 0px;
+    -fx-text-fill: #184D40;
+}

@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
+
+import java.nio.file.Path;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -19,7 +22,9 @@ import gui.factory.ControlFactory;
 import gui.widgets.VoiceWidget;
 import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
+import exporters.DraftMusicCreator;
 import exporters.MusicExportPipeline;
+import exporters.TempMidiDraftService;
 
 public class CompositionScreen extends Screen {
 
@@ -31,10 +36,35 @@ public class CompositionScreen extends Screen {
     private final InputReader reader;
     private final MusicPathUtils pathUtils;
 
+    private final DraftMusicCreator draftCreator;
+    private final Consumer<Path> onListenDraft;
+
+
     public CompositionScreen(InputReader reader, MusicPathUtils pathUtils, MusicExportPipeline<?> exporter) {
+        this(reader, pathUtils, exporter, new TempMidiDraftService(exporter), path -> {});
+    }   
+
+    public CompositionScreen(
+        InputReader reader, 
+        MusicPathUtils pathUtils, 
+        MusicExportPipeline<?> exporter, 
+        DraftMusicCreator draftCreator, 
+        Consumer<Path> onListenDraft
+    ) {
+
+        if (reader == null)  throw new IllegalArgumentException("Reader cannot be null.");
+        if (pathUtils == null)  throw new IllegalArgumentException("Path utils cannot be null.");
+        if (exporter == null)  throw new IllegalArgumentException("Exporter cannot be null.");
+        if (draftCreator == null)  throw new IllegalArgumentException("Draft creator cannot be null.");
+        if (onListenDraft == null)  throw new IllegalArgumentException("Consumer(onListenDraft) cannot be null.");
+    
         this.exporter = exporter;
         this.reader = reader;
         this.pathUtils = pathUtils;
+
+        this.draftCreator = draftCreator;
+        this.onListenDraft = onListenDraft;
+
 
         VoiceWidget.restartCurrentVoiceNum();
 
@@ -55,13 +85,16 @@ public class CompositionScreen extends Screen {
                                             .build())
                                     .build();
 
-        HBox saveImportButtons = new BoxBuilder<>(new HBox(20))
+        HBox actionButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fill-button-container")
                                     .add(new ButtonBuilder("Salvar música")
                                             .onClick(b -> saveMusic())
                                             .build())
                                     .add(new ButtonBuilder("Importar música")
                                             .onClick(b -> importMusic())                                            
+                                            .build())
+                                    .add(new ButtonBuilder("Ouvir rascunho")
+                                            .onClick(b -> listenDraft())      
                                             .build())
                                     .build();
 
@@ -71,14 +104,14 @@ public class CompositionScreen extends Screen {
                                     .add(voicesContainerScroll)
                                     .add(plusMinusButtons)
                                     .add(ControlFactory.createVerticalGrower())
-                                    .add(saveImportButtons)
+                                    .add(actionButtons)
                                     .build();
         
         setScreenMainContent(mainContent);
     }
 
     private void saveMusic() {
-        File file = openFileChooserWindow(pathUtils.getMusicsFolderPath());
+        File file = openMidiSaveDialog(pathUtils.getMusicsFolderPath());
         if (file == null) return;
 
         try {
@@ -112,6 +145,19 @@ public class CompositionScreen extends Screen {
 
         } catch (IllegalArgumentException e) {
             showErrorMessage(e.getMessage());
+        }
+    }
+
+    private void listenDraft(){
+
+        MusicInputData data = getMusicInputData();
+
+        try {
+            Path draftPath = draftCreator.createDraft(data.text(), data.presets());
+            onListenDraft.accept(draftPath);
+        }
+        catch (IOException | IllegalArgumentException e) {
+            showErrorMessage("Falha ao gerar rascunho: " + e.getMessage());
         }
     }
 

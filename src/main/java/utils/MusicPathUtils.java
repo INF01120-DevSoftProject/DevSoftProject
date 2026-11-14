@@ -5,18 +5,22 @@ import java.util.List;
 
 public abstract class MusicPathUtils {
 
-    public Path getResourcesPath() {
-        return Path.of("src", "main", "resources")
+    public Path getResourceFolderPath(String folderName) {
+        if (folderName == null || folderName.isBlank()) {
+            throw new IllegalArgumentException("Folder name cannot be null or blank.");
+        }
+
+        Path resourcesPath = Path.of("src", "main", "resources")
                 .toAbsolutePath()
                 .normalize();
-    }
 
-    public Path getResourcesFolderPath(String folderName) {
-        if (folderName == null) throw new IllegalArgumentException("Folder name cannot be null.");
-       
-        return getResourcesPath()
-                .resolve(folderName)
-                .normalize();
+        Path folderPath = resourcesPath.resolve(folderName).normalize();
+
+        if (!folderPath.startsWith(resourcesPath)) {
+            throw new IllegalArgumentException("Invalid resource folder.");
+        }
+
+        return folderPath;
     }
 
     public List<String> getMusicNamesFromPaths(List<Path> paths) {
@@ -31,6 +35,8 @@ public abstract class MusicPathUtils {
 
     public abstract Path getMusicsFolderPath();
 
+    public abstract String getDefaultExtension();
+
     public abstract List<Path> getAllMusicsPathInResources();
 
     public abstract Path getPreviousMusicPath(Path currentPath);
@@ -39,5 +45,5 @@ public abstract class MusicPathUtils {
 
     public abstract Path getMusicPathFromName(String fileName);
 
-
+    public abstract boolean isSupportedFile(Path path);
 }

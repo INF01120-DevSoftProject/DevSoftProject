@@ -1,9 +1,10 @@
 package player;
 
 import java.nio.file.Path;
+
 public interface Player<T> extends AutoCloseable {
 
-    void load(Path path);
+    void load(Path musicPath);
 
     void play();
 
@@ -26,7 +27,6 @@ public interface Player<T> extends AutoCloseable {
     String getCurrentMusicName();
 
     Path getCurrentMusicPath();
-
 
     @Override
     void close();

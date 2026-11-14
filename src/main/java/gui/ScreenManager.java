@@ -1,5 +1,7 @@
 package gui;
 
+import javax.sound.midi.Sequence;
+
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,6 +19,7 @@ import gui.screens.*;
 import input.TXTInputReader;
 import exporters.MusicExportPipeline;
 import exporters.MidiFileExporter;
+import exporters.TempMidiDraftService;
 
 public class ScreenManager extends Application {
     private static final int SCENE_WIDTH = 600;
@@ -26,24 +29,36 @@ public class ScreenManager extends Application {
     private MapperScreen mapperScreen;
     private PlayerScreen playerScreen;
 
-    private Stage stage;
     private BorderPane layout;
 
     @Override 
     public void start(Stage stage) {
-        this.stage = stage;
+
+        MusicExportPipeline<Sequence> exportPipeline = new MusicExportPipeline<>(
+            new TextToMusicTranslator(),
+            new MusicToMidiParser(),
+            new MidiFileExporter()
+        );
+        TempMidiDraftService draftService = new TempMidiDraftService(exportPipeline);
 
         compositionScreen = new CompositionScreen(
             new TXTInputReader(),
             new MidiMusicPathUtils(),
-            new MusicExportPipeline<>(new TextToMusicTranslator(), new MusicToMidiParser(), new MidiFileExporter())
+            exportPipeline,
+            draftService,
+            draftPath -> {
+                playerScreen.loadDraft(draftPath);
+                layout.setCenter(playerScreen);
+            }
         );
 
         mapperScreen = new MapperScreen();
         
         playerScreen = new PlayerScreen(
-            stage, new MidiPlayer(), 
-            new MidiMusicPathUtils()
+            stage,
+            new MidiPlayer(),
+            new MidiMusicPathUtils(),
+            draftService
         );
 
         VBox sideBar = new BoxBuilder<>(new VBox(10))
@@ -55,7 +70,10 @@ public class ScreenManager extends Application {
                                     .onClick(e -> layout.setCenter(mapperScreen))
                                     .build())
                             .add(new ButtonBuilder("Player")
-                                    .onClick(e -> layout.setCenter(playerScreen))
+                                    .onClick(e -> {
+                                        playerScreen.refreshMusicList();
+                                        layout.setCenter(playerScreen);
+                                    })
                                     .build())
                             .build();
 
@@ -65,11 +83,11 @@ public class ScreenManager extends Application {
 
         layout.setCenter(compositionScreen);
 
-        Scene scene = createScene(layout);
-        addAllCSS(scene);
+        Scene scene = createScene(stage, layout);
+        addCssStyles(scene);
     }
 
-    private Scene createScene(Parent layout) { 
+    private Scene createScene(Stage stage, Parent layout) { 
         Scene scene = new Scene(layout, SCENE_WIDTH, SCENE_HEIGHT);
         stage.setScene(scene);
         stage.show();
@@ -77,7 +95,7 @@ public class ScreenManager extends Application {
         return scene;
     }
 
-    private void addAllCSS(Scene scene) {
+    private void addCssStyles(Scene scene) {
         // Base style
         addCSStoScene(scene, "/styles/base.css");
 

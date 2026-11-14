@@ -30,6 +30,18 @@ public abstract class Screen extends Pane {
     }
 
     protected File openFileChooserWindow(Path initialDirectory) {
+        return createFileChooser(initialDirectory).showSaveDialog(getCurrentWindow());
+    }
+
+    protected File openMidiSaveDialog(Path initialDirectory) {
+        FileChooser fileChooser = createFileChooser(initialDirectory);
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Arquivos MIDI (*.mid, *.midi)", "*.mid", "*.midi")
+        );
+        return fileChooser.showSaveDialog(getCurrentWindow());
+    }
+
+    private FileChooser createFileChooser(Path initialDirectory) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Salvar MIDI");
@@ -39,6 +51,8 @@ public abstract class Screen extends Pane {
             fileChooser.setInitialDirectory(initialDirectory.toFile());
         }
 
-        return fileChooser.showSaveDialog(getCurrentWindow());
+        return fileChooser;
     }
+
+
 }

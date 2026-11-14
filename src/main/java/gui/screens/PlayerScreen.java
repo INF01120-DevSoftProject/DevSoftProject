@@ -205,9 +205,7 @@ public class PlayerScreen extends Screen {
         sheetMusicWidget.loadMusic(currentPath);
 
         musicTitle.setText(isDraft ? "Rascunho (não salvo)" : player.getCurrentMusicName());
-
-        musicSlider.setMax(player.getDuration());
-        musicSlider.setValue(0);
+        musicSlider.resetSlider();
 
         playPauseButton.setCurrentButtonToPlay();
 

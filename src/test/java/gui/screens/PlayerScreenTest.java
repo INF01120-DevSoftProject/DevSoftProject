@@ -358,6 +358,29 @@ class PlayerScreenTest extends JavaFXTestBase {
         });
     }
 
+    @Test
+    void savingCurrentMusicReloadsNormalizedPathButSavingAnotherDoesNot() throws Exception {
+        TempMidiDraftService service = createDraftService();
+        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
+        Path current = tempDir.resolve("current.mid");
+        Files.copy(draft, current);
+
+        runOnFxThread(() -> {
+            TestPlayer player = new TestPlayer();
+            PlayerScreen screen = new PlayerScreen(
+                    createManagedStage(), player, musicPathUtilsFor(tempDir), service);
+            int initialLoads = player.loadCalls;
+
+            screen.onMusicSaved(tempDir.resolve(".").resolve("current.mid"));
+            assertThat(player.loadCalls).isEqualTo(initialLoads + 1);
+            assertThat(player.getCurrentMusicPath().normalize()).isEqualTo(current);
+
+            screen.onMusicSaved(tempDir.resolve("other.mid"));
+            assertThat(player.loadCalls).isEqualTo(initialLoads + 1);
+            assertThat(player.getCurrentMusicPath().normalize()).isEqualTo(current);
+        });
+    }
+
     private MusicPathUtils musicPathUtilsFor(Path musicsDir) {
         return new MidiMusicPathUtils() {
             @Override

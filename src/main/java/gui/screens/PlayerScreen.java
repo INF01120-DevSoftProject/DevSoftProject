@@ -126,6 +126,18 @@ public class PlayerScreen extends Screen {
         setNodeVisibility(draftStatusLabel, false);
     }
 
+    public void onMusicSaved(Path savedPath) {
+        refreshMusicList();
+
+        Path currentPath = player.getCurrentMusicPath();
+        if (currentPath == null) return;
+
+        if (currentPath.toAbsolutePath().normalize()
+                .equals(savedPath.toAbsolutePath().normalize())) {
+            loadMusic(savedPath);
+        }
+    }
+
     private void setNodeVisibility(Node node, boolean visible) {
         node.setVisible(visible);
         node.setManaged(visible);

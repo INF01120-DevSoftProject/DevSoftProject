@@ -48,6 +48,9 @@ public class ScreenManager extends Application {
             draftPath -> {
                 playerScreen.loadDraft(draftPath);
                 layout.setCenter(playerScreen);
+            },
+            filePath -> {
+                playerScreen.onMusicSaved(filePath);
             }
         );
 

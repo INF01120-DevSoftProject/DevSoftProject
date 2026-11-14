@@ -34,14 +34,17 @@ public class CompositionScreen extends Screen {
     private final InputReader reader;
 
     private final DraftMusicCreator draftCreator;
+
     private final Consumer<Path> onListenDraft;
+    private final Consumer<Path> onMusicSaved;
 
 
     public CompositionScreen(
         InputReader reader, 
         MusicExportPipeline<?> exporter, 
         DraftMusicCreator draftCreator, 
-        Consumer<Path> onListenDraft
+        Consumer<Path> onListenDraft,
+        Consumer<Path> onMusicSaved
     ) {
 
         if (reader == null)  throw new IllegalArgumentException("Reader cannot be null.");
@@ -51,10 +54,9 @@ public class CompositionScreen extends Screen {
     
         this.exporter = exporter;
         this.reader = reader;
-
         this.draftCreator = draftCreator;
         this.onListenDraft = onListenDraft;
-
+        this.onMusicSaved = onMusicSaved;
 
         VoiceWidget.restartCurrentVoiceNum();
 
@@ -107,6 +109,7 @@ public class CompositionScreen extends Screen {
         try {
             MusicInputData data = getMusicInputData();
             exporter.exportMusic(file, data.text(), data.presets());
+            onMusicSaved.accept(file.toPath());
 
         } catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao salvar o arquivo MIDI: " + e.getMessage());

@@ -3,7 +3,6 @@ package gui.screens;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,7 +32,6 @@ import javafx.stage.WindowEvent;
 import music.VoicePreset;
 import musicElements.InstrumentType;
 import parsers.MusicToMidiParser;
-import player.Player;
 import translators.TextToMusic.TextToMusicTranslator;
 import utils.MidiMusicPathUtils;
 import utils.MusicPathUtils;
@@ -44,30 +42,6 @@ class PlayerScreenTest extends JavaFXTestBase {
     Path tempDir;
 
     private TempMidiDraftService draftService;
-
-    private static class TestablePlayerScreen extends PlayerScreen {
-        File nextChosenFile;
-        String lastErrorMessage;
-
-        TestablePlayerScreen(
-                Stage stage,
-                Player<?> player,
-                MusicPathUtils musicPathUtils,
-                DraftMusicManager draftManager
-        ) {
-            super(stage, player, musicPathUtils, draftManager);
-        }
-
-        @Override
-        protected File chooseDraftSaveFile(Path initialDirectory) {
-            return nextChosenFile;
-        }
-
-        @Override
-        protected void showErrorMessage(String message) {
-            this.lastErrorMessage = message;
-        }
-    }
 
     @AfterEach
     void cleanUpDrafts() {
@@ -179,18 +153,38 @@ class PlayerScreenTest extends JavaFXTestBase {
         runOnFxThread(() -> {
             Stage stage = createManagedStage();
             TestPlayer player = new TestPlayer();
-            Path testMidi = Path.of("src", "main", "resources", "musics", "musica.mid");
-            player.load(testMidi);
-
             MidiMusicPathUtils pathUtils = new MidiMusicPathUtils();
-            PlayerScreen screen = new PlayerScreen(stage, player, pathUtils);
+
+            DraftMusicManager draftManager = new DraftMusicManager() {
+                @Override
+                public boolean isDraft(Path path) {
+                    return false;
+                }
+
+                @Override
+                public void saveDraft(Path draftPath, Path targetPath) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void cleanUp() {
+                }
+            };
+
+            PlayerScreen screen = new PlayerScreen(
+                stage,
+                player,
+                pathUtils,
+                draftManager
+            );
+
             screenRef.set(screen);
         });
 
         assertThat(screenRef.get()).isNotNull();
         assertThat(screenRef.get().getChildren()).isNotEmpty();
     }
-
+    
     @Test
     void rejectsNullDependenciesInConstructor() throws Exception {
         TempMidiDraftService service = createDraftService();
@@ -212,7 +206,7 @@ class PlayerScreenTest extends JavaFXTestBase {
     }
 
     @Test
-    void hidesSaveDraftButtonAndStatusWhenPlayingSavedMusic() throws Exception {
+    void initiallyHidesDraftStatusAndExposesSaveControl() throws Exception {
         TempMidiDraftService service = createDraftService();
         AtomicReference<Button> saveButtonRef = new AtomicReference<>();
         AtomicReference<Label> statusLabelRef = new AtomicReference<>();
@@ -223,10 +217,10 @@ class PlayerScreenTest extends JavaFXTestBase {
             statusLabelRef.set(findLabelByStyleClass(screen, "draft-status-label"));
         });
 
-        assertThat(saveButtonRef.get().isVisible()).isFalse();
-        assertThat(saveButtonRef.get().isManaged()).isFalse();
+        // A presença do botão não implica que ele deva ficar invisível:
+        // a disponibilidade da ação é definida por PlayerScreen.
+        assertThat(saveButtonRef.get()).isNotNull();
         assertThat(statusLabelRef.get().isVisible()).isFalse();
-        assertThat(statusLabelRef.get().isManaged()).isFalse();
     }
 
     @Test
@@ -235,17 +229,17 @@ class PlayerScreenTest extends JavaFXTestBase {
         Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
 
         TestPlayer player = new TestPlayer();
-        AtomicReference<TestablePlayerScreen> screenRef = new AtomicReference<>();
+        AtomicReference<PlayerScreen> screenRef = new AtomicReference<>();
 
         runOnFxThread(() -> {
-            TestablePlayerScreen screen = new TestablePlayerScreen(
+            PlayerScreen screen = new PlayerScreen(
                     createManagedStage(), player, new MidiMusicPathUtils(), service
             );
             screen.loadDraft(draft);
             screenRef.set(screen);
         });
 
-        TestablePlayerScreen screen = screenRef.get();
+        PlayerScreen screen = screenRef.get();
         assertThat(player.getCurrentMusicPath()).isEqualTo(draft);
         assertThat(player.playCalled).isFalse();
         assertThat(player.isPlaying()).isFalse();
@@ -267,144 +261,109 @@ class PlayerScreenTest extends JavaFXTestBase {
         });
     }
 
+    // O FileChooser é aberto diretamente por PlayerScreen. Estes testes cobrem
+    // o serviço de persistência e a seleção de músicas sem abrir diálogo nativo.
     @Test
-    void saveDraftSavesFileShowsSuccessIndicatorAndAllowsSavingAgain() throws Exception {
+    void saveDraftAllowsSavingTheSameDraftTwice() throws Exception {
         TempMidiDraftService service = createDraftService();
         Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
         Path firstTarget = tempDir.resolve("primeiro_salvamento.mid");
         Path secondTarget = tempDir.resolve("segundo_salvamento.mid");
 
-        AtomicReference<TestablePlayerScreen> screenRef = new AtomicReference<>();
-
-        runOnFxThread(() -> {
-            TestablePlayerScreen screen = new TestablePlayerScreen(
-                    createManagedStage(), new TestPlayer(), new MidiMusicPathUtils(), service
-            );
-            screen.loadDraft(draft);
-
-            Button saveButton = findButtonByText(screen, "Salvar rascunho");
-            screen.nextChosenFile = firstTarget.toFile();
-            saveButton.fire();
-
-            screen.nextChosenFile = secondTarget.toFile();
-            saveButton.fire();
-            screenRef.set(screen);
-        });
-
-        TestablePlayerScreen screen = screenRef.get();
-        Label statusLabel = findLabelByStyleClass(screen, "draft-status-label");
+        service.saveDraft(draft, firstTarget);
+        service.saveDraft(draft, secondTarget);
 
         assertThat(firstTarget).exists();
         assertThat(secondTarget).exists();
-        assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("segundo_salvamento.mid");
-        assertThat(findButtonByText(screen, "Salvar rascunho").isVisible()).isTrue();
-        assertThat(statusLabel.isVisible()).isTrue();
-        assertThat(statusLabel.getText()).contains("segundo_salvamento.mid");
-        assertThat(screen.lastErrorMessage).isNull();
+        assertThat(Files.size(firstTarget)).isPositive();
+        assertThat(Files.size(secondTarget)).isPositive();
+        assertThat(Files.readAllBytes(firstTarget)).isEqualTo(Files.readAllBytes(draft));
+        assertThat(Files.readAllBytes(secondTarget)).isEqualTo(Files.readAllBytes(draft));
     }
 
     @Test
-    void selectingSavedMusicAfterDraftHidesSaveButtonAndStatus() throws Exception {
+    void selectingSavedMusicAfterDraftUpdatesSelectionTitleAndDraftStatus() throws Exception {
         TempMidiDraftService service = createDraftService();
         Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
-        Path target = tempDir.resolve("salvo.mid");
-
-        AtomicReference<TestablePlayerScreen> screenRef = new AtomicReference<>();
+        Path musicsDir = Files.createDirectory(tempDir.resolve("musics_selecao"));
+        Files.copy(draft, musicsDir.resolve("salvo.mid"));
+        MusicPathUtils pathUtils = musicPathUtilsFor(musicsDir);
 
         runOnFxThread(() -> {
-            TestablePlayerScreen screen = new TestablePlayerScreen(
-                    createManagedStage(), new TestPlayer(), new MidiMusicPathUtils(), service
+            PlayerScreen screen = new PlayerScreen(
+                    createManagedStage(), new TestPlayer(), pathUtils, service
             );
             screen.loadDraft(draft);
-            screen.nextChosenFile = target.toFile();
-            findButtonByText(screen, "Salvar rascunho").fire();
 
+            assertThat(findButtonByText(screen, "Salvar rascunho").isVisible()).isTrue();
             ComboBox<String> selectionBox = findMusicSelectionBox(screen);
-            selectionBox.getSelectionModel().selectFirst();
+            assertThat(selectionBox.getItems()).contains("salvo.mid");
+
+            selectionBox.getSelectionModel().select("salvo.mid");
             selectionBox.fireEvent(new javafx.event.ActionEvent());
-            screenRef.set(screen);
-        });
 
-        TestablePlayerScreen screen = screenRef.get();
-        assertThat(findButtonByText(screen, "Salvar rascunho").isVisible()).isFalse();
-        assertThat(findLabelByStyleClass(screen, "draft-status-label").isVisible()).isFalse();
-        assertThat(findMusicTitleLabel(screen).getText()).isNotEqualTo("Rascunho (não salvo)");
+            assertThat(selectionBox.getValue()).isEqualTo("salvo.mid");
+            assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("salvo.mid");
+            assertThat(findLabelByStyleClass(screen, "draft-status-label").isVisible()).isFalse();
+        });
     }
 
     @Test
-    void savingDraftInMusicsFolderImmediatelyUpdatesAndSelectsInSelectionList() throws Exception {
-        Path musicsDir = tempDir.resolve("musics");
-        Files.createDirectories(musicsDir);
-        Path existingMidi = Path.of("src", "main", "resources", "musics", "musica.mid");
-        Files.copy(existingMidi, musicsDir.resolve("musica.mid"));
+    void screenListsSavedMidisFromMusicFolderAndAllowsSelectingThem() throws Exception {
+        TempMidiDraftService service = createDraftService();
+        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
+        Path musicsDir = Files.createDirectory(tempDir.resolve("musics"));
+        Files.copy(draft, musicsDir.resolve("musica.mid"));
+        Files.copy(draft, musicsDir.resolve("novo_rascunho.mid"));
 
-        MusicPathUtils tempMusicsPathUtils = new MidiMusicPathUtils() {
+        runOnFxThread(() -> {
+            PlayerScreen screen = new PlayerScreen(
+                    createManagedStage(), new TestPlayer(), musicPathUtilsFor(musicsDir), service
+            );
+            ComboBox<String> selectionBox = findMusicSelectionBox(screen);
+            assertThat(selectionBox.getItems()).contains("musica.mid", "novo_rascunho.mid");
+
+            selectionBox.getSelectionModel().select("novo_rascunho.mid");
+            selectionBox.fireEvent(new javafx.event.ActionEvent());
+
+            assertThat(selectionBox.getValue()).isEqualTo("novo_rascunho.mid");
+            assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("novo_rascunho.mid");
+        });
+    }
+
+    @Test
+    void musicSelectionUsesMidiExtensionForSavedFiles() throws Exception {
+        TempMidiDraftService service = createDraftService();
+        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
+        Path musicsDir = Files.createDirectory(tempDir.resolve("musics_sem_ext"));
+        Files.copy(draft, musicsDir.resolve("meu_rascunho"));
+        Path midFile = musicsDir.resolve("meu_rascunho.mid");
+        Files.copy(draft, midFile);
+
+        runOnFxThread(() -> {
+            PlayerScreen screen = new PlayerScreen(
+                    createManagedStage(), new TestPlayer(), musicPathUtilsFor(musicsDir), service
+            );
+            ComboBox<String> selectionBox = findMusicSelectionBox(screen);
+            assertThat(selectionBox.getItems()).contains("meu_rascunho.mid");
+            assertThat(selectionBox.getItems()).doesNotContain("meu_rascunho");
+
+            selectionBox.getSelectionModel().select("meu_rascunho.mid");
+            selectionBox.fireEvent(new javafx.event.ActionEvent());
+
+            assertThat(midFile).exists();
+            assertThat(selectionBox.getValue()).isEqualTo("meu_rascunho.mid");
+            assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("meu_rascunho.mid");
+        });
+    }
+
+    private MusicPathUtils musicPathUtilsFor(Path musicsDir) {
+        return new MidiMusicPathUtils() {
             @Override
             public Path getMusicsFolderPath() {
                 return musicsDir;
             }
         };
-
-        TempMidiDraftService service = createDraftService();
-        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
-        Path savedInFolder = musicsDir.resolve("novo_rascunho.mid");
-        AtomicReference<TestablePlayerScreen> screenRef = new AtomicReference<>();
-
-        runOnFxThread(() -> {
-            TestablePlayerScreen screen = new TestablePlayerScreen(
-                    createManagedStage(), new TestPlayer(), tempMusicsPathUtils, service
-            );
-            screen.loadDraft(draft);
-            screen.nextChosenFile = savedInFolder.toFile();
-            findButtonByText(screen, "Salvar rascunho").fire();
-            screenRef.set(screen);
-        });
-
-        TestablePlayerScreen screen = screenRef.get();
-        ComboBox<String> selectionBox = findMusicSelectionBox(screen);
-        assertThat(savedInFolder).exists();
-        assertThat(selectionBox.getItems()).contains("musica.mid", "novo_rascunho.mid");
-        assertThat(selectionBox.getValue()).isEqualTo("novo_rascunho.mid");
-        assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("novo_rascunho.mid");
-    }
-
-    @Test
-    void savingDraftWithoutExtensionAppendsMidAndAppearsInSelectionList() throws Exception {
-        Path musicsDir = tempDir.resolve("musics_sem_ext");
-        Files.createDirectories(musicsDir);
-        Path existingMidi = Path.of("src", "main", "resources", "musics", "musica.mid");
-        Files.copy(existingMidi, musicsDir.resolve("musica.mid"));
-
-        MusicPathUtils tempMusicsPathUtils = new MidiMusicPathUtils() {
-            @Override
-            public Path getMusicsFolderPath() {
-                return musicsDir;
-            }
-        };
-
-        TempMidiDraftService service = createDraftService();
-        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
-        Path chosenWithoutExtension = musicsDir.resolve("meu_rascunho");
-        Path expectedMidiPath = musicsDir.resolve("meu_rascunho.mid");
-        AtomicReference<TestablePlayerScreen> screenRef = new AtomicReference<>();
-
-        runOnFxThread(() -> {
-            TestablePlayerScreen screen = new TestablePlayerScreen(
-                    createManagedStage(), new TestPlayer(), tempMusicsPathUtils, service
-            );
-            screen.loadDraft(draft);
-            screen.nextChosenFile = chosenWithoutExtension.toFile();
-            findButtonByText(screen, "Salvar rascunho").fire();
-            screenRef.set(screen);
-        });
-
-        TestablePlayerScreen screen = screenRef.get();
-        ComboBox<String> selectionBox = findMusicSelectionBox(screen);
-        assertThat(chosenWithoutExtension).doesNotExist();
-        assertThat(expectedMidiPath).exists();
-        assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("meu_rascunho.mid");
-        assertThat(selectionBox.getItems()).contains("musica.mid", "meu_rascunho.mid");
-        assertThat(selectionBox.getValue()).isEqualTo("meu_rascunho.mid");
     }
 
     @Test

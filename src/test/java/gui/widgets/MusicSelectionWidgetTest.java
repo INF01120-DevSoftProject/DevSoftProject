@@ -17,6 +17,11 @@ class MusicSelectionWidgetTest extends JavaFXTestBase {
             return Path.of("fake");
         }
 
+        @Override 
+        public String getDefaultExtension() {
+            return "fake";
+        }
+
         @Override
         public List<Path> getAllMusicsPathInResources() {
             return List.of(Path.of("songA.mid"), Path.of("songB.mid"));
@@ -36,6 +41,13 @@ class MusicSelectionWidgetTest extends JavaFXTestBase {
         public Path getMusicPathFromName(String fileName) {
             return Path.of(fileName);
         }
+
+
+        @Override
+        public boolean isSupportedFile(Path file) {
+            return false;
+        }
+
     }
 
     @Test

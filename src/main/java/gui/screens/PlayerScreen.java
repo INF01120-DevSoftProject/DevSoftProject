@@ -71,6 +71,7 @@ public class PlayerScreen extends Screen {
 
         draftStatusLabel = new Label();
         draftStatusLabel.getStyleClass().add("draft-status-label");
+        setNodeVisibility(draftStatusLabel, false);
 
         nextMusicButton = new ButtonBuilder("⏮")
                                 .onClick(e -> changeToPreviousMusic())

@@ -221,6 +221,7 @@ class PlayerScreenTest extends JavaFXTestBase {
         // a disponibilidade da ação é definida por PlayerScreen.
         assertThat(saveButtonRef.get()).isNotNull();
         assertThat(statusLabelRef.get().isVisible()).isFalse();
+        assertThat(statusLabelRef.get().isManaged()).isFalse();
     }
 
     @Test

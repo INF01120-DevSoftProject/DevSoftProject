@@ -49,8 +49,8 @@ public class ControlFactory {
 
     public static TextArea createTextArea(int rows, String promptText) {
         TextArea inputBox = new TextArea();
-        inputBox.setPrefRowCount(2);
-        inputBox.setPromptText("Digite sua partitura");
+        inputBox.setPrefRowCount(rows);
+        inputBox.setPromptText(promptText);
         inputBox.setWrapText(true);
 
         return inputBox;

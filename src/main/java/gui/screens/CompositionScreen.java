@@ -159,7 +159,6 @@ public class CompositionScreen extends Screen {
         catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao gerar rascunho: " + e.getMessage());
         }
-
     }
 
     private record MusicInputData (

@@ -3,7 +3,6 @@ package gui.screens;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Locale;
 
 import exporters.DraftMusicManager;
 import gui.builders.BoxBuilder;
@@ -15,9 +14,7 @@ import gui.widgets.MusicSliderWidget;
 import gui.widgets.SheetMusicWidget;
 
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -33,32 +30,12 @@ public class PlayerScreen extends Screen {
 
     private final Label musicTitle;
     private final Label draftStatusLabel;
-    private final Button saveDraftButton;
-    private final HBox draftActions;
+    private final HBox draftActionsContainer;
 
     private final SheetMusicWidget sheetMusicWidget;
     private final MusicSliderWidget musicSlider;
-    private final MusicSelectionWidget musicSelectionBox;
+    private final MusicSelectionWidget musicSelectionWidget;
     private final MusicPlayButtonWidget playPauseButton;
-
-    private boolean updatingSelection = false;
-
-    public PlayerScreen(Stage stage, Player<?> player, MusicPathUtils musicPathUtils) {
-        this(stage, player, musicPathUtils, new DraftMusicManager() {
-            @Override
-            public boolean isDraft(Path path) {
-                return false;
-            }
-
-            @Override
-            public void saveDraft(Path draftPath, Path targetPath) {
-                throw new UnsupportedOperationException("Gerenciador de rascunho não configurado.");
-            }
-
-            @Override
-            public void cleanUp() {}
-        });
-    }
 
     public PlayerScreen(
         Stage stage,
@@ -80,22 +57,16 @@ public class PlayerScreen extends Screen {
         player.load(musicPathUtils.getAllMusicsPathInResources().getFirst());
 
         sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicPosition);
-        ScrollPane sheetMusicWidgetScroll = ControlFactory.createScrollPane(sheetMusicWidget);
-
         playPauseButton = new MusicPlayButtonWidget(player);
-        musicSelectionBox = new MusicSelectionWidget(musicPathUtils);
-        musicSelectionBox.setOnAction(e -> selectMusic());
+        musicSelectionWidget = new MusicSelectionWidget(musicPathUtils);
+        musicSelectionWidget.setOnAction(e -> selectMusic());
 
-        musicTitle = new Label(musicSelectionBox.getValue());
+        musicTitle = new Label(player.getCurrentMusicName());
         musicSlider = new MusicSliderWidget(player);
-
-        saveDraftButton = new ButtonBuilder("Salvar rascunho")
-                        .onClick(e -> saveCurrentDraft())
-                        .build();
 
         draftStatusLabel = new Label();
         draftStatusLabel.getStyleClass().add("draft-status-label");
-        setNodeVisible(draftStatusLabel, false);
+        setNodeVisibility(draftStatusLabel, false);
 
         HBox playerButtons = new BoxBuilder<>(new HBox(25))
                         .addClass("player-buttons")
@@ -108,38 +79,40 @@ public class PlayerScreen extends Screen {
                                 .build())
                         .build();
 
-        draftActions = new BoxBuilder<>(new HBox(10))
+        draftActionsContainer = new BoxBuilder<>(new HBox(10))
                         .addClass("player-buttons")
-                        .add(saveDraftButton)
+                        .add(new ButtonBuilder("Salvar rascunho")
+                            .onClick(e -> saveCurrentDraft())
+                            .build())
                         .build();
-        setSaveDraftVisible(false);
+
+        setNodeVisibility(draftActionsContainer, false);
 
         VBox playerController = new BoxBuilder<>(new VBox(25))
                         .addClass("player-controller")
                         .add(musicTitle)
                         .add(musicSlider)
                         .add(playerButtons)
-                        .add(draftActions)
+                        .add(draftActionsContainer)
                         .add(draftStatusLabel)
                         .build();
 
         VBox mainContent = new BoxBuilder<>(new VBox(25))
                         .setId("main")
                         .add(new Label("Player"))
-                        .add(musicSelectionBox)
-                        .add(sheetMusicWidgetScroll)
+                        .add(musicSelectionWidget)
+                        .add(ControlFactory.createScrollPane(sheetMusicWidget))
                         .add(playerController)
                         .build();
 
         setScreenMainContent(mainContent);
     }
 
-
     /**
      * Atualiza imediatamente a lista de musicas salvas exibida no player.
      */
     public void refreshMusicList() {
-        updateSelectionSilently(musicSelectionBox::refreshMusicList);
+        musicSelectionWidget.refreshMusicList();
     }
 
     public void loadDraft(Path draftPath) {
@@ -147,93 +120,60 @@ public class PlayerScreen extends Screen {
             throw new IllegalArgumentException("Rascunho inválido ou não encontrado.");
         }
 
-        if (!changeMusic(draftPath)) return;
+        if (!loadMusic(draftPath)) return;
 
-        updateSelectionSilently(() -> musicSelectionBox.getSelectionModel().clearSelection());
-        setNodeVisible(draftStatusLabel, false);
+        musicSelectionWidget.clearCurrentBoxSelection();
+        setNodeVisibility(draftStatusLabel, false);
     }
 
-    protected File chooseDraftSaveFile(Path initialDirectory) {
-        return openMidiSaveDialog(initialDirectory);
-    }
-
-    private void setSaveDraftVisible(boolean visible) {
-        setNodeVisible(draftActions, visible);
-        setNodeVisible(saveDraftButton, visible);
-    }
-
-    private void setNodeVisible(Node node, boolean visible) {
+    private void setNodeVisibility(Node node, boolean visible) {
         node.setVisible(visible);
         node.setManaged(visible);
-    }
-
-    private void updateSelectionSilently(Runnable selectionUpdate) {
-        updatingSelection = true;
-        try {
-            selectionUpdate.run();
-        } finally {
-            updatingSelection = false;
-        }
     }
 
     private void saveCurrentDraft() {
         Path currentPath = player.getCurrentMusicPath();
         if (!draftManager.isDraft(currentPath)) return;
 
-        File targetFile = chooseDraftSaveFile(musicPathUtils.getMusicsFolderPath());
+        File targetFile = openMidiSaveDialog(musicPathUtils.getMusicsFolderPath());
         if (targetFile == null) return;
 
         try {
-            Path targetPath = ensureMidiExtension(targetFile.toPath());
+            Path targetPath = targetFile.toPath();
+
+            if (!musicPathUtils.isSupportedFile(targetPath)) {
+                throw new IllegalArgumentException("Formato de arquivo não suportado: " + targetPath.getFileName());
+            }
+            
             String savedFileName = targetPath.getFileName().toString();
+
             draftManager.saveDraft(currentPath, targetPath);
             musicTitle.setText(savedFileName);
             draftStatusLabel.setText("Versão atual salva com sucesso (" + savedFileName + ")");
-            setNodeVisible(draftStatusLabel, true);
-            refreshSavedMusicList(targetPath, savedFileName);
+
+            setNodeVisibility(draftStatusLabel, true);
+            musicSelectionWidget.refreshMusicList();
+
         } catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao salvar o rascunho: " + e.getMessage());
         }
     }
 
-    private Path ensureMidiExtension(Path path) {
-        String fileName = path.getFileName().toString();
-        String lowerName = fileName.toLowerCase(Locale.ROOT);
-        if (lowerName.endsWith(".mid") || lowerName.endsWith(".midi")) {
-            return path;
-        }
-        return path.resolveSibling(fileName + ".mid");
-    }
-
-    private void refreshSavedMusicList(Path savedPath, String fileName) {
-        Path musicsDir = musicPathUtils.getMusicsFolderPath().toAbsolutePath().normalize();
-        Path savedParent = savedPath.toAbsolutePath().normalize().getParent();
-
-        updateSelectionSilently(() -> {
-            musicSelectionBox.refreshMusicList();
-            if (musicsDir.equals(savedParent) && musicSelectionBox.getItems().contains(fileName)) {
-                musicSelectionBox.setValue(fileName);
-            }
-        });
-    }
-
     private void selectMusic() {
-        if (updatingSelection) return;
-
-        String musicName = musicSelectionBox.getValue();
+        String musicName = musicSelectionWidget.getValue();
         if (musicName == null) return;
 
         boolean isDraft = draftManager.isDraft(player.getCurrentMusicPath());
         if (!isDraft && musicName.equals(player.getCurrentMusicName())) return;
 
         try {
-            changeMusic(musicPathUtils.getMusicPathFromName(musicName));
+            loadMusic(musicPathUtils.getMusicPathFromName(musicName));
         } catch(IllegalArgumentException e) {
             showErrorMessage(e.getMessage());
         }
     }
 
-    private boolean changeMusic(Path path) {
+    private boolean loadMusic(Path path) {
         if (path == null) return false;
 
         try {
@@ -260,9 +200,10 @@ public class PlayerScreen extends Screen {
 
         playPauseButton.setCurrentButtonToPlay();
 
-        setSaveDraftVisible(isDraft);
+        setNodeVisibility(draftActionsContainer, isDraft);
+
         if (!isDraft) {
-            setNodeVisible(draftStatusLabel, false);
+            setNodeVisibility(draftStatusLabel, false);
         }
     }
 
@@ -274,15 +215,15 @@ public class PlayerScreen extends Screen {
         navigateMusic(musicPathUtils.getPreviousMusicPath(player.getCurrentMusicPath()));
     }
 
-    private void navigateMusic(Path targetPath) {
-        if (!changeMusic(targetPath)) return;
+    private void navigateMusic(Path path) {
+        if (!loadMusic(path)) return;
 
-        updateSelectionSilently(() -> musicSelectionBox.setValue(musicPathUtils.getMusicNameFromPath(targetPath)));
+        musicSelectionWidget.setValue(player.getCurrentMusicName());
     }
 
     private void endProgram() {
         musicSlider.stopUpdater();
-        musicSelectionBox.stopUpdater();
+        musicSelectionWidget.stopUpdater();
         sheetMusicWidget.stopAnimation();
         player.close();
         draftManager.cleanUp();

@@ -29,12 +29,10 @@ public class ScreenManager extends Application {
     private MapperScreen mapperScreen;
     private PlayerScreen playerScreen;
 
-    private Stage stage;
     private BorderPane layout;
 
     @Override 
     public void start(Stage stage) {
-        this.stage = stage;
 
         MusicExportPipeline<Sequence> exportPipeline = new MusicExportPipeline<>(
             new TextToMusicTranslator(),
@@ -85,11 +83,11 @@ public class ScreenManager extends Application {
 
         layout.setCenter(compositionScreen);
 
-        Scene scene = createScene(layout);
-        addAllCSS(scene);
+        Scene scene = createScene(stage, layout);
+        addCssStyles(scene);
     }
 
-    private Scene createScene(Parent layout) { 
+    private Scene createScene(Stage stage, Parent layout) { 
         Scene scene = new Scene(layout, SCENE_WIDTH, SCENE_HEIGHT);
         stage.setScene(scene);
         stage.show();
@@ -97,7 +95,7 @@ public class ScreenManager extends Application {
         return scene;
     }
 
-    private void addAllCSS(Scene scene) {
+    private void addCssStyles(Scene scene) {
         // Base style
         addCSStoScene(scene, "/styles/base.css");
 

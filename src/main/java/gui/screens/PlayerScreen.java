@@ -200,6 +200,7 @@ public class PlayerScreen extends Screen {
         try {
             loadMusic(musicPathUtils.getMusicPathFromName(musicName));
         } catch(IllegalArgumentException e) {
+            changeToNextMusic(); 
             showErrorMessage(e.getMessage());
         }
     }

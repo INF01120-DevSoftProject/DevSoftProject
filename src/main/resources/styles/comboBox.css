@@ -50,3 +50,16 @@
     -fx-background-color: #E0F3ED;
     -fx-text-fill: #108B72;
 }
+
+.combo-box .list-view .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.combo-box .list-view .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.combo-box .list-view .scroll-bar:vertical .thumb {
+    -fx-background-color: #777777;
+    -fx-background-radius: 10px;
+}

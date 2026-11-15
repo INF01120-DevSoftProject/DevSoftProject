@@ -44,7 +44,6 @@ public class ControlFactory {
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         return scrollPane;
-
     }
 
     public static TextArea createTextArea(int rows, String promptText) {

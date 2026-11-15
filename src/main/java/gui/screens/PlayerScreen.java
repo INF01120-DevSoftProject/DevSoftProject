@@ -214,7 +214,7 @@ public class PlayerScreen extends Screen {
             updatePlayerUI();
             return true;
         } catch (RuntimeException e) {
-            showErrorMessage(e.getMessage());
+            showErrorMessage("Não foi possível gerar a musica. Verifique o arquivo \n" + e.getMessage());
             return false;
         }
     }

@@ -1,6 +1,7 @@
 package player;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.sound.midi.InvalidMidiDataException;
@@ -73,8 +74,10 @@ public class MidiPlayer implements Player<Sequencer> {
             this.sequencer.setMicrosecondPosition(0);
             this.isLoaded = true;
 
-        } catch (InvalidMidiDataException | IOException e) {
-            throw new RuntimeException("Failed to load MIDI file: " + path, e);
+        } catch (InvalidMidiDataException e) {
+            throw new IllegalArgumentException("Arquivo MIDI inválido: " + path, e);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Erro ao ler arquivo MIDI: " + path, e);
         }
 
         setCurrentMusic(path);

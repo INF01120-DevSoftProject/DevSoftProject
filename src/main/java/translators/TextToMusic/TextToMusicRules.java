@@ -43,6 +43,8 @@ public class TextToMusicRules {
     public TextToMusicRules(CharacterMapping mapping, Map<String, TextToMusicActions> customActions) {
         if (mapping == null) throw new IllegalArgumentException("O mapeamento não pode ser nulo");
         if (customActions == null) throw new IllegalArgumentException("As ações extras não podem ser nulas");
+        // troca de caracteres feita pela metade: melhor avisar do que traduzir errado
+        mapping.checkComplete();
 
         this.mapping = mapping;
         this.elementsActionMapping = createActionMapping(customActions);

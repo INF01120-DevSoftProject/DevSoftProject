@@ -555,6 +555,24 @@ class TextToMusicTranslatorTest {
     }
 
     @Test
+    void swappedNotesAreTranslatedWithTheirNewCharacters() {
+        mapping.replaceChar("note", "A", "B");
+        mapping.replaceChar("note", "B", "A");
+        List<MusicElement> elements = firstVoiceElements("BA");
+
+        assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
+        assertThat(noteAt(elements, 1).getNote()).isEqualTo(Notes.B);
+    }
+
+    @Test
+    void halfSwapIsReportedWhenTranslating() {
+        mapping.replaceChar("note", "A", "B");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> voices("B"));
+        assertThat(error.getMessage()).contains("incompleto");
+    }
+
+    @Test
     void trailingLineBreakDoesNotCreateAnExtraVoice() {
         // arquivo .txt do Windows: toda linha, inclusive a ultima, termina com \r\n
         String text = String.join("\r\n", Collections.nCopies(Music.MAX_VOICES, "A")) + "\r\n";

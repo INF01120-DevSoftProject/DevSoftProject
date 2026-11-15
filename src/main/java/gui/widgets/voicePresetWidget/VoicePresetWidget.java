@@ -1,11 +1,15 @@
 package gui.widgets.voicePresetWidget;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import gui.builders.BoxBuilder;
 import gui.factory.ControlFactory;
+import input.JsonInputReader;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -16,6 +20,7 @@ import musicElements.InstrumentElement;
 import musicElements.InstrumentType;
 import musicElements.Octave;
 import musicElements.VolumeElement;
+import utils.MusicPathUtils;
 import javafx.scene.Node;
 
 public abstract class VoicePresetWidget {
@@ -86,14 +91,65 @@ public abstract class VoicePresetWidget {
         return new ArrayList<>(createOctaveTypes().keySet()).get(1);
     }
 
+    public String getDefaultInstrument() {
+        return createInstrumentTypes().keySet().iterator().next();
+    }
+
     public abstract VolumeElement getDefaultVolume();
-    public abstract String getDefaultInstrument();
     public abstract InstrumentType getInstrumentType();
 
-    protected abstract Map<String, InstrumentElement> createInstrumentTypes();
     protected abstract Map<String, Octave> createOctaveTypes();
 
+    private Map<String, InstrumentElement> createInstrumentTypes() {
+        Map<String, InstrumentElement> instruments = new LinkedHashMap<>();
 
+        JsonInputReader<String, Integer> reader = new JsonInputReader<>(String.class, Integer.class);
+
+        try {
+            LinkedHashMap<String, Integer> data = reader.readFile(
+                MusicPathUtils.getResourceFolderPath("instruments/instruments.json")
+            );
+
+            Map<String, Integer> filtered = filterInstrumentByType(
+                data, 
+                getInstrumentType()
+            );
+
+            for (Map.Entry<String, Integer> entry : filtered.entrySet()) {
+                instruments.put(
+                    entry.getKey(),
+                    new InstrumentElement(entry.getValue(), getInstrumentType())
+                );
+            }
+
+        } catch (IOException e) {
+            throw new UncheckedIOException("Erro ao carregar instrumentos.", e);
+        }
+
+        return instruments;
+    }
+
+    private <K> LinkedHashMap<K, Integer> filterInstrumentByType(Map<K, Integer> data, InstrumentType instrumentType) {
+        int inicio = getInstrumentType().getMinInstrument();
+        int fim = getInstrumentType().getMaxInstrument();
+
+        if (inicio > fim) {
+            throw new IllegalArgumentException("Intervalo inválido.");
+        }
+
+        LinkedHashMap<K, Integer> result = new LinkedHashMap<>();
+
+        for (Map.Entry<K, Integer> entry : data.entrySet()) {
+            int valor = entry.getValue();
+
+            if (valor >= inicio && valor <= fim) {
+                result.put(entry.getKey(), valor);
+            }
+        }
+
+        return result;
+    }
+ 
     private  List<String> getInstrumentsNames() {
         return List.copyOf(createInstrumentTypes().keySet());
     }

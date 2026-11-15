@@ -1,5 +1,7 @@
 package translators.TextToMusic;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.*;
@@ -8,13 +10,36 @@ import music.Music;
 import music.VoicePreset;
 
 public class TextToMusicTranslator {
+
+    private final CharacterMapping mapping;
+    private final Map<String, TextToMusicActions> customActions;
+
+    // Usa o mapeamento compartilhado editado pela GUI atual (ver TextToMusicRules)
+    public TextToMusicTranslator() {
+        this(TextToMusicRules.sharedMapping());
+    }
+
+    public TextToMusicTranslator(CharacterMapping mapping) {
+        this(mapping, Map.of());
+    }
+
+    // customActions: comandos extras, repassados para o TextToMusicRules
+    public TextToMusicTranslator(CharacterMapping mapping, Map<String, TextToMusicActions> customActions) {
+        if (mapping == null) throw new IllegalArgumentException("O mapeamento não pode ser nulo");
+        if (customActions == null) throw new IllegalArgumentException("As ações extras não podem ser nulas");
+        this.mapping = mapping;
+        // mantém a ordem: ela define a prioridade dos comandos extras no REGEX
+        this.customActions = Collections.unmodifiableMap(new LinkedHashMap<>(customActions));
+    }
+
     public Music textToMusic(String name, String text){
         return textToMusic(name, text, null);
     }
 
     // voz sem preset na lista usa o preset padrão dela
     public Music textToMusic(String name, String text, List<VoicePreset> presets){
-        TextToMusicRules musicRules = new TextToMusicRules();
+        // regras novas a cada tradução, com o mapeamento como está agora
+        TextToMusicRules musicRules = new TextToMusicRules(mapping, customActions);
 
         // a quebra de linha no fim do texto (TerminalInputReader, GUI e .txt terminam assim) só fecha a última voz
         text = removeTrailingLineBreak(text);

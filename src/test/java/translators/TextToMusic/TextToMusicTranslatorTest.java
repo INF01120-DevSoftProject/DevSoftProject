@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import music.Music;
@@ -27,12 +26,9 @@ import musicElements.VolumeElement;
 
 class TextToMusicTranslatorTest {
 
-    private final TextToMusicTranslator translator = new TextToMusicTranslator();
-
-    @AfterEach
-    void restoreDefaultMapping() {
-        TextToMusicRules.resetMappings();
-    }
+    // cada teste tem o seu próprio mapeamento: nenhum teste interfere em outro
+    private final CharacterMapping mapping = new CharacterMapping();
+    private final TextToMusicTranslator translator = new TextToMusicTranslator(mapping);
 
     private List<Voice> voices(String text) {
         return translator.textToMusic("Teste", text).getVoices();
@@ -440,7 +436,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void mappedCharacterBecomesTheChosenNote() {
-        TextToMusicRules.mapNote("J", Notes.A);
+        mapping.mapNote("J", Notes.A);
         NoteElement note = noteAt(firstVoiceElements("J#:2"), 0);
 
         assertThat(note.getNote()).isEqualTo(Notes.A);
@@ -450,7 +446,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacedNoteLetterMovesToTheNewCharacter() {
-        TextToMusicRules.replaceChar("note", "A", "J");
+        mapping.replaceChar("note", "A", "J");
         List<MusicElement> elements = firstVoiceElements("JA");
 
         assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
@@ -460,8 +456,8 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacedAccidentalAndDurationKeepTheirMeaning() {
-        TextToMusicRules.replaceChar("accidental", "#", "s");
-        TextToMusicRules.replaceChar("duration", "2", "m");
+        mapping.replaceChar("accidental", "#", "s");
+        mapping.replaceChar("duration", "2", "m");
         NoteElement note = noteAt(firstVoiceElements("Cs:m"), 0);
 
         assertThat(note.getAccidental()).isEqualTo(Accidentals.SHARP);
@@ -470,7 +466,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacingADigitOnlyChangesItsGroup() {
-        TextToMusicRules.replaceChar("duration", "2", "m");
+        mapping.replaceChar("duration", "2", "m");
         List<MusicElement> elements = firstVoiceElements("C:2");
 
         // "2" não é mais duração, mas continua trocando o instrumento
@@ -480,23 +476,23 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacingACharacterOutsideItsGroupIsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.replaceChar("pause", "A", "J"));
-        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.replaceChar("grupoQueNaoExiste", "A", "J"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("pause", "A", "J"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("grupoQueNaoExiste", "A", "J"));
     }
 
     @Test
     void characterAlreadyInUseIsRejected() {
         // "a" já é pausa: não pode virar também subir o BPM
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-            () -> TextToMusicRules.replaceChar("bpmUp", ">", "a"));
+            () -> mapping.replaceChar("bpmUp", ">", "a"));
         assertThat(error.getMessage()).contains("pause");
-        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.addElementChars("bpmUp", "V"));
-        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.mapNote("a", Notes.A));
+        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars("bpmUp", "V"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.mapNote("a", Notes.A));
     }
 
     @Test
     void digitsCanBeUsedMoreThanOnce() {
-        TextToMusicRules.addElementChars("bpmUp", "9");
+        mapping.addElementChars("bpmUp", "9");
         List<MusicElement> elements = firstVoiceElements("9");
 
         assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
@@ -504,7 +500,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void eachNoteHasOnlyOneCharacter() {
-        TextToMusicRules.mapNote("J", Notes.A);
+        mapping.mapNote("J", Notes.A);
         List<MusicElement> elements = firstVoiceElements("JA");
 
         assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
@@ -515,7 +511,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void elementCharsCanBeChanged() {
-        TextToMusicRules.setElementChars("bpmUp", "+]");
+        mapping.setElementChars("bpmUp", "+]");
         List<MusicElement> elements = firstVoiceElements("+]>");
 
         assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
@@ -525,7 +521,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void eachAddedCharacterWorksOnItsOwn() {
-        TextToMusicRules.addElementChars("octaveUp", "^L");
+        mapping.addElementChars("octaveUp", "^L");
         // desce 3 antes, pra subir sem passar da oitava máxima
         List<MusicElement> elements = firstVoiceElements("VVVA^AL?A");
 
@@ -536,8 +532,8 @@ class TextToMusicTranslatorTest {
 
     @Test
     void removedCharacterStopsWorking() {
-        TextToMusicRules.addElementChars("bpmUp", "+");
-        TextToMusicRules.removeElementChars("bpmUp", ">");
+        mapping.addElementChars("bpmUp", "+");
+        mapping.removeElementChars("bpmUp", ">");
         List<MusicElement> elements = firstVoiceElements(">+");
 
         assertThat(elements.get(0)).isInstanceOf(PauseElement.class);
@@ -546,14 +542,14 @@ class TextToMusicTranslatorTest {
 
     @Test
     void groupCannotBeLeftWithoutCharacters() {
-        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.removeElementChars("bpmUp", ">"));
-        assertThrows(IllegalArgumentException.class, () -> TextToMusicRules.setElementChars("bpmUp", ""));
+        assertThrows(IllegalArgumentException.class, () -> mapping.removeElementChars("bpmUp", ">"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.setElementChars("bpmUp", ""));
     }
 
     @Test
     void resetGoesBackToTheDefaultMapping() {
-        TextToMusicRules.mapNote("J", Notes.A);
-        TextToMusicRules.resetMappings();
+        mapping.mapNote("J", Notes.A);
+        mapping.reset();
 
         assertThat(firstVoiceElements("J").get(0)).isInstanceOf(PauseElement.class);
     }

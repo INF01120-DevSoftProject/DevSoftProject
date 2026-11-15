@@ -3,8 +3,8 @@ package input;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface InputReader {
+public interface InputReader<T> {
     
-    String readFile(Path path) throws IOException;
+    T readFile(Path path) throws IOException;
 
 }

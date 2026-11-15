@@ -39,7 +39,7 @@ class CompositionScreenTest extends JavaFXTestBase {
         String lastErrorMessage;
 
         TestableCompositionScreen(
-                InputReader reader,
+                InputReader<String> reader,
                 MusicExportPipeline<?> exporter,
                 DraftMusicCreator draftCreator,
                 Consumer<Path> onListenDraft
@@ -139,7 +139,7 @@ class CompositionScreenTest extends JavaFXTestBase {
 
     @Test
     void rejectsNullDependenciesInConstructor() {
-        InputReader reader = new TXTInputReader();
+        InputReader<String> reader = new TXTInputReader();
         MusicExportPipeline<?> pipeline = createPipeline();
         DraftMusicCreator draftCreator = (text, presets) -> Path.of("draft.mid");
         Consumer<Path> onListenDraft = path -> {};

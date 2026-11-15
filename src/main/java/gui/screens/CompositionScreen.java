@@ -31,7 +31,7 @@ public class CompositionScreen extends Screen {
     private final VBox voicesContainer;
     
     private final MusicExportPipeline<?> exporter;
-    private final InputReader reader;
+    private final InputReader<String> reader;
 
     private final DraftMusicCreator draftCreator;
 
@@ -40,7 +40,7 @@ public class CompositionScreen extends Screen {
 
 
     public CompositionScreen(
-        InputReader reader, 
+        InputReader<String> reader, 
         MusicExportPipeline<?> exporter, 
         DraftMusicCreator draftCreator, 
         Consumer<Path> onListenDraft,

@@ -8,6 +8,7 @@ import java.util.regex.*;
 
 import music.Music;
 import music.VoicePreset;
+import musicElements.BPMElement;
 
 public class TextToMusicTranslator {
 
@@ -38,6 +39,11 @@ public class TextToMusicTranslator {
 
     // voz sem preset na lista usa o preset padrão dela
     public Music textToMusic(String name, String text, List<VoicePreset> presets){
+        return textToMusic(name, text, presets, Music.DEFAULT_BPM);
+    }
+
+    // initialBpm: BPM com que a música (e cada voz) começa
+    public Music textToMusic(String name, String text, List<VoicePreset> presets, int initialBpm){
         // regras novas a cada tradução, com o mapeamento como está agora
         TextToMusicRules musicRules = new TextToMusicRules(mapping, customActions);
 
@@ -50,11 +56,12 @@ public class TextToMusicTranslator {
             throw new IllegalArgumentException(
                 "O texto tem " + numberOfLines + " linhas, mas o máximo é " + Music.MAX_VOICES + " (uma voz por linha)");
         }
-        Music music = new Music(name, Math.max(numberOfLines, Music.MIN_VOICES));
+        Music music = new Music(name, new BPMElement(initialBpm), Math.max(numberOfLines, Music.MIN_VOICES));
 
         Pattern token = Pattern.compile(musicRules.getREGEXToken());
         Matcher matcher = token.matcher(text);
-        TextToMusicContext context = new TextToMusicContext(music.getVoices(), presets);
+        TextToMusicContext context = new TextToMusicContext(
+            music.getVoices(), presets, music.getDefaultBPMElement().getBPM());
 
         while (matcher.find()) {
             // acha o grupo que casou e executa a action dele

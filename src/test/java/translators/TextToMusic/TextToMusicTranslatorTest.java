@@ -573,6 +573,33 @@ class TextToMusicTranslatorTest {
     }
 
     @Test
+    void initialBpmIsUsedByTheMusicAndEveryVoice() {
+        Music music = translator.textToMusic("Teste", "A>\nB", null, 90);
+
+        assertThat(music.getDefaultBPMElement().getBPM()).isEqualTo(90);
+        for (Voice voice : music.getVoices().subList(0, 2)) {
+            // o BPM do preset no começo da voz é o inicial, não o padrão
+            assertThat(((BPMElement) voice.getSheetMusic().getSheetMusic().get(PRESET_SIZE - 1)).getBPM()).isEqualTo(90);
+        }
+        // ">" sobe a partir do BPM inicial
+        assertThat(elements(music.getVoices().get(0))).anyMatch(e -> e instanceof BPMElement bpm && bpm.getBPM() == 100);
+    }
+
+    @Test
+    void withoutInitialBpmTheDefaultIsUsed() {
+        Music music = translator.textToMusic("Teste", "A");
+
+        assertThat(music.getDefaultBPMElement().getBPM()).isEqualTo(Music.DEFAULT_BPM);
+        assertThat(((BPMElement) music.getVoices().get(0).getSheetMusic().getSheetMusic().get(PRESET_SIZE - 1)).getBPM())
+            .isEqualTo(Music.DEFAULT_BPM);
+    }
+
+    @Test
+    void invalidInitialBpmIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> translator.textToMusic("Teste", "A", null, 5));
+    }
+
+    @Test
     void trailingLineBreakDoesNotCreateAnExtraVoice() {
         // arquivo .txt do Windows: toda linha, inclusive a ultima, termina com \r\n
         String text = String.join("\r\n", Collections.nCopies(Music.MAX_VOICES, "A")) + "\r\n";

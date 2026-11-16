@@ -199,6 +199,31 @@ class CharacterMappingTest {
     }
 
     @Test
+    void digitOfAnotherStandaloneGroupIsRejected() {
+        CharacterMapping mapping = new CharacterMapping();
+
+        // "2" já troca o instrumento: não pode também subir o BPM
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> mapping.addElementChars("bpmUp", "2"));
+        assertThat(error.getMessage()).contains("instrument");
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("bpmDown", "<", "4"));
+
+        assertThat(mapping.getChars("bpmUp")).isEqualTo(">");
+    }
+
+    @Test
+    void digitCanBeSharedWithAContextualGroup() {
+        CharacterMapping mapping = new CharacterMapping();
+
+        // "9" só é usado no atraso "[n]", e "3" só na duração ":3" e no atraso
+        mapping.addElementChars("bpmUp", "9");
+        mapping.addElementChars("instrument", "3");
+
+        assertThat(mapping.getChars("bpmUp")).isEqualTo(">9");
+        assertThat(mapping.getChars("instrument")).isEqualTo("024683");
+    }
+
+    @Test
     void addGroupIfAbsentKeepsExistingGroups() {
         CharacterMapping mapping = new CharacterMapping();
 

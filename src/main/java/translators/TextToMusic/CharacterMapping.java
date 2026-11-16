@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import musicElements.Accidentals;
 import musicElements.DurationTime;
 import musicElements.Notes;
@@ -277,13 +278,25 @@ public class CharacterMapping {
         };
     }
 
+    // Verifica se o char já está associado a outro grupo.
+    // Um dígito pode ser compartilhado só quando um dos grupos é contextual (ver CONTEXTUAL_GROUPS):
+    // ex.: "2" é duração depois de ":" e troca de instrumento sozinho, sem um atrapalhar o outro.
     private void checkNotUsed(String chars, String elementType) {
         for (char c : chars.toCharArray()) {
-            if (Character.isDigit(c)) continue;
             for (Map.Entry<String, String> element : elementsMapping.entrySet()) {
-                if (!element.getKey().equals(elementType) && element.getValue().indexOf(c) >= 0)
-                    throw new IllegalArgumentException("O caractere '" + c + "' já é usado em " + element.getKey());
+                String otherType = element.getKey();
+                if (otherType.equals(elementType) || element.getValue().indexOf(c) < 0) continue;
+                if (Character.isDigit(c) && (isContextual(elementType) || isContextual(otherType))) continue;
+                throw new IllegalArgumentException("O caractere '" + c + "' já é usado em " + otherType);
             }
         }
+    }
+
+    // Grupos que só valem em um contexto: "[n]" no começo da linha, ":duração" e o acidente logo
+    // depois da nota. O mesmo dígito sozinho no texto continua livre para outro grupo.
+    private static final Set<String> CONTEXTUAL_GROUPS = Set.of("startDelay", "duration", "accidental");
+
+    private static boolean isContextual(String elementType) {
+        return elementType != null && CONTEXTUAL_GROUPS.contains(elementType);
     }
 }

@@ -176,6 +176,29 @@ class CharacterMappingTest {
     }
 
     @Test
+    void mapNoteRejectsTheCharacterOfAnotherNote() {
+        CharacterMapping mapping = new CharacterMapping();
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> mapping.mapNote("B", Notes.A));
+
+        assertThat(error.getMessage()).contains("'B'").contains("B");
+        assertThat(mapping.getNote("B")).isEqualTo(Notes.B);
+        assertThat(mapping.getNote("A")).isEqualTo(Notes.A);
+        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+    }
+
+    @Test
+    void mapNoteToTheSameCharacterChangesNothing() {
+        CharacterMapping mapping = new CharacterMapping();
+
+        mapping.mapNote("A", Notes.A);
+
+        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+        assertThat(mapping.getNote("A")).isEqualTo(Notes.A);
+    }
+
+    @Test
     void addGroupIfAbsentKeepsExistingGroups() {
         CharacterMapping mapping = new CharacterMapping();
 

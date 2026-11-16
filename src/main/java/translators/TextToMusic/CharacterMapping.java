@@ -219,9 +219,16 @@ public class CharacterMapping {
         elementsMapping.put(elementType, current.toString());
     }
 
-    // Associa um caractere a uma nota, tirando o caractere antigo
+    // Associa um caractere a uma nota, tirando o caractere antigo.
+    // Um caractere que já é de outra nota é recusado (para trocar duas notas, use replaceChar).
     public void mapNote(String input, Notes note) {
+        if (note == null) throw new IllegalArgumentException("A nota não pode ser nula");
         checkNotUsed(input, "note");
+        Notes current = notesRules.get(input);
+        if (current == note) return;
+        if (current != null)
+            throw new IllegalArgumentException("O caractere '" + input + "' já é usado pela nota " + current
+                + " (use replaceChar para trocar as duas)");
         String oldChar = null;
         for (Map.Entry<String, Notes> rule : notesRules.entrySet()) {
             if (rule.getValue() == note) oldChar = rule.getKey();

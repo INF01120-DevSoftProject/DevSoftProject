@@ -151,6 +151,31 @@ class CharacterMappingTest {
     }
 
     @Test
+    void noteCharacterWithoutANoteIsRejected() {
+        CharacterMapping mapping = new CharacterMapping();
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> mapping.addElementChars("note", "Z"));
+        assertThat(error.getMessage()).contains("mapNote");
+        assertThrows(IllegalArgumentException.class, () -> mapping.setElementChars("note", "ABZ"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars("duration", "9"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars("accidental", "s"));
+
+        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+    }
+
+    @Test
+    void noteCharactersWithANoteCanBeSet() {
+        CharacterMapping mapping = new CharacterMapping();
+
+        mapping.setElementChars("note", "ABC");
+        mapping.mapNote("Z", Notes.D);
+
+        assertThat(mapping.getChars("note")).isEqualTo("ABCZ");
+        assertThat(mapping.getNote("Z")).isEqualTo(Notes.D);
+    }
+
+    @Test
     void addGroupIfAbsentKeepsExistingGroups() {
         CharacterMapping mapping = new CharacterMapping();
 

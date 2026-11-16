@@ -190,6 +190,7 @@ public class CharacterMapping {
     // Substitui TODOS os caracteres de um grupo, apagando os antigos
     public void setElementChars(String elementType, String chars) {
         checkNotUsed(chars, elementType);
+        checkHasValue(elementType, chars);
         if (chars.isEmpty())
             throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
         elementsMapping.put(elementType, chars);
@@ -199,6 +200,7 @@ public class CharacterMapping {
     // Acrescenta caracteres a um grupo
     public void addElementChars(String elementType, String chars) {
         checkNotUsed(chars, elementType);
+        checkHasValue(elementType, chars);
         StringBuilder current = new StringBuilder(getChars(elementType));
         for (char c : chars.toCharArray()) {
             if (current.indexOf(String.valueOf(c)) < 0) current.append(c);
@@ -245,6 +247,29 @@ public class CharacterMapping {
     }
 
     // Verifica se o char já está associado a outro grupo (números ficam de fora)
+    // Nos grupos que viram um valor musical (nota, duração e acidente), todo caractere precisa ter
+    // esse valor; senão o REGEX reconhece o caractere e a tradução recebe um valor nulo.
+    // Para associar um caractere novo a uma nota, use mapNote.
+    private void checkHasValue(String elementType, String chars) {
+        Map<String, ?> values = valuesOf(elementType);
+        if (values == null) return;
+        for (char c : chars.toCharArray()) {
+            if (!values.containsKey(String.valueOf(c)))
+                throw new IllegalArgumentException("O caractere '" + c + "' não tem valor no grupo " + elementType
+                    + (elementType.equals("note") ? " (use mapNote para associá-lo a uma nota)" : ""));
+        }
+    }
+
+    // Mapa caractere -> valor musical do grupo, ou null se o grupo não tem valor
+    private Map<String, ?> valuesOf(String elementType) {
+        return switch (elementType) {
+            case "note"       -> notesRules;
+            case "duration"   -> durationTimeRules;
+            case "accidental" -> accidentalsRules;
+            default           -> null;
+        };
+    }
+
     private void checkNotUsed(String chars, String elementType) {
         for (char c : chars.toCharArray()) {
             if (Character.isDigit(c)) continue;

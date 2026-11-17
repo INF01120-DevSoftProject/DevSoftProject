@@ -1,17 +1,20 @@
 package translators.TextToMusic;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import music.Music;
 import music.Voice;
 import musicElements.Accidentals;
+import musicElements.BPMElement;
 import musicElements.DurationTime;
 import musicElements.InstrumentElement;
 import musicElements.InstrumentType;
@@ -163,5 +166,73 @@ class TextToMusicRulesTest {
             assertThat(context.getCurrentInstrument().getInstrument()).isEqualTo(type.getMinInstrument());
             assertThat(context.getCurrentInstrument().getType()).isEqualTo(type);
         }
+    }
+
+    @AfterEach
+    @SuppressWarnings("deprecation")
+    void restoreSharedMapping() {
+        TextToMusicRules.resetMappings();
+    }
+
+    @Test
+    void eachInstanceUsesItsOwnMapping() {
+        CharacterMapping mapping = new CharacterMapping();
+        mapping.replaceChar("note", "A", "J");
+
+        assertThat(new TextToMusicRules(mapping).getNote("J")).isEqualTo(Notes.A);
+        assertThat(new TextToMusicRules().getNote("J")).isNull();
+    }
+
+    @Test
+    void customActionGoesBeforeElse() {
+        CharacterMapping mapping = new CharacterMapping();
+        mapping.addGroupIfAbsent("tempo", "T");
+
+        TextToMusicRules customRules = new TextToMusicRules(mapping, Map.of("tempo", (matcher, context) -> {}));
+        List<String> groups = List.copyOf(customRules.getElementsActionMapping().keySet());
+
+        assertThat(groups.get(groups.size() - 2)).isEqualTo("tempo");
+        assertThat(groups.get(groups.size() - 1)).isEqualTo("else");
+        assertThat(rules.getElementsActionMapping()).doesNotContainKey("tempo");
+    }
+
+    @Test
+    void newCommandWorksWithoutChangingThisClass() {
+        // comando novo "T": BPM fixo em 200
+        CharacterMapping mapping = new CharacterMapping();
+        mapping.addGroupIfAbsent("tempo", "T");
+        TextToMusicActions setTempo = (matcher, context) -> {
+            context.setBpm(200);
+            context.appendControlElement(new BPMElement(200));
+        };
+        TextToMusicTranslator translator = new TextToMusicTranslator(mapping, Map.of("tempo", setTempo));
+
+        List<MusicElement> sheet = translator.textToMusic("Teste", "T>").getVoices().get(0).getSheetMusic().getSheetMusic();
+        List<MusicElement> elements = sheet.subList(3, sheet.size());
+
+        assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(200);
+        assertThat(((BPMElement) elements.get(1)).getBPM()).isEqualTo(210);
+    }
+
+    @Test
+    void customActionNeedsCharactersAndANewName() {
+        CharacterMapping mapping = new CharacterMapping();
+        TextToMusicActions nothing = (matcher, context) -> {};
+
+        assertThrows(IllegalArgumentException.class, () -> new TextToMusicRules(mapping, Map.of("tempo", nothing)));
+        assertThrows(IllegalArgumentException.class, () -> new TextToMusicRules(mapping, Map.of("note", nothing)));
+        assertThrows(IllegalArgumentException.class, () -> new TextToMusicRules(mapping, Map.of("else", nothing)));
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void legacyStaticMethodsChangeTheMappingOfTheDefaultTranslator() {
+        // a GUI atual ainda usa os métodos estáticos; eles valem para o TextToMusicTranslator padrão
+        TextToMusicRules.replaceChar("bpmUp", ">", "+");
+
+        List<MusicElement> sheet = new TextToMusicTranslator().textToMusic("Teste", "+").getVoices().get(0).getSheetMusic().getSheetMusic();
+
+        assertThat(TextToMusicRules.getMappingCharacters("bpmUp")).containsExactly("+");
+        assertThat(sheet).anyMatch(element -> element instanceof BPMElement bpm && bpm.getBPM() == 130);
     }
 }

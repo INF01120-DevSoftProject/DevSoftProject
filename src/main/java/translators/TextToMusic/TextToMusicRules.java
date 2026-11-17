@@ -1,12 +1,10 @@
 package translators.TextToMusic;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import musicElements.Accidentals;
 import musicElements.BPMElement;
 import musicElements.DurationTime;
@@ -19,167 +17,63 @@ import musicElements.Octave;
 import musicElements.PauseElement;
 import musicElements.VolumeElement;
 
+// Regras de uma tradução: as ações de cada grupo e o REGEX montado a partir do mapeamento.
+// O mapeamento de caracteres fica no CharacterMapping e a montagem do REGEX no RegexBuilder.
+// Cada instância tem o seu próprio estado; o tradutor cria uma nova a cada textToMusic().
 public class TextToMusicRules {
 
-
-    private String REGEXToken;
-
-    //Mapeamento dos caracteres, compartilhado por todos os tradutores
-    private static final Map<String, String> elementsMapping = new LinkedHashMap<>();
-
-    //Dict das Rules dos Notes usadas no TextToMusicTranslator, sendo salva como: InputRecebido , Notes
-    private static final Map<String, Notes> notesRules = new LinkedHashMap<>();
-
-    //Dict das Rules do DurationTime usadas no TextToMusicTranslator, sendo salva como: InputRecebido , DurationTime
-    private static final Map<String, DurationTime> durationTimeRules = new LinkedHashMap<>();
-
-    //Dict das Rules dos accidentals usadas no TextToMusicTranslator, sendo salva como: InputRecebido , Accidentals
-    private static final Map<String, Accidentals> accidentalsRules = new LinkedHashMap<>();
-
-    static { resetMappings(); }
-
-    //Volta o mapeamento para o padrão
-    public static void resetMappings() {
-        elementsMapping.clear();
-        elementsMapping.put("note",         "ABCDEFG");
-        elementsMapping.put("accidental",   "#b");
-        elementsMapping.put("duration",     "1234567");
-        elementsMapping.put("pause",        "acdefgh");
-
-        elementsMapping.put("octaveUp",     "?.");
-        elementsMapping.put("octaveDown",   "V");
-
-        elementsMapping.put("bpmUp",        ">");
-        elementsMapping.put("bpmDown",      "<");
-
-        elementsMapping.put("doubleVolume", " ");
-
-        elementsMapping.put("newVoice",     "\n");
-
-        elementsMapping.put("instrument",   "02468");
-        elementsMapping.put("startDelay",   "0123456789");
-
-        notesRules.clear();
-        notesRules.put("A", Notes.A);
-        notesRules.put("B", Notes.B);
-        notesRules.put("C", Notes.C);
-        notesRules.put("D", Notes.D);
-        notesRules.put("E", Notes.E);
-        notesRules.put("F", Notes.F);
-        notesRules.put("G", Notes.G);
-
-        durationTimeRules.clear();
-        durationTimeRules.put("1", DurationTime.WHOLE);
-        durationTimeRules.put("2", DurationTime.HALF);
-        durationTimeRules.put("3", DurationTime.QUARTER);
-        durationTimeRules.put("4", DurationTime.EIGHTH);
-        durationTimeRules.put("5", DurationTime.SIXTEENTH);
-        durationTimeRules.put("6", DurationTime.THIRTY_SECOND);
-        durationTimeRules.put("7", DurationTime.SIXTY_FOURTH);
-
-        accidentalsRules.clear();
-        accidentalsRules.put("b", Accidentals.FLAT);
-        accidentalsRules.put("#", Accidentals.SHARP);
-        accidentalsRules.put("", Accidentals.NONE);
-    }
-
-    // Substitui um caractere por outro:
-    public static void replaceChar(String elementType, String oldChar, String newChar) {
-        String chars = elementsMapping.get(elementType);
-        if (chars == null || !chars.contains(oldChar))
-            throw new IllegalArgumentException("O grupo " + elementType + " não tem o caractere '" + oldChar + "'");
-        if (oldChar.equals(newChar)) return;
-        checkNotUsed(newChar, null);
-
-        elementsMapping.put(elementType, chars.replace(oldChar, newChar));
-        if (elementType.equals("note"))
-            notesRules.put(newChar, notesRules.remove(oldChar));
-        if (elementType.equals("duration"))
-            durationTimeRules.put(newChar, durationTimeRules.remove(oldChar));
-        if (elementType.equals("accidental"))
-            accidentalsRules.put(newChar, accidentalsRules.remove(oldChar));
-    }
-
-    public static List<String> getMappingCharacters(String type) {
-        String mapping = elementsMapping.get(type);
-
-        if (mapping == null) {
-            return List.of();
-        }
-
-        return Arrays.asList(mapping.split(""));
-    }
-
-    //Verifica se o char já está associado a alguém (números ficam de fora)
-    private static void checkNotUsed(String chars, String elementType) {
-        for (char c : chars.toCharArray()) {
-            if (Character.isDigit(c)) continue;
-            for (Map.Entry<String, String> element : elementsMapping.entrySet()) {
-                if (!element.getKey().equals(elementType) && element.getValue().indexOf(c) >= 0)
-                    throw new IllegalArgumentException("O caractere '" + c + "' já é usado em " + element.getKey());
-            }
-        }
-    }
-
-    //Substitui TODOS os caracteres de um grupo de elemento, apagando os antigos
-    public static void setElementChars(String elementType, String chars) {
-        checkNotUsed(chars, elementType);
-        if (chars.isEmpty())
-            throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
-        elementsMapping.put(elementType, chars);
-    }
-
-    //Acrescenta caracteres a um grupo
-    public static void addElementChars(String elementType, String chars) {
-        checkNotUsed(chars, elementType);
-        StringBuilder current = new StringBuilder(elementsMapping.get(elementType));
-        for (char c : chars.toCharArray()) {
-            if (current.indexOf(String.valueOf(c)) < 0) current.append(c);
-        }
-        elementsMapping.put(elementType, current.toString());
-    }
-
-    //Tira caracteres de um grupo
-    public static void removeElementChars(String elementType, String chars) {
-        StringBuilder current = new StringBuilder();
-        for (char c : elementsMapping.get(elementType).toCharArray()) {
-            if (chars.indexOf(c) < 0) current.append(c);
-        }
-        if (current.length() == 0)
-            throw new IllegalArgumentException("O grupo " + elementType + " não pode ficar sem caractere");
-        elementsMapping.put(elementType, current.toString());
-    }
-
-    //Associa um caractere a uma nota, tirando o caractere antigo
-    public static void mapNote(String input, Notes note) {
-        checkNotUsed(input, "note");
-        String oldChar = null;
-        for (Map.Entry<String, Notes> rule : notesRules.entrySet()) {
-            if (rule.getValue() == note) oldChar = rule.getKey();
-        }
-        if (oldChar != null) {
-            notesRules.remove(oldChar);
-            removeElementChars("note", oldChar);
-        }
-        notesRules.put(input, note);
-        addElementChars("note", input);
-    }
+    private final CharacterMapping mapping;
 
     //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action
     //A ordem importa: "startDelay" e "note" primeiro, "else" por último
-    private Map<String, TextToMusicActions> elementsActionMapping = new LinkedHashMap<>();
-    {
-        elementsActionMapping.put("startDelay",   this::addStartDelay);
-        elementsActionMapping.put("note",         this::addNote);
-        elementsActionMapping.put("pause",        this::addPause);
-        elementsActionMapping.put("octaveUp",     this::raiseOctave);
-        elementsActionMapping.put("octaveDown",   this::lowerOctave);
-        elementsActionMapping.put("bpmUp",        this::increaseBpm);
-        elementsActionMapping.put("bpmDown",      this::decreaseBpm);
-        elementsActionMapping.put("doubleVolume", this::doubleVolume);
-        elementsActionMapping.put("newVoice",     this::startNewVoice);
-        elementsActionMapping.put("instrument",   this::nextInstrument);
-        elementsActionMapping.put("else",         this::repeatLastNoteOrPause);
+    private final Map<String, TextToMusicActions> elementsActionMapping;
+
+    private final String REGEXToken;
+
+    public TextToMusicRules() {
+        this(new CharacterMapping());
+    }
+
+    public TextToMusicRules(CharacterMapping mapping) {
+        this(mapping, Map.of());
+    }
+
+    // customActions: ações extras (NomeGrupo -> Action), sem precisar editar esta classe.
+    // Cada grupo extra precisa ter caracteres no mapeamento; ele entra antes do "else".
+    public TextToMusicRules(CharacterMapping mapping, Map<String, TextToMusicActions> customActions) {
+        if (mapping == null) throw new IllegalArgumentException("O mapeamento não pode ser nulo");
+        if (customActions == null) throw new IllegalArgumentException("As ações extras não podem ser nulas");
+        // troca de caracteres feita pela metade: melhor avisar do que traduzir errado
+        mapping.checkComplete();
+
+        this.mapping = mapping;
+        this.elementsActionMapping = createActionMapping(customActions);
+        this.REGEXToken = RegexBuilder.build(mapping, elementsActionMapping.keySet());
+    }
+
+    private Map<String, TextToMusicActions> createActionMapping(Map<String, TextToMusicActions> customActions) {
+        Map<String, TextToMusicActions> actions = new LinkedHashMap<>();
+        actions.put("startDelay",   this::addStartDelay);
+        actions.put("note",         this::addNote);
+        actions.put("pause",        this::addPause);
+        actions.put("octaveUp",     this::raiseOctave);
+        actions.put("octaveDown",   this::lowerOctave);
+        actions.put("bpmUp",        this::increaseBpm);
+        actions.put("bpmDown",      this::decreaseBpm);
+        actions.put("doubleVolume", this::doubleVolume);
+        actions.put("newVoice",     this::startNewVoice);
+        actions.put("instrument",   this::nextInstrument);
+
+        for (Map.Entry<String, TextToMusicActions> custom : customActions.entrySet()) {
+            if (actions.containsKey(custom.getKey()) || custom.getKey().equals("else"))
+                throw new IllegalArgumentException("Já existe uma ação para o grupo " + custom.getKey());
+            if (!mapping.hasGroup(custom.getKey()))
+                throw new IllegalArgumentException("O grupo " + custom.getKey() + " não tem caracteres no mapeamento");
+            actions.put(custom.getKey(), custom.getValue());
+        }
+
+        actions.put("else",         this::repeatLastNoteOrPause);
+        return Collections.unmodifiableMap(actions);
     }
 
     private void addStartDelay(Matcher matcher, TextToMusicContext context) {
@@ -258,78 +152,6 @@ public class TextToMusicRules {
         }
     }
 
-    public String getElementChars(String elementType) {
-        // o quote serve pra caracteres como ] e ^ não quebrarem o REGEX
-        return Pattern.quote(elementsMapping.get(elementType));
-    }
-
-    //Dict das Rules do REGEX usadas no TextToMusicTranslator, sendo salva como: NomeGrupo , REGEX
-    private Map<String, String> REGEXRules = new LinkedHashMap<>();
-    {
-        REGEXRules.put("note",         "(?<note>["         + getElementChars("note")         + "])");
-        REGEXRules.put("accidental",   "(?<accidental>["   + getElementChars("accidental")   + "])?");
-        REGEXRules.put("duration",     "(?::(?<duration>[" + getElementChars("duration")     + "]))?");
-        REGEXRules.put("pause",        "(?<pause>["        + getElementChars("pause")        + "])");
-
-        REGEXRules.put("octaveUp",     "(?<octaveUp>["     + getElementChars("octaveUp")     + "])");
-        REGEXRules.put("octaveDown",   "(?<octaveDown>["   + getElementChars("octaveDown")   + "])");
-
-        REGEXRules.put("bpmUp",        "(?<bpmUp>["        + getElementChars("bpmUp")        + "])");
-        REGEXRules.put("bpmDown",      "(?<bpmDown>["      + getElementChars("bpmDown")      + "])");
-
-        REGEXRules.put("doubleVolume", "(?<doubleVolume>[" + getElementChars("doubleVolume") + "])");
-
-        REGEXRules.put("newVoice",     "(?<newVoice>["     + getElementChars("newVoice")     + "])");
-        REGEXRules.put("instrument",   "(?<instrument>["   + getElementChars("instrument")   + "])");
-
-        REGEXRules.put("startDelay",   "(?m:^)\\[(?<startDelay>[" + getElementChars("startDelay") + "]{1,3})\\] ?");
-
-        REGEXRules.put("else",         "(?<else>.)");
-    }
-
-    //Cria um Token para o REGEX, é a unção de todas as regras em uma String
-    private String createREGEXToken() {
-        StringJoiner joiner = new StringJoiner("|");
-        //Token do ATRASO/DELAY (vem antes de tudo obrigatoriamente)
-        joiner.add(REGEXRules.get("startDelay"));
-        //Token das NOTAS
-        joiner.add(REGEXRules.get("note") + REGEXRules.get("accidental") + REGEXRules.get("duration"));
-
-        //Token de OUTRAS regras
-        for (Map.Entry<String, String> rule : REGEXRules.entrySet()) {
-            if (!List.of("note", "accidental", "duration", "startDelay").contains(rule.getKey()))
-                joiner.add(rule.getValue());
-        }
-        //Junção de todos Tokens
-        return joiner.toString();
-    }
-
-    public String getREGEXToken() {
-        return this.REGEXToken;
-    }
-
-    public String getStartDelayREGEX() {
-        return REGEXRules.get("startDelay");
-    }
-
-    public Notes getNote(String input) {
-        return notesRules.get(input);
-    }
-
-    public DurationTime getDurationTime(String input) {
-        return durationTimeRules.getOrDefault(input, DurationTime.QUARTER);
-    }
-
-    public Map<String, TextToMusicActions> getElementsActionMapping() {
-        return elementsActionMapping;
-    }
-
-    public Accidentals getAccidental(String input) {
-        return accidentalsRules.getOrDefault(input, Accidentals.NONE);
-    }
-
-    { REGEXToken = createREGEXToken(); }
-
     //Próximo instrumento da família (InstrumentType) do instrumento atual e loopa se necessário
     private InstrumentElement nextInstrumentInFamily(InstrumentElement current) {
         InstrumentType family = current.getType();
@@ -337,5 +159,92 @@ public class TextToMusicRules {
         int position = current.getInstrument() - family.getMinInstrument();
         int next = family.getMinInstrument() + (position + 1) % familySize;
         return new InstrumentElement(next, family);
+    }
+
+    public CharacterMapping getMapping() {
+        return mapping;
+    }
+
+    public String getElementChars(String elementType) {
+        return RegexBuilder.quotedChars(elementType, mapping);
+    }
+
+    public String getREGEXToken() {
+        return this.REGEXToken;
+    }
+
+    public String getStartDelayREGEX() {
+        return RegexBuilder.startDelay(mapping);
+    }
+
+    public Map<String, TextToMusicActions> getElementsActionMapping() {
+        return elementsActionMapping;
+    }
+
+    public Notes getNote(String input) {
+        return mapping.getNote(input);
+    }
+
+    public DurationTime getDurationTime(String input) {
+        return mapping.getDurationTime(input);
+    }
+
+    public Accidentals getAccidental(String input) {
+        return mapping.getAccidental(input);
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Compatibilidade com a GUI atual (MapperScreen e MappingWidget), que ainda chama os métodos
+    // estáticos. Eles agem sobre um único mapeamento compartilhado, que é o usado pelo
+    // TextToMusicTranslator sem argumentos. Código novo deve usar um CharacterMapping próprio.
+    // ------------------------------------------------------------------------------------------
+
+    private static final CharacterMapping SHARED_MAPPING = new CharacterMapping();
+
+    // Mapeamento compartilhado usado pelo TextToMusicTranslator padrão
+    static CharacterMapping sharedMapping() {
+        return SHARED_MAPPING;
+    }
+
+    /** @deprecated use {@link CharacterMapping#reset()} */
+    @Deprecated
+    public static void resetMappings() {
+        SHARED_MAPPING.reset();
+    }
+
+    /** @deprecated use {@link CharacterMapping#replaceChar(String, String, String)} */
+    @Deprecated
+    public static void replaceChar(String elementType, String oldChar, String newChar) {
+        SHARED_MAPPING.replaceChar(elementType, oldChar, newChar);
+    }
+
+    /** @deprecated use {@link CharacterMapping#getMappingCharacters(String)} */
+    @Deprecated
+    public static List<String> getMappingCharacters(String type) {
+        return SHARED_MAPPING.getMappingCharacters(type);
+    }
+
+    /** @deprecated use {@link CharacterMapping#setElementChars(String, String)} */
+    @Deprecated
+    public static void setElementChars(String elementType, String chars) {
+        SHARED_MAPPING.setElementChars(elementType, chars);
+    }
+
+    /** @deprecated use {@link CharacterMapping#addElementChars(String, String)} */
+    @Deprecated
+    public static void addElementChars(String elementType, String chars) {
+        SHARED_MAPPING.addElementChars(elementType, chars);
+    }
+
+    /** @deprecated use {@link CharacterMapping#removeElementChars(String, String)} */
+    @Deprecated
+    public static void removeElementChars(String elementType, String chars) {
+        SHARED_MAPPING.removeElementChars(elementType, chars);
+    }
+
+    /** @deprecated use {@link CharacterMapping#mapNote(String, Notes)} */
+    @Deprecated
+    public static void mapNote(String input, Notes note) {
+        SHARED_MAPPING.mapNote(input, note);
     }
 }

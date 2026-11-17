@@ -23,7 +23,9 @@ public class TextToMusicContext {
     private Voice currentVoice;
     private SheetMusic sheetMusic;
     private MusicElement lastMusicElement;
-    private int bpm = DEFAULT_BPM;
+    // BPM com que cada voz começa (o BPM inicial da música)
+    private final int initialBpm;
+    private int bpm;
     private boolean presetWritten;
 
 
@@ -33,9 +35,20 @@ public class TextToMusicContext {
 
     // chosenPresets.get(i) é o preset da voz i; o que não tiver usa o preset padrão da voz
     public TextToMusicContext(List<Voice> voices, List<VoicePreset> chosenPresets) {
+        this(voices, chosenPresets, DEFAULT_BPM);
+    }
+
+    // initialBpm: BPM inicial da música, usado no começo de cada voz
+    public TextToMusicContext(List<Voice> voices, List<VoicePreset> chosenPresets, int initialBpm) {
+        new BPMElement(initialBpm); // valida o BPM (lança IllegalArgumentException se for inválido)
         this.voices = voices;
         this.chosenPresets = chosenPresets;
+        this.initialBpm = initialBpm;
         startVoice();
+    }
+
+    public int getInitialBpm() {
+        return initialBpm;
     }
 
     // o preset recebido para a voz atual, ou o padrão dela se não recebeu nenhum
@@ -108,11 +121,11 @@ public class TextToMusicContext {
         currentVolume = preset.getVolumeElement();
         currentInstrument = preset.getInstrumentElement();
         lastMusicElement = null;
-        bpm = DEFAULT_BPM;
+        bpm = initialBpm;
         presetWritten = false;
     }
 
-    // a sheet de cada voz começa com os valores do preset (instrumento, volume e BPM padrão);
+    // a sheet de cada voz começa com os valores do preset (instrumento, volume e BPM inicial da música);
     // nas vozes vazias não aplica o preset;
     private void writePresetBeforeFirstElement() {
         if (presetWritten) return;
@@ -120,7 +133,7 @@ public class TextToMusicContext {
         VoicePreset preset = currentPreset();
         sheetMusic.appendToSheetMusic(preset.getInstrumentElement());
         sheetMusic.appendToSheetMusic(preset.getVolumeElement());
-        sheetMusic.appendToSheetMusic(new BPMElement(DEFAULT_BPM));
+        sheetMusic.appendToSheetMusic(new BPMElement(initialBpm));
     }
 
     public void closeVoice() {

@@ -22,11 +22,11 @@ public interface Player<T> extends AutoCloseable {
 
     double getMusicPosition();
 
-    T getMusicData();
-
     String getCurrentMusicName();
 
     Path getCurrentMusicPath();
+
+    void addEndMusicEvent(Runnable action);
 
     @Override
     void close();

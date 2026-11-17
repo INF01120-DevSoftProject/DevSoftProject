@@ -1,5 +1,7 @@
 package musicElements;
 
+import builders.MidiSequenceBuilder;
+
 public class BPMElement implements MusicElement{
 
     private final int bpm;
@@ -14,6 +16,11 @@ public class BPMElement implements MusicElement{
         }
 
         this.bpm = newBPM;
+    }
+
+    @Override
+    public void addMusicElementToMIDI(MidiSequenceBuilder builder) {
+        builder.setBPM(this);
     }
 
     public int getBPM(){

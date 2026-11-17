@@ -1,5 +1,7 @@
 package musicElements;
 
+import builders.MidiSequenceBuilder;
+
 public class VolumeElement implements MusicElement{
     
     private final int volume;
@@ -15,6 +17,12 @@ public class VolumeElement implements MusicElement{
 
         this.volume  = newVolume;
     }
+
+    @Override
+    public void addMusicElementToMIDI(MidiSequenceBuilder builder) {
+        builder.setVolume(this);
+    }
+
 
     public int getVolume(){
         return this.volume;

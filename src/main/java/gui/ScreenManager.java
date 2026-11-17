@@ -43,12 +43,14 @@ public class ScreenManager extends Application {
 
         compositionScreen = new CompositionScreen(
             new TXTInputReader(),
-            new MidiMusicPathUtils(),
             exportPipeline,
             draftService,
             draftPath -> {
                 playerScreen.loadDraft(draftPath);
                 layout.setCenter(playerScreen);
+            },
+            filePath -> {
+                playerScreen.onMusicSaved(filePath);
             }
         );
 

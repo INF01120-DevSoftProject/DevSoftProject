@@ -3,6 +3,9 @@ package gui.widgets;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import musicElements.InstrumentElement;
+import musicElements.Octave;
+import musicElements.VolumeElement;
 import gui.builders.BorderPaneBuilder;
 import gui.builders.BoxBuilder;
 import gui.factory.ControlFactory;
@@ -14,10 +17,10 @@ public class VoiceWidget extends BorderPane {
     private static int currentVoiceNum;
 
     private final TextArea inputBox;
-    private final VoicePresetWidget voicePresetNode;
+    private final VoicePresetWidget voicePresetWidget;
         
     public VoiceWidget(VoicePresetWidget voicePresetNode) {
-        this.voicePresetNode = voicePresetNode;
+        this.voicePresetWidget = voicePresetNode;
         currentVoiceNum++;
 
 
@@ -43,16 +46,16 @@ public class VoiceWidget extends BorderPane {
         getStyleClass().add("voice-node");
     }
 
-    public int getInstrument() {
-        return voicePresetNode.getInstrument();
+    public InstrumentElement getInstrument() {
+        return voicePresetWidget.getInstrument();
     }
 
-    public int getVolume() {
-        return (int) Math.round(voicePresetNode.getVolume());
+    public VolumeElement getVolume() {
+        return voicePresetWidget.getVolume();
     }
 
-    public int getOctave() {
-        return voicePresetNode.getOctave();
+    public Octave getOctave() {
+        return voicePresetWidget.getOctave();
     }
 
     public void setVoiceText(String text) {

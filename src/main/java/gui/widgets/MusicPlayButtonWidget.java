@@ -26,9 +26,12 @@ public class MusicPlayButtonWidget extends StackPane {
 
         getChildren().setAll(playButton, pauseButton);
 
-        setCurrentButton(playButton);
-    }
+        player.addEndMusicEvent(
+            () -> {setCurrentButtonToPlay();}
+        );
 
+        setCurrentButtonToPlay();
+    }
 
     public void setCurrentButtonToPlay() {
         setCurrentButton(playButton);

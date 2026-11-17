@@ -53,6 +53,26 @@ class MusicPlayButtonWidgetTest extends JavaFXTestBase {
     }
 
     @Test
+    void playbackCompletionRestoresPlayButtonAndAllowsRestart() {
+        TestPlayer player = new TestPlayer();
+        MusicPlayButtonWidget widget = new MusicPlayButtonWidget(player);
+        Button playBtn = (Button) widget.getChildren().get(0);
+        Button pauseBtn = (Button) widget.getChildren().get(1);
+
+        playBtn.fire();
+        player.finishPlayback();
+
+        assertThat(playBtn.isVisible()).isTrue();
+        assertThat(pauseBtn.isVisible()).isFalse();
+        assertThat(player.isPlaying()).isFalse();
+
+        playBtn.fire();
+
+        assertThat(player.isPlaying()).isTrue();
+        assertThat(pauseBtn.isVisible()).isTrue();
+    }
+
+    @Test
     void setsExplicitButtonStates() {
         TestPlayer player = new TestPlayer();
         MusicPlayButtonWidget widget = new MusicPlayButtonWidget(player);

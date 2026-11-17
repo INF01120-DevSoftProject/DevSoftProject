@@ -221,6 +221,7 @@ class PlayerScreenTest extends JavaFXTestBase {
         // a disponibilidade da ação é definida por PlayerScreen.
         assertThat(saveButtonRef.get()).isNotNull();
         assertThat(statusLabelRef.get().isVisible()).isFalse();
+        assertThat(statusLabelRef.get().isManaged()).isFalse();
     }
 
     @Test
@@ -357,11 +358,50 @@ class PlayerScreenTest extends JavaFXTestBase {
         });
     }
 
+    @Test
+    void savingCurrentMusicReloadsNormalizedPathButSavingAnotherDoesNot() throws Exception {
+        TempMidiDraftService service = createDraftService();
+        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
+        Path current = tempDir.resolve("current.mid");
+        Files.copy(draft, current);
+
+        runOnFxThread(() -> {
+            TestPlayer player = new TestPlayer();
+            PlayerScreen screen = new PlayerScreen(
+                    createManagedStage(), player, musicPathUtilsFor(tempDir), service);
+            int initialLoads = player.loadCalls;
+
+            screen.onMusicSaved(tempDir.resolve(".").resolve("current.mid"));
+            assertThat(player.loadCalls).isEqualTo(initialLoads + 1);
+            assertThat(player.getCurrentMusicPath().normalize()).isEqualTo(current);
+
+            screen.onMusicSaved(tempDir.resolve("other.mid"));
+            assertThat(player.loadCalls).isEqualTo(initialLoads + 1);
+            assertThat(player.getCurrentMusicPath().normalize()).isEqualTo(current);
+        });
+    }
+
     private MusicPathUtils musicPathUtilsFor(Path musicsDir) {
         return new MidiMusicPathUtils() {
             @Override
-            public Path getMusicsFolderPath() {
-                return musicsDir;
+            public List<Path> getAllMusicsPathInResources() {
+                try (var files = Files.list(musicsDir)) {
+                    return files.filter(Files::isRegularFile)
+                            .filter(this::isSupportedFile)
+                            .sorted()
+                            .toList();
+                } catch (java.io.IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+            }
+
+            @Override
+            public Path getMusicPathFromName(String fileName) {
+                Path path = musicsDir.resolve(fileName).normalize();
+                if (!path.startsWith(musicsDir) || !Files.isRegularFile(path)) {
+                    throw new IllegalArgumentException("Arquivo MIDI não encontrado: " + fileName);
+                }
+                return path;
             }
         };
     }

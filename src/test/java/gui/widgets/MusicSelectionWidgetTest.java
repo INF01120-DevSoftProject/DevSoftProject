@@ -13,8 +13,8 @@ class MusicSelectionWidgetTest extends JavaFXTestBase {
 
     static class DummyMusicPathUtils extends MusicPathUtils {
         @Override
-        public Path getMusicsFolderPath() {
-            return Path.of("fake");
+        public List<String> getSupportedExtensions() {
+            return List.of("*.mid", "*.midi");
         }
 
         @Override 

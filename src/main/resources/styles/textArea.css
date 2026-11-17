@@ -27,7 +27,7 @@
 
 .text-area .scroll-pane,
 .text-field .scroll-pane,
-.text-area .scroll-pane .viewport
+.text-area .scroll-pane .viewport,
 .text-field  .scroll-pane .viewport {
     -fx-background-color: transparent;
 }

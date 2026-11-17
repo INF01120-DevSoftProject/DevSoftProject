@@ -3,6 +3,7 @@ package gui.screens;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import javax.sound.midi.MidiSystem;
 import exporters.DraftMusicCreator;
 import exporters.MidiFileExporter;
 import exporters.MusicExportPipeline;
@@ -29,8 +32,6 @@ import javafx.scene.layout.VBox;
 import music.VoicePreset;
 import parsers.MusicToMidiParser;
 import translators.TextToMusic.TextToMusicTranslator;
-import utils.MidiMusicPathUtils;
-import utils.MusicPathUtils;
 
 class CompositionScreenTest extends JavaFXTestBase {
 
@@ -38,13 +39,12 @@ class CompositionScreenTest extends JavaFXTestBase {
         String lastErrorMessage;
 
         TestableCompositionScreen(
-                InputReader reader,
-                MusicPathUtils pathUtils,
+                InputReader<String> reader,
                 MusicExportPipeline<?> exporter,
                 DraftMusicCreator draftCreator,
                 Consumer<Path> onListenDraft
         ) {
-            super(reader, pathUtils, exporter, draftCreator, onListenDraft);
+            super(reader, exporter, draftCreator, onListenDraft, path -> {});
         }
 
         @Override
@@ -123,8 +123,10 @@ class CompositionScreenTest extends JavaFXTestBase {
     void initializesCompositionScreenWithSingleVoice() {
         CompositionScreen screen = new CompositionScreen(
                 new TXTInputReader(),
-                new MidiMusicPathUtils(),
-                createPipeline()
+                createPipeline(),
+                (text, presets) -> Path.of("draft.mid"),
+                path -> {},
+                path -> {}
         );
 
         assertThat(screen.getChildren()).isNotEmpty();
@@ -137,30 +139,29 @@ class CompositionScreenTest extends JavaFXTestBase {
 
     @Test
     void rejectsNullDependenciesInConstructor() {
-        InputReader reader = new TXTInputReader();
-        MusicPathUtils pathUtils = new MidiMusicPathUtils();
+        InputReader<String> reader = new TXTInputReader();
         MusicExportPipeline<?> pipeline = createPipeline();
         DraftMusicCreator draftCreator = (text, presets) -> Path.of("draft.mid");
         Consumer<Path> onListenDraft = path -> {};
 
         assertThrows(IllegalArgumentException.class,
-                () -> new CompositionScreen(null, pathUtils, pipeline, draftCreator, onListenDraft));
+                () -> new CompositionScreen(null, pipeline, draftCreator, onListenDraft, path -> {}));
         assertThrows(IllegalArgumentException.class,
-                () -> new CompositionScreen(reader, null, pipeline, draftCreator, onListenDraft));
+                () -> new CompositionScreen(reader, null, draftCreator, onListenDraft, path -> {}));
         assertThrows(IllegalArgumentException.class,
-                () -> new CompositionScreen(reader, pathUtils, null, draftCreator, onListenDraft));
+                () -> new CompositionScreen(reader, pipeline, null, onListenDraft, path -> {}));
         assertThrows(IllegalArgumentException.class,
-                () -> new CompositionScreen(reader, pathUtils, pipeline, null, onListenDraft));
-        assertThrows(IllegalArgumentException.class,
-                () -> new CompositionScreen(reader, pathUtils, pipeline, draftCreator, null));
+                () -> new CompositionScreen(reader, pipeline, draftCreator, null, path -> {}));
     }
 
     @Test
     void containsListenDraftButtonAlongsideSaveAndImport() {
         CompositionScreen screen = new CompositionScreen(
                 new TXTInputReader(),
-                new MidiMusicPathUtils(),
-                createPipeline()
+                createPipeline(),
+                (text, presets) -> Path.of("draft.mid"),
+                path -> {},
+                path -> {}
         );
 
         List<String> buttonTexts = findButtons(screen).stream()
@@ -168,6 +169,38 @@ class CompositionScreenTest extends JavaFXTestBase {
                 .toList();
 
         assertThat(buttonTexts).contains("Salvar música", "Importar música", "Ouvir rascunho");
+    }
+
+    @Test
+    void savingMusicNotifiesCallbackAfterWritingMidi(@TempDir Path tempDir) throws Exception {
+        Path target = tempDir.resolve("saved.mid");
+        AtomicReference<Path> savedPath = new AtomicReference<>();
+        AtomicReference<Exception> callbackError = new AtomicReference<>();
+        CompositionScreen screen = new CompositionScreen(
+                new TXTInputReader(), createPipeline(),
+                (text, presets) -> Path.of("unused.mid"), path -> {},
+                path -> {
+                    try {
+                        MidiSystem.getSequence(path.toFile());
+                        savedPath.set(path);
+                    } catch (Exception e) {
+                        callbackError.set(e);
+                    }
+                }
+        ) {
+            @Override
+            protected File openMusicSaveDialog() {
+                return target.toFile();
+            }
+        };
+
+        runOnFxThread(() -> {
+            findFirstVoiceWidget(screen).setVoiceText("C D E");
+            findButtonByText(screen, "Salvar música").fire();
+        });
+
+        assertThat(callbackError.get()).isNull();
+        assertThat(savedPath.get()).isEqualTo(target);
     }
 
     @Test
@@ -185,7 +218,6 @@ class CompositionScreenTest extends JavaFXTestBase {
 
         TestableCompositionScreen screen = new TestableCompositionScreen(
                 new TXTInputReader(),
-                new MidiMusicPathUtils(),
                 createPipeline(),
                 fakeCreator,
                 navigatedPath::set
@@ -211,7 +243,6 @@ class CompositionScreenTest extends JavaFXTestBase {
 
         TestableCompositionScreen screen = new TestableCompositionScreen(
                 new TXTInputReader(),
-                new MidiMusicPathUtils(),
                 createPipeline(),
                 new exporters.TempMidiDraftService(createPipeline()),
                 navigatedPath::set
@@ -232,7 +263,6 @@ class CompositionScreenTest extends JavaFXTestBase {
 
         TestableCompositionScreen screen = new TestableCompositionScreen(
                 new TXTInputReader(),
-                new MidiMusicPathUtils(),
                 createPipeline(),
                 failingCreator,
                 navigatedPath::set

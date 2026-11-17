@@ -56,8 +56,8 @@ class ControlFactoryTest {
         TextArea textArea = ControlFactory.createTextArea(5, "prompt");
 
         assertThat(textArea).isNotNull();
-        assertThat(textArea.getPrefRowCount()).isEqualTo(2);
-        assertThat(textArea.getPromptText()).isEqualTo("Digite sua partitura");
+        assertThat(textArea.getPrefRowCount()).isEqualTo(5);
+        assertThat(textArea.getPromptText()).isEqualTo("prompt");
         assertThat(textArea.isWrapText()).isTrue();
     }
 

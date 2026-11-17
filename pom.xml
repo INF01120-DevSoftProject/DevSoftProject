@@ -53,6 +53,12 @@
             <version>0.0.5</version>
             <scope>compile</scope>
         </dependency>
+        <!-- GSON: biblioteca de leitura de arquivo json -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.15.0</version>
+        </dependency>
     </dependencies>
 
     <build>

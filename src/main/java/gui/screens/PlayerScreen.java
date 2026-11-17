@@ -14,6 +14,7 @@ import gui.widgets.MusicSliderWidget;
 import gui.widgets.SheetMusicWidget;
 
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -37,6 +38,9 @@ public class PlayerScreen extends Screen {
     private final MusicSelectionWidget musicSelectionWidget;
     private final MusicPlayButtonWidget playPauseButton;
 
+    private final Button nextMusicButton;
+    private final Button previousMusicButton;
+
     public PlayerScreen(
         Stage stage,
         Player<?> player,
@@ -58,6 +62,7 @@ public class PlayerScreen extends Screen {
 
         sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicPosition);
         playPauseButton = new MusicPlayButtonWidget(player);
+
         musicSelectionWidget = new MusicSelectionWidget(musicPathUtils);
         musicSelectionWidget.setOnAction(e -> selectMusic());
 
@@ -68,15 +73,19 @@ public class PlayerScreen extends Screen {
         draftStatusLabel.getStyleClass().add("draft-status-label");
         setNodeVisibility(draftStatusLabel, false);
 
+        nextMusicButton = new ButtonBuilder("⏮")
+                                .onClick(e -> changeToPreviousMusic())
+                                .build();
+
+        previousMusicButton = new ButtonBuilder("⏭")
+                                .onClick(e -> changeToNextMusic())
+                                .build();
+
         HBox playerButtons = new BoxBuilder<>(new HBox(25))
                         .addClass("player-buttons")
-                        .add(new ButtonBuilder("⏮")
-                                .onClick(e -> changeToPreviousMusic())
-                                .build())
+                        .add(nextMusicButton)
                         .add(playPauseButton)
-                        .add(new ButtonBuilder("⏭")
-                                .onClick(e -> changeToNextMusic())
-                                .build())
+                        .add(previousMusicButton)
                         .build();
 
         draftActionsContainer = new BoxBuilder<>(new HBox(10))
@@ -124,6 +133,21 @@ public class PlayerScreen extends Screen {
 
         musicSelectionWidget.clearCurrentBoxSelection();
         setNodeVisibility(draftStatusLabel, false);
+        setNodeVisibility(previousMusicButton, false);
+        setNodeVisibility(nextMusicButton, false);
+    }
+
+
+    public void onMusicSaved(Path savedPath) {
+        refreshMusicList();
+
+        Path currentPath = player.getCurrentMusicPath();
+        if (currentPath == null) return;
+
+        if (currentPath.toAbsolutePath().normalize()
+                .equals(savedPath.toAbsolutePath().normalize())) {
+            loadMusic(savedPath);
+        }
     }
 
     private void setNodeVisibility(Node node, boolean visible) {
@@ -135,7 +159,7 @@ public class PlayerScreen extends Screen {
         Path currentPath = player.getCurrentMusicPath();
         if (!draftManager.isDraft(currentPath)) return;
 
-        File targetFile = openMidiSaveDialog(musicPathUtils.getMusicsFolderPath());
+        File targetFile = openMusicSaveDialog();
         if (targetFile == null) return;
 
         try {
@@ -144,6 +168,10 @@ public class PlayerScreen extends Screen {
             if (!musicPathUtils.isSupportedFile(targetPath)) {
                 throw new IllegalArgumentException("Formato de arquivo não suportado: " + targetPath.getFileName());
             }
+
+            if (!loadMusic(targetPath)) {
+                throw new IllegalArgumentException("Erro ao carregar arquivo no player: " + targetPath.getFileName());
+            }
             
             String savedFileName = targetPath.getFileName().toString();
 
@@ -151,8 +179,12 @@ public class PlayerScreen extends Screen {
             musicTitle.setText(savedFileName);
             draftStatusLabel.setText("Versão atual salva com sucesso (" + savedFileName + ")");
 
-            setNodeVisibility(draftStatusLabel, true);
             musicSelectionWidget.refreshMusicList();
+            musicSelectionWidget.selectMusicSilently(savedFileName);
+
+            setNodeVisibility(draftStatusLabel, true);
+            setNodeVisibility(previousMusicButton, true);
+            setNodeVisibility(nextMusicButton, true);
 
         } catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao salvar o rascunho: " + e.getMessage());
@@ -169,6 +201,7 @@ public class PlayerScreen extends Screen {
         try {
             loadMusic(musicPathUtils.getMusicPathFromName(musicName));
         } catch(IllegalArgumentException e) {
+            changeToNextMusic(); 
             showErrorMessage(e.getMessage());
         }
     }
@@ -181,10 +214,9 @@ public class PlayerScreen extends Screen {
             updatePlayerUI();
             return true;
         } catch (RuntimeException e) {
-            showErrorMessage(e.getMessage());
+            showErrorMessage("Não foi possível gerar a musica. Verifique o arquivo \n" + e.getMessage());
             return false;
         }
-
     }
 
     private void updatePlayerUI() {
@@ -194,9 +226,7 @@ public class PlayerScreen extends Screen {
         sheetMusicWidget.loadMusic(currentPath);
 
         musicTitle.setText(isDraft ? "Rascunho (não salvo)" : player.getCurrentMusicName());
-
-        musicSlider.setMax(player.getDuration());
-        musicSlider.setValue(0);
+        musicSlider.resetSlider();
 
         playPauseButton.setCurrentButtonToPlay();
 

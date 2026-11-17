@@ -1,12 +1,49 @@
+
 package gui.widgets.voicePresetWidget;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import gui.JavaFXTestBase;
+import input.JsonInputReader;
 import javafx.scene.layout.HBox;
+import musicElements.InstrumentType;
+import utils.MusicPathUtils;
 
 class VoicePresetWidgetTest extends JavaFXTestBase {
+
+    private static LinkedHashMap<String, Integer> instruments;
+
+    @BeforeAll
+    static void loadInstruments() throws IOException {
+        instruments = new JsonInputReader<>(String.class, Integer.class).readFile(
+            MusicPathUtils.getResourceFolderPath("instruments/instruments.json")
+        );
+        assertThat(instruments).isNotEmpty();
+    }
+
+    private static List<Map.Entry<String, Integer>> instrumentsFor(InstrumentType type) {
+        return instruments.entrySet().stream()
+            .filter(entry -> type.contains(entry.getValue()))
+            .toList();
+    }
+
+    private static void assertInstrumentsMatchJson(VoicePresetWidget widget, InstrumentType type) {
+        List<Map.Entry<String, Integer>> expected = instrumentsFor(type);
+        assertThat(expected).isNotEmpty();
+        assertThat(widget.getInstrumentType()).isEqualTo(type);
+        assertThat(widget.instrumentSelector.getItems())
+            .containsExactlyElementsOf(expected.stream().map(Map.Entry::getKey).toList());
+        assertThat(widget.getDefaultInstrument()).isEqualTo(expected.getFirst().getKey());
+        assertThat(widget.instrumentSelector.getValue()).isEqualTo(expected.getFirst().getKey());
+        assertThat(widget.getInstrument().getInstrument()).isEqualTo(expected.getFirst().getValue());
+    }
 
     @Test
     void keysPresetProvidesExpectedDefaultsAndBuildsContainer() {
@@ -14,14 +51,16 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         HBox container = widget.createVoicePresetContainer();
 
         assertThat(container).isNotNull();
-        assertThat(widget.getDefaultInstrument()).isEqualTo("Piano");
+        assertInstrumentsMatchJson(widget, InstrumentType.KEYS);
         assertThat(widget.getDefaultOctave()).isEqualTo("Terceira Oitava");
-        assertThat(widget.getDefaultVolume()).isEqualTo(66);
+        assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(66);
 
-        assertThat(widget.getInstrument()).isEqualTo(0);
-        assertThat(widget.getOctave()).isEqualTo(3);
-        assertThat(widget.getVolume()).isEqualTo(66.0);
-        assertThat(widget.getOctaveNames()).contains("Segunda Oitava", "Terceira Oitava", "Quarta Oitava");
+        assertThat(widget.getOctave()).isNotNull();
+        assertThat(widget.octaveController.getValue()).isEqualTo("Terceira Oitava");
+        assertThat(widget.getVolume().getVolume()).isEqualTo(66);
+
+        assertThat(widget.getOctaveNames())
+            .contains("Segunda Oitava", "Terceira Oitava", "Quarta Oitava");
     }
 
     @Test
@@ -30,13 +69,13 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         HBox container = widget.createVoicePresetContainer();
 
         assertThat(container).isNotNull();
-        assertThat(widget.getDefaultInstrument()).isEqualTo("Lead 1 (Onda Quadrada)");
+        assertInstrumentsMatchJson(widget, InstrumentType.PERCUSSION_AND_SYNTH);
         assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
-        assertThat(widget.getDefaultVolume()).isEqualTo(82);
+        assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(82);
 
-        assertThat(widget.getInstrument()).isEqualTo(80);
-        assertThat(widget.getOctave()).isEqualTo(2);
-        assertThat(widget.getVolume()).isEqualTo(82.0);
+        assertThat(widget.getOctave()).isNotNull();
+        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getVolume().getVolume()).isEqualTo(82);
     }
 
     @Test
@@ -45,13 +84,13 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         HBox container = widget.createVoicePresetContainer();
 
         assertThat(container).isNotNull();
-        assertThat(widget.getDefaultInstrument()).contains("Nylon");
+        assertInstrumentsMatchJson(widget, InstrumentType.PLUCKED);
         assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
-        assertThat(widget.getDefaultVolume()).isEqualTo(72);
+        assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(72);
 
-        assertThat(widget.getInstrument()).isEqualTo(24);
-        assertThat(widget.getOctave()).isEqualTo(2);
-        assertThat(widget.getVolume()).isEqualTo(72.0);
+        assertThat(widget.getOctave()).isNotNull();
+        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getVolume().getVolume()).isEqualTo(72);
     }
 
     @Test
@@ -60,13 +99,13 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         HBox container = widget.createVoicePresetContainer();
 
         assertThat(container).isNotNull();
-        assertThat(widget.getDefaultInstrument()).isEqualTo("Violino");
+        assertInstrumentsMatchJson(widget, InstrumentType.STRINGS);
         assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
-        assertThat(widget.getDefaultVolume()).isEqualTo(83);
+        assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(83);
 
-        assertThat(widget.getInstrument()).isEqualTo(40);
-        assertThat(widget.getOctave()).isEqualTo(2);
-        assertThat(widget.getVolume()).isEqualTo(83.0);
+        assertThat(widget.getOctave()).isNotNull();
+        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getVolume().getVolume()).isEqualTo(83);
     }
 
     @Test
@@ -75,13 +114,13 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         HBox container = widget.createVoicePresetContainer();
 
         assertThat(container).isNotNull();
-        assertThat(widget.getDefaultInstrument()).isEqualTo("Trompete");
+        assertInstrumentsMatchJson(widget, InstrumentType.WINDS);
         assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
-        assertThat(widget.getDefaultVolume()).isEqualTo(83);
+        assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(83);
 
-        assertThat(widget.getInstrument()).isEqualTo(56);
-        assertThat(widget.getOctave()).isEqualTo(2);
-        assertThat(widget.getVolume()).isEqualTo(83.0);
+        assertThat(widget.getOctave()).isNotNull();
+        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getVolume().getVolume()).isEqualTo(83);
     }
 
     @Test
@@ -89,12 +128,16 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         VoicePresetKeysWidget widget = new VoicePresetKeysWidget();
         widget.createVoicePresetContainer();
 
-        widget.instrumentController.setValue("Cravo");
+        List<Map.Entry<String, Integer>> keys = instrumentsFor(InstrumentType.KEYS);
+        assertThat(keys).hasSizeGreaterThan(1);
+        Map.Entry<String, Integer> selectedInstrument = keys.get(1);
+        widget.instrumentSelector.setValue(selectedInstrument.getKey());
         widget.octaveController.setValue("Quarta Oitava");
         widget.volumeController.setValue(90);
 
-        assertThat(widget.getInstrument()).isEqualTo(6);
-        assertThat(widget.getOctave()).isEqualTo(4);
-        assertThat(widget.getVolume()).isEqualTo(90.0);
+        assertThat(widget.getInstrument().getInstrument()).isEqualTo(selectedInstrument.getValue());
+        assertThat(widget.getOctave()).isNotNull();
+        assertThat(widget.octaveController.getValue()).isEqualTo("Quarta Oitava");
+        assertThat(widget.getVolume().getVolume()).isEqualTo(90);
     }
 }

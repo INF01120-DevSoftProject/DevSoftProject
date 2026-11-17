@@ -15,7 +15,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import music.VoicePreset;
-import utils.MusicPathUtils;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.factory.ControlFactory;
@@ -24,7 +23,6 @@ import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
 import exporters.DraftMusicCreator;
 import exporters.MusicExportPipeline;
-import exporters.TempMidiDraftService;
 
 public class CompositionScreen extends Screen {
 
@@ -33,38 +31,32 @@ public class CompositionScreen extends Screen {
     private final VBox voicesContainer;
     
     private final MusicExportPipeline<?> exporter;
-    private final InputReader reader;
-    private final MusicPathUtils pathUtils;
+    private final InputReader<String> reader;
 
     private final DraftMusicCreator draftCreator;
+
     private final Consumer<Path> onListenDraft;
+    private final Consumer<Path> onMusicSaved;
 
-
-    public CompositionScreen(InputReader reader, MusicPathUtils pathUtils, MusicExportPipeline<?> exporter) {
-        this(reader, pathUtils, exporter, new TempMidiDraftService(exporter), path -> {});
-    }   
 
     public CompositionScreen(
-        InputReader reader, 
-        MusicPathUtils pathUtils, 
+        InputReader<String> reader, 
         MusicExportPipeline<?> exporter, 
         DraftMusicCreator draftCreator, 
-        Consumer<Path> onListenDraft
+        Consumer<Path> onListenDraft,
+        Consumer<Path> onMusicSaved
     ) {
 
         if (reader == null)  throw new IllegalArgumentException("Reader cannot be null.");
-        if (pathUtils == null)  throw new IllegalArgumentException("Path utils cannot be null.");
         if (exporter == null)  throw new IllegalArgumentException("Exporter cannot be null.");
         if (draftCreator == null)  throw new IllegalArgumentException("Draft creator cannot be null.");
         if (onListenDraft == null)  throw new IllegalArgumentException("Consumer(onListenDraft) cannot be null.");
     
         this.exporter = exporter;
         this.reader = reader;
-        this.pathUtils = pathUtils;
-
         this.draftCreator = draftCreator;
         this.onListenDraft = onListenDraft;
-
+        this.onMusicSaved = onMusicSaved;
 
         VoiceWidget.restartCurrentVoiceNum();
 
@@ -111,12 +103,13 @@ public class CompositionScreen extends Screen {
     }
 
     private void saveMusic() {
-        File file = openMidiSaveDialog(pathUtils.getMusicsFolderPath());
+        File file = openMusicSaveDialog();
         if (file == null) return;
 
         try {
             MusicInputData data = getMusicInputData();
             exporter.exportMusic(file, data.text(), data.presets());
+            onMusicSaved.accept(file.toPath());
 
         } catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao salvar o arquivo MIDI: " + e.getMessage());
@@ -124,7 +117,7 @@ public class CompositionScreen extends Screen {
     }
 
     private void importMusic() {
-        File file = openFileChooserWindow(null);
+        File file = openFileChooserWindow();
         if (file == null) return;
 
         try {

@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import musicElements.VolumeElement;
 import javafx.scene.layout.Region;
 
 import java.util.List;
@@ -24,6 +25,16 @@ public class ControlFactory {
         return slider;
     }
 
+    public static Slider createVolumeSlider(VolumeElement minValue, VolumeElement maxValue, VolumeElement value) {
+        Slider slider = new Slider();
+        slider.setMin(minValue.getVolume());      
+        slider.setMax(maxValue.getVolume());  
+        slider.setValue(value.getVolume());
+        slider.setShowTickLabels(true); // Show numbers
+
+        return slider;
+    }
+
     public static ScrollPane createScrollPane(Pane pane) {
         ScrollPane scrollPane = new ScrollPane(pane);
 
@@ -33,13 +44,12 @@ public class ControlFactory {
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         return scrollPane;
-
     }
 
     public static TextArea createTextArea(int rows, String promptText) {
         TextArea inputBox = new TextArea();
-        inputBox.setPrefRowCount(2);
-        inputBox.setPromptText("Digite sua partitura");
+        inputBox.setPrefRowCount(rows);
+        inputBox.setPromptText(promptText);
         inputBox.setWrapText(true);
 
         return inputBox;

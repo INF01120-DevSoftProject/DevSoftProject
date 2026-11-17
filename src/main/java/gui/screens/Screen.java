@@ -3,11 +3,14 @@ package gui.screens;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import utils.MidiMusicPathUtils;
+import utils.MusicPathUtils;
 
 public abstract class Screen extends Pane {
 
@@ -29,23 +32,44 @@ public abstract class Screen extends Pane {
         ).showAndWait();
     }
 
-    protected File openFileChooserWindow(Path initialDirectory) {
-        return createFileChooser(initialDirectory).showSaveDialog(getCurrentWindow());
+    protected File openFileChooserWindow() {
+        FileChooser fileChooser = createFileChooser();
+        fileChooser.setTitle("Importar texto musical");
+    
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Arquivos de Texto", "*.txt")
+        );
+
+
+        return fileChooser.showOpenDialog(getCurrentWindow());
     }
 
-    protected File openMidiSaveDialog(Path initialDirectory) {
-        FileChooser fileChooser = createFileChooser(initialDirectory);
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("Arquivos MIDI (*.mid, *.midi)", "*.mid", "*.midi")
+    protected File openMusicSaveDialog() {
+        List<MusicPathUtils> formats = List.of(
+            new MidiMusicPathUtils()
         );
+
+        List<String> extensions = formats.stream()
+                .flatMap(format -> format.getSupportedExtensions().stream())
+                .distinct()
+                .toList();
+
+        FileChooser fileChooser = createFileChooser();
+
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Arquivos de música", extensions)
+        );
+
+        fileChooser.setTitle("Salvar música");
+        fileChooser.setInitialFileName("musica.midi");
+
         return fileChooser.showSaveDialog(getCurrentWindow());
     }
 
-    private FileChooser createFileChooser(Path initialDirectory) {
-        FileChooser fileChooser = new FileChooser();
+    private FileChooser createFileChooser() {
 
-        fileChooser.setTitle("Salvar MIDI");
-        fileChooser.setInitialFileName("musica.mid");
+        Path initialDirectory = MusicPathUtils.getMusicsFolderPath();
+        FileChooser fileChooser = new FileChooser();
 
         if (initialDirectory != null && Files.isDirectory(initialDirectory)) {
             fileChooser.setInitialDirectory(initialDirectory.toFile());

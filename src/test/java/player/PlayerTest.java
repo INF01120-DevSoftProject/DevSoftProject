@@ -11,7 +11,6 @@ public class PlayerTest {
     static class DummyPlayer implements Player<Sequencer> {
         private boolean played = false;
         private boolean closed = false;
-        private Sequencer sequencer;
 
         private Path currentMusicPath;
         private String currentMusicName;
@@ -40,8 +39,7 @@ public class PlayerTest {
         }
 
         @Override
-        public Sequencer getMusicData() {
-            return this.sequencer;
+        public void addEndMusicEvent(Runnable action) {
         }
 
         @Override 

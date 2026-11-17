@@ -35,6 +35,11 @@ public class MusicSliderWidget extends Slider {
         sliderUpdater.stop();
     }
 
+    public void resetSlider() {
+        setMax(player.getDuration());
+        setValue(0);
+    }
+
     private void startSliderUpdater() {
         sliderUpdater = new Timeline(
             new KeyFrame(

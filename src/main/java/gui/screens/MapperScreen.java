@@ -1,6 +1,11 @@
 package gui.screens;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -14,9 +19,20 @@ import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.widgets.MappingWidget;
 
+import musicElements.Accidentals;
+import musicElements.Notes;
 import translators.TextToMusic.CharacterMapping;
 
 public class MapperScreen extends Screen {
+
+    // Nome de cada valor musical. O caractere de cada um vem do CharacterMapping (getNote/getAccidental),
+    // então o rótulo continua certo depois de trocas e não depende da ordem dos caracteres no grupo.
+    private static final Map<Notes, String> NOTE_NAMES = new EnumMap<>(Map.of(
+        Notes.C, "Dó", Notes.D, "Ré", Notes.E, "Mi", Notes.F, "Fá",
+        Notes.G, "Sol", Notes.A, "Lá", Notes.B, "Si"));
+
+    private static final Map<Accidentals, String> ACCIDENTAL_NAMES = new EnumMap<>(Map.of(
+        Accidentals.SHARP, "Sustenido", Accidentals.FLAT, "Bemol"));
 
     private final CharacterMapping mapping;
 
@@ -125,23 +141,21 @@ public class MapperScreen extends Screen {
         }
     }
 
-    private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String[] texts) {
-        List<String> characters = mapping.getMappingCharacters(type);
+    // Um widget por caractere do grupo, com o rótulo do valor musical que o mapeamento dá a ele.
+    // Os widgets ficam na ordem dos valores (Dó, Ré, ..., Si), não na ordem dos caracteres.
+    private <T extends Enum<T>> void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type,
+                                                                   Function<String, T> valueOf, Map<T, String> names) {
+        List<String> characters = new ArrayList<>(mapping.getMappingCharacters(type));
+        characters.sort(Comparator.comparing(valueOf));
 
-        if (characters.size() != texts.length) {
-            throw new IllegalStateException("Quantidade de caracteres incompatível com o tipo de mapeamento: " + type);
-        }
-
-        for (int i = 0; i < texts.length; i++) {
-            container.add(new MappingWidget(mapping, type, texts[i], characters.get(i)));
+        for (String c : characters) {
+            container.add(new MappingWidget(mapping, type, names.get(valueOf.apply(c)), c));
         }
     }
 
     private FlowPane createNoteMappingContainer() {
-        String[] notes = {"Dó", "Ré", "Mi", "Fá", "Sol", "Lá", "Si"};
-
         BoxBuilder<FlowPane> noteMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(noteMappingContainer, "note", notes);
+        assingMappingWidgetToContainer(noteMappingContainer, "note", mapping::getNote, NOTE_NAMES);
 
         return noteMappingContainer.build();
     }
@@ -166,10 +180,8 @@ public class MapperScreen extends Screen {
     }
 
     private FlowPane createAccidentalMappingContainer() {
-        String[] accidentals = {"Sustenido", "Bemol"};
-
         BoxBuilder<FlowPane> accidentalMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(accidentalMappingContainer, "accidental", accidentals);
+        assingMappingWidgetToContainer(accidentalMappingContainer, "accidental", mapping::getAccidental, ACCIDENTAL_NAMES);
 
         return accidentalMappingContainer.build();
     }

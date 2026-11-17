@@ -95,6 +95,19 @@ public class MapperScreen extends Screen {
 
     private void restoreMappingContainers() {
         mapping.reset();
+        refreshMappingContainers();
+
+        if (mainContent != null) {
+            mainContent.setCenter(noteMappingContainer);
+        }
+    }
+
+    // Recria os campos a partir do mapeamento atual, mantendo a aba que estava aberta
+    private void refreshMappingContainers() {
+        Node shown = mainContent == null ? null : mainContent.getCenter();
+        boolean pauses = shown != null && shown == pauseMappingContainer;
+        boolean accidentals = shown != null && shown == accidentalMappingContainer;
+        boolean controls = shown != null && shown == musicControlsMappingContainer;
 
         noteMappingContainer = createNoteMappingContainer();
         pauseMappingContainer = createPauseMappingContainer();
@@ -102,19 +115,37 @@ public class MapperScreen extends Screen {
         musicControlsMappingContainer = createMusicControlsMappingContainer();
 
         if (mainContent != null) {
-            mainContent.setCenter(noteMappingContainer);
+            mainContent.setCenter(pauses ? pauseMappingContainer
+                : accidentals ? accidentalMappingContainer
+                : controls ? musicControlsMappingContainer
+                : noteMappingContainer);
         }
     }
 
     private void applyAllMappings() {
         try {
+            saveMappings();
+        } catch(IllegalArgumentException e) {
+            showErrorMessage("Erro ao salvar mapeamento: " + e.getMessage());
+        }
+    }
+
+    // Aplica todos os campos e confere se nenhuma troca ficou pela metade
+    // (ex.: Dó recebeu "D", mas Ré continuou com "D"). Assim o erro aparece ao salvar, não só ao tocar.
+    // Se algo falhar, o salvamento inteiro é desfeito: o mapeamento e os campos voltam a como estavam.
+    void saveMappings() {
+        CharacterMapping before = mapping.copy();
+        try {
             applyMappings(noteMappingContainer);
             applyMappings(pauseMappingContainer);
             applyMappings(musicControlsMappingContainer);
             applyMappings(accidentalMappingContainer);
-            
-        } catch(IllegalArgumentException e) {
-            showErrorMessage("Erro ao salvar mapeamento: " + e.getMessage());
+
+            mapping.checkComplete();
+        } catch (IllegalArgumentException e) {
+            mapping.restore(before);
+            refreshMappingContainers();
+            throw e;
         }
     }
 

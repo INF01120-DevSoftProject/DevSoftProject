@@ -233,4 +233,24 @@ class CharacterMappingTest {
         assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
         assertThat(mapping.getChars("tempo")).isEqualTo("T");
     }
+
+    @Test
+    void restoreGoesBackToACopyIncludingHalfSwaps() {
+        CharacterMapping mapping = new CharacterMapping();
+        mapping.replaceChar("note", "C", "D");
+        CharacterMapping saved = mapping.copy();
+
+        mapping.reset();
+        mapping.replaceChar("note", "A", "J");
+        mapping.restore(saved);
+
+        assertThat(mapping.getNote("D")).isEqualTo(Notes.C);
+        assertThat(mapping.getNote("J")).isNull();
+        assertThat(mapping.isComplete()).isFalse();
+
+        // a cópia é independente: terminar a troca no original não mexe nela
+        mapping.replaceChar("note", "D", "C");
+        assertThat(mapping.isComplete()).isTrue();
+        assertThat(saved.isComplete()).isFalse();
+    }
 }

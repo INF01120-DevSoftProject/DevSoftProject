@@ -15,9 +15,9 @@ public class TextToMusicTranslator {
     private final CharacterMapping mapping;
     private final Map<String, TextToMusicActions> customActions;
 
-    // Usa o mapeamento compartilhado editado pela GUI atual (ver TextToMusicRules)
+    // Usa um mapeamento novo, com os caracteres padrão
     public TextToMusicTranslator() {
-        this(TextToMusicRules.sharedMapping());
+        this(new CharacterMapping());
     }
 
     public TextToMusicTranslator(CharacterMapping mapping) {

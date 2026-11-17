@@ -14,9 +14,11 @@ import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.widgets.MappingWidget;
 
-import translators.TextToMusic.TextToMusicRules;
+import translators.TextToMusic.CharacterMapping;
 
 public class MapperScreen extends Screen {
+
+    private final CharacterMapping mapping;
 
     private BorderPane mainContent;
     
@@ -25,7 +27,8 @@ public class MapperScreen extends Screen {
     private FlowPane accidentalMappingContainer;
     private FlowPane musicControlsMappingContainer;
 
-    public MapperScreen() {
+    public MapperScreen(CharacterMapping mapping) {
+        this.mapping = mapping;
 
         restoreMappingContainers();
 
@@ -75,7 +78,7 @@ public class MapperScreen extends Screen {
     }
 
     private void restoreMappingContainers() {
-        TextToMusicRules.resetMappings();
+        mapping.reset();
 
         noteMappingContainer = createNoteMappingContainer();
         pauseMappingContainer = createPauseMappingContainer();
@@ -117,20 +120,20 @@ public class MapperScreen extends Screen {
     }
 
     private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String text) {
-        for (String c : TextToMusicRules.getMappingCharacters(type)) {
-            container.add(new MappingWidget(type, text, c));
+        for (String c : mapping.getMappingCharacters(type)) {
+            container.add(new MappingWidget(mapping, type, text, c));
         }
     }
 
     private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String[] texts) {
-        List<String> characters = TextToMusicRules.getMappingCharacters(type);
+        List<String> characters = mapping.getMappingCharacters(type);
 
         if (characters.size() != texts.length) {
             throw new IllegalStateException("Quantidade de caracteres incompatível com o tipo de mapeamento: " + type);
         }
 
         for (int i = 0; i < texts.length; i++) {
-            container.add(new MappingWidget(type, texts[i], characters.get(i)));
+            container.add(new MappingWidget(mapping, type, texts[i], characters.get(i)));
         }
     }
 

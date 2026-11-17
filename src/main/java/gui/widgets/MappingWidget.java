@@ -6,14 +6,16 @@ import javafx.scene.layout.VBox;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.Region;
 
-import translators.TextToMusic.TextToMusicRules;
+import translators.TextToMusic.CharacterMapping;
 
 public class MappingWidget extends VBox {
+    private final CharacterMapping mapping;
     private final String mappingRuleType;
     private String oldCaracter;
     private final TextField textField;
 
-    public MappingWidget(String mappingRuleType, String nodeName, String character) {
+    public MappingWidget(CharacterMapping mapping, String mappingRuleType, String nodeName, String character) {
+        this.mapping = mapping;
         this.mappingRuleType = mappingRuleType;
         this.oldCaracter = character;
 
@@ -36,7 +38,7 @@ public class MappingWidget extends VBox {
             return;
         }
 
-        TextToMusicRules.replaceChar(mappingRuleType, oldCaracter, newCaracter);
+        mapping.replaceChar(mappingRuleType, oldCaracter, newCaracter);
 
         oldCaracter = newCaracter;
     }

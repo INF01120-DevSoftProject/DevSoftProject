@@ -2,24 +2,16 @@ package gui.screens;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import gui.JavaFXTestBase;
 import javafx.scene.layout.BorderPane;
-import translators.TextToMusic.TextToMusicRules;
+import translators.TextToMusic.CharacterMapping;
 
 class MapperScreenTest extends JavaFXTestBase {
 
-    @BeforeEach
-    @AfterEach
-    void resetRules() {
-        TextToMusicRules.resetMappings();
-    }
-
     @Test
     void initializesMapperScreenWithMainContent() {
-        MapperScreen screen = new MapperScreen();
+        MapperScreen screen = new MapperScreen(new CharacterMapping());
 
         assertThat(screen.getChildren()).isNotEmpty();
         assertThat(screen.getChildren().getFirst()).isInstanceOf(BorderPane.class);

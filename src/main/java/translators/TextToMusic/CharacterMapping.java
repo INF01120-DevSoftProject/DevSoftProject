@@ -96,6 +96,28 @@ public class CharacterMapping {
         accidentalsRules.put("", Accidentals.NONE);
     }
 
+    // Cópia independente do estado atual (usada para desfazer um salvamento que falhou)
+    public CharacterMapping copy() {
+        CharacterMapping copy = new CharacterMapping(defaultCharacters);
+        copy.restore(this);
+        return copy;
+    }
+
+    // Volta para o estado de outro mapeamento (normalmente uma cópia feita antes)
+    public void restore(CharacterMapping saved) {
+        if (saved == null) throw new IllegalArgumentException("O mapeamento salvo não pode ser nulo");
+        elementsMapping.clear();
+        elementsMapping.putAll(saved.elementsMapping);
+        notesRules.clear();
+        notesRules.putAll(saved.notesRules);
+        durationTimeRules.clear();
+        durationTimeRules.putAll(saved.durationTimeRules);
+        accidentalsRules.clear();
+        accidentalsRules.putAll(saved.accidentalsRules);
+        pendingReplacements.clear();
+        saved.pendingReplacements.forEach((group, pending) -> pendingReplacements.put(group, new LinkedHashMap<>(pending)));
+    }
+
     // Registra um grupo novo (ex.: de um comando extra) sem mexer nos que já existem
     public void addGroupIfAbsent(String elementType, String defaultChars) {
         if (defaultChars == null || defaultCharacters.containsKey(elementType)) return;

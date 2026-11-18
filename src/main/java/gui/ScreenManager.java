@@ -10,6 +10,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import parsers.MusicToMidiParser;
 import player.MidiPlayer;
+import translators.TextToMusic.CharacterMapping;
 import translators.TextToMusic.TextToMusicTranslator;
 import utils.MidiMusicPathUtils;
 import gui.builders.BorderPaneBuilder;
@@ -34,8 +35,11 @@ public class ScreenManager extends Application {
     @Override 
     public void start(Stage stage) {
 
+        // o mesmo mapeamento é editado na MapperScreen e lido pelo tradutor
+        CharacterMapping mapping = new CharacterMapping();
+
         MusicExportPipeline<Sequence> exportPipeline = new MusicExportPipeline<>(
-            new TextToMusicTranslator(),
+            new TextToMusicTranslator(mapping),
             new MusicToMidiParser(),
             new MidiFileExporter()
         );
@@ -54,7 +58,7 @@ public class ScreenManager extends Application {
             }
         );
 
-        mapperScreen = new MapperScreen();
+        mapperScreen = new MapperScreen(mapping);
         
         playerScreen = new PlayerScreen(
             stage,

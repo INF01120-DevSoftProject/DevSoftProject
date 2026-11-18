@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import music.Music;
@@ -168,12 +167,6 @@ class TextToMusicRulesTest {
         }
     }
 
-    @AfterEach
-    @SuppressWarnings("deprecation")
-    void restoreSharedMapping() {
-        TextToMusicRules.resetMappings();
-    }
-
     @Test
     void eachInstanceUsesItsOwnMapping() {
         CharacterMapping mapping = new CharacterMapping();
@@ -222,17 +215,5 @@ class TextToMusicRulesTest {
         assertThrows(IllegalArgumentException.class, () -> new TextToMusicRules(mapping, Map.of("tempo", nothing)));
         assertThrows(IllegalArgumentException.class, () -> new TextToMusicRules(mapping, Map.of("note", nothing)));
         assertThrows(IllegalArgumentException.class, () -> new TextToMusicRules(mapping, Map.of("else", nothing)));
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    void legacyStaticMethodsChangeTheMappingOfTheDefaultTranslator() {
-        // a GUI atual ainda usa os métodos estáticos; eles valem para o TextToMusicTranslator padrão
-        TextToMusicRules.replaceChar("bpmUp", ">", "+");
-
-        List<MusicElement> sheet = new TextToMusicTranslator().textToMusic("Teste", "+").getVoices().get(0).getSheetMusic().getSheetMusic();
-
-        assertThat(TextToMusicRules.getMappingCharacters("bpmUp")).containsExactly("+");
-        assertThat(sheet).anyMatch(element -> element instanceof BPMElement bpm && bpm.getBPM() == 130);
     }
 }

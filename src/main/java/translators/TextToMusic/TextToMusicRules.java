@@ -2,7 +2,6 @@ package translators.TextToMusic;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import musicElements.Accidentals;
@@ -191,60 +190,5 @@ public class TextToMusicRules {
 
     public Accidentals getAccidental(String input) {
         return mapping.getAccidental(input);
-    }
-
-    // ------------------------------------------------------------------------------------------
-    // Compatibilidade com a GUI atual (MapperScreen e MappingWidget), que ainda chama os métodos
-    // estáticos. Eles agem sobre um único mapeamento compartilhado, que é o usado pelo
-    // TextToMusicTranslator sem argumentos. Código novo deve usar um CharacterMapping próprio.
-    // ------------------------------------------------------------------------------------------
-
-    private static final CharacterMapping SHARED_MAPPING = new CharacterMapping();
-
-    // Mapeamento compartilhado usado pelo TextToMusicTranslator padrão
-    static CharacterMapping sharedMapping() {
-        return SHARED_MAPPING;
-    }
-
-    /** @deprecated use {@link CharacterMapping#reset()} */
-    @Deprecated
-    public static void resetMappings() {
-        SHARED_MAPPING.reset();
-    }
-
-    /** @deprecated use {@link CharacterMapping#replaceChar(String, String, String)} */
-    @Deprecated
-    public static void replaceChar(String elementType, String oldChar, String newChar) {
-        SHARED_MAPPING.replaceChar(elementType, oldChar, newChar);
-    }
-
-    /** @deprecated use {@link CharacterMapping#getMappingCharacters(String)} */
-    @Deprecated
-    public static List<String> getMappingCharacters(String type) {
-        return SHARED_MAPPING.getMappingCharacters(type);
-    }
-
-    /** @deprecated use {@link CharacterMapping#setElementChars(String, String)} */
-    @Deprecated
-    public static void setElementChars(String elementType, String chars) {
-        SHARED_MAPPING.setElementChars(elementType, chars);
-    }
-
-    /** @deprecated use {@link CharacterMapping#addElementChars(String, String)} */
-    @Deprecated
-    public static void addElementChars(String elementType, String chars) {
-        SHARED_MAPPING.addElementChars(elementType, chars);
-    }
-
-    /** @deprecated use {@link CharacterMapping#removeElementChars(String, String)} */
-    @Deprecated
-    public static void removeElementChars(String elementType, String chars) {
-        SHARED_MAPPING.removeElementChars(elementType, chars);
-    }
-
-    /** @deprecated use {@link CharacterMapping#mapNote(String, Notes)} */
-    @Deprecated
-    public static void mapNote(String input, Notes note) {
-        SHARED_MAPPING.mapNote(input, note);
     }
 }

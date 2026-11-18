@@ -1,6 +1,11 @@
 package gui.screens;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -14,9 +19,22 @@ import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.widgets.MappingWidget;
 
-import translators.TextToMusic.TextToMusicRules;
+import musicElements.Accidentals;
+import musicElements.Notes;
+import translators.TextToMusic.CharacterMapping;
 
 public class MapperScreen extends Screen {
+
+    // Nome de cada valor musical. O caractere de cada um vem do CharacterMapping (getNote/getAccidental),
+    // então o rótulo continua certo depois de trocas e não depende da ordem dos caracteres no grupo.
+    private static final Map<Notes, String> NOTE_NAMES = new EnumMap<>(Map.of(
+        Notes.C, "Dó", Notes.D, "Ré", Notes.E, "Mi", Notes.F, "Fá",
+        Notes.G, "Sol", Notes.A, "Lá", Notes.B, "Si"));
+
+    private static final Map<Accidentals, String> ACCIDENTAL_NAMES = new EnumMap<>(Map.of(
+        Accidentals.SHARP, "Sustenido", Accidentals.FLAT, "Bemol"));
+
+    private final CharacterMapping mapping;
 
     private BorderPane mainContent;
     
@@ -25,7 +43,8 @@ public class MapperScreen extends Screen {
     private FlowPane accidentalMappingContainer;
     private FlowPane musicControlsMappingContainer;
 
-    public MapperScreen() {
+    public MapperScreen(CharacterMapping mapping) {
+        this.mapping = mapping;
 
         restoreMappingContainers();
 
@@ -75,7 +94,20 @@ public class MapperScreen extends Screen {
     }
 
     private void restoreMappingContainers() {
-        TextToMusicRules.resetMappings();
+        mapping.reset();
+        refreshMappingContainers();
+
+        if (mainContent != null) {
+            mainContent.setCenter(noteMappingContainer);
+        }
+    }
+
+    // Recria os campos a partir do mapeamento atual, mantendo a aba que estava aberta
+    private void refreshMappingContainers() {
+        Node shown = mainContent == null ? null : mainContent.getCenter();
+        boolean pauses = shown != null && shown == pauseMappingContainer;
+        boolean accidentals = shown != null && shown == accidentalMappingContainer;
+        boolean controls = shown != null && shown == musicControlsMappingContainer;
 
         noteMappingContainer = createNoteMappingContainer();
         pauseMappingContainer = createPauseMappingContainer();
@@ -83,19 +115,37 @@ public class MapperScreen extends Screen {
         musicControlsMappingContainer = createMusicControlsMappingContainer();
 
         if (mainContent != null) {
-            mainContent.setCenter(noteMappingContainer);
+            mainContent.setCenter(pauses ? pauseMappingContainer
+                : accidentals ? accidentalMappingContainer
+                : controls ? musicControlsMappingContainer
+                : noteMappingContainer);
         }
     }
 
     private void applyAllMappings() {
         try {
+            saveMappings();
+        } catch(IllegalArgumentException e) {
+            showErrorMessage("Erro ao salvar mapeamento: " + e.getMessage());
+        }
+    }
+
+    // Aplica todos os campos e confere se nenhuma troca ficou pela metade
+    // (ex.: Dó recebeu "D", mas Ré continuou com "D"). Assim o erro aparece ao salvar, não só ao tocar.
+    // Se algo falhar, o salvamento inteiro é desfeito: o mapeamento e os campos voltam a como estavam.
+    void saveMappings() {
+        CharacterMapping before = mapping.copy();
+        try {
             applyMappings(noteMappingContainer);
             applyMappings(pauseMappingContainer);
             applyMappings(musicControlsMappingContainer);
             applyMappings(accidentalMappingContainer);
-            
-        } catch(IllegalArgumentException e) {
-            showErrorMessage("Erro ao salvar mapeamento: " + e.getMessage());
+
+            mapping.checkComplete();
+        } catch (IllegalArgumentException e) {
+            mapping.restore(before);
+            refreshMappingContainers();
+            throw e;
         }
     }
 
@@ -117,28 +167,26 @@ public class MapperScreen extends Screen {
     }
 
     private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String text) {
-        for (String c : TextToMusicRules.getMappingCharacters(type)) {
-            container.add(new MappingWidget(type, text, c));
+        for (String c : mapping.getMappingCharacters(type)) {
+            container.add(new MappingWidget(mapping, type, text, c));
         }
     }
 
-    private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String[] texts) {
-        List<String> characters = TextToMusicRules.getMappingCharacters(type);
+    // Um widget por caractere do grupo, com o rótulo do valor musical que o mapeamento dá a ele.
+    // Os widgets ficam na ordem dos valores (Dó, Ré, ..., Si), não na ordem dos caracteres.
+    private <T extends Enum<T>> void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type,
+                                                                   Function<String, T> valueOf, Map<T, String> names) {
+        List<String> characters = new ArrayList<>(mapping.getMappingCharacters(type));
+        characters.sort(Comparator.comparing(valueOf));
 
-        if (characters.size() != texts.length) {
-            throw new IllegalStateException("Quantidade de caracteres incompatível com o tipo de mapeamento: " + type);
-        }
-
-        for (int i = 0; i < texts.length; i++) {
-            container.add(new MappingWidget(type, texts[i], characters.get(i)));
+        for (String c : characters) {
+            container.add(new MappingWidget(mapping, type, names.get(valueOf.apply(c)), c));
         }
     }
 
     private FlowPane createNoteMappingContainer() {
-        String[] notes = {"Dó", "Ré", "Mi", "Fá", "Sol", "Lá", "Si"};
-
         BoxBuilder<FlowPane> noteMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(noteMappingContainer, "note", notes);
+        assingMappingWidgetToContainer(noteMappingContainer, "note", mapping::getNote, NOTE_NAMES);
 
         return noteMappingContainer.build();
     }
@@ -163,10 +211,8 @@ public class MapperScreen extends Screen {
     }
 
     private FlowPane createAccidentalMappingContainer() {
-        String[] accidentals = {"Sustenido", "Bemol"};
-
         BoxBuilder<FlowPane> accidentalMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(accidentalMappingContainer, "accidental", accidentals);
+        assingMappingWidgetToContainer(accidentalMappingContainer, "accidental", mapping::getAccidental, ACCIDENTAL_NAMES);
 
         return accidentalMappingContainer.build();
     }

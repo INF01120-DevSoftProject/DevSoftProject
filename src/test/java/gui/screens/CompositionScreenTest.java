@@ -15,6 +15,8 @@ import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.Sequence;
@@ -41,6 +43,8 @@ class CompositionScreenTest extends JavaFXTestBase {
 
     private static class TestableCompositionScreen extends CompositionScreen {
         String lastErrorMessage;
+        boolean confirmWarning;
+        int warningCount;
 
         TestableCompositionScreen(
                 InputReader<String> reader,
@@ -54,6 +58,12 @@ class CompositionScreenTest extends JavaFXTestBase {
         @Override
         protected void showErrorMessage(String message) {
             this.lastErrorMessage = message;
+        }
+
+        @Override
+        protected boolean showWarningMessage(String message) {
+            warningCount++;
+            return confirmWarning;
         }
     }
 
@@ -173,6 +183,71 @@ class CompositionScreenTest extends JavaFXTestBase {
                 .toList();
 
         assertThat(buttonTexts).contains("Salvar música", "Importar música", "Ouvir rascunho");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void removingVoiceWithTextRequiresConfirmation(boolean confirm) throws Exception {
+        runOnFxThread(() -> {
+            TestableCompositionScreen screen = new TestableCompositionScreen(
+                    new TXTInputReader(), createPipeline(),
+                    (text, presets, initialBpm) -> Path.of("draft.mid"), path -> {}
+            );
+            screen.confirmWarning = confirm;
+            findButtonByText(screen, "+").fire();
+            VBox voices = (VBox) findFirstVoiceWidget(screen).getParent();
+            VoiceWidget lastVoice = (VoiceWidget) voices.getChildren().getLast();
+            lastVoice.setVoiceText("C D E");
+
+            findButtonByText(screen, "-").fire();
+
+            assertThat(screen.warningCount).isEqualTo(1);
+            assertThat(voices.getChildren()).hasSize(confirm ? 1 : 2);
+            assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(confirm ? 1 : 2);
+            if (!confirm) {
+                assertThat(voices.getChildren().getLast()).isSameAs(lastVoice);
+                assertThat(lastVoice.getVoiceText()).isEqualTo("C D E");
+            }
+        });
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " \t\n"})
+    void removingEmptyVoiceDoesNotAskForConfirmation(String text) throws Exception {
+        runOnFxThread(() -> {
+            TestableCompositionScreen screen = new TestableCompositionScreen(
+                    new TXTInputReader(), createPipeline(),
+                    (input, presets, initialBpm) -> Path.of("draft.mid"), path -> {}
+            );
+            findFirstVoiceWidget(screen).setVoiceText("C D E");
+            findButtonByText(screen, "+").fire();
+            VBox voices = (VBox) findFirstVoiceWidget(screen).getParent();
+            ((VoiceWidget) voices.getChildren().getLast()).setVoiceText(text);
+
+            findButtonByText(screen, "-").fire();
+
+            assertThat(screen.warningCount).isZero();
+            assertThat(voices.getChildren()).hasSize(1);
+            assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
+            assertThat(findFirstVoiceWidget(screen).getVoiceText()).isEqualTo("C D E");
+        });
+    }
+
+    @Test
+    void doesNotRemoveTheOnlyVoiceOrAskForConfirmation() throws Exception {
+        runOnFxThread(() -> {
+            TestableCompositionScreen screen = new TestableCompositionScreen(
+                    new TXTInputReader(), createPipeline(),
+                    (text, presets, initialBpm) -> Path.of("draft.mid"), path -> {}
+            );
+            findFirstVoiceWidget(screen).setVoiceText("C D E");
+
+            findButtonByText(screen, "-").fire();
+
+            assertThat(screen.warningCount).isZero();
+            assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
+            assertThat(findFirstVoiceWidget(screen).getVoiceText()).isEqualTo("C D E");
+        });
     }
 
     @Test

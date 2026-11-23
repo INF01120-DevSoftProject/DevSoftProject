@@ -75,7 +75,7 @@ public class MapperScreen extends Screen {
 										.onClick(e -> applyAllMappings())
                                         .build())
 								.add(new ButtonBuilder("Restaurar ao Padrão")
-                                        .onClick(e -> restoreMappingContainers())
+                                        .onClick(e -> restoreDefaultMapping())
                                         .build())
 								.build();
 
@@ -91,6 +91,14 @@ public class MapperScreen extends Screen {
 
     private void showMapping(FlowPane container) {
         mainContent.setCenter(container);
+    }
+
+    private void restoreDefaultMapping() {
+        if (!showWarningMessage("Deseja mesmo restaurar o mapeamento ao padrão? As alterações serão perdidas.")) {
+            return;
+        }
+
+        restoreMappingContainers();
     }
 
     private void restoreMappingContainers() {

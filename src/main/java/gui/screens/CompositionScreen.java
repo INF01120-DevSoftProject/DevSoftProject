@@ -86,8 +86,7 @@ public class CompositionScreen extends Screen {
                                             .onClickAddToContainer(() -> createVoiceWidget(), voicesContainer, MAX_VOICES)
                                             .build())
                                     .add(new ButtonBuilder("-")
-                                            .onClickRemoveLastFromContainer(voicesContainer)
-                                            .onClick(e -> VoiceWidget.decrementCurrentVoiceNum())
+                                            .onClick(e -> removeLastVoice())
                                             .build())
                                     .build();
 
@@ -120,6 +119,18 @@ public class CompositionScreen extends Screen {
                                     .build();
         
         setScreenMainContent(mainContent);
+    }
+
+    private void removeLastVoice() {
+        if (voicesContainer.getChildren().size() <= 1) return;
+
+        VoiceWidget voice = (VoiceWidget) voicesContainer.getChildren().getLast();
+        if (!voice.getVoiceText().isBlank() && !showWarningMessage("Deseja mesmo excluir esta voz? O texto será perdido.")) {
+            return;
+        }
+
+        voicesContainer.getChildren().removeLast();
+        VoiceWidget.decrementCurrentVoiceNum();
     }
 
     private void saveMusic() {

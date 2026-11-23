@@ -52,15 +52,15 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
         assertThat(container).isNotNull();
         assertInstrumentsMatchJson(widget, InstrumentType.KEYS);
-        assertThat(widget.getDefaultOctave()).isEqualTo("Terceira Oitava");
+        assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(66);
 
         assertThat(widget.getOctave()).isNotNull();
-        assertThat(widget.octaveController.getValue()).isEqualTo("Terceira Oitava");
+        assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getVolume().getVolume()).isEqualTo(66);
 
         assertThat(widget.getOctaveNames())
-            .contains("Segunda Oitava", "Terceira Oitava", "Quarta Oitava");
+            .contains("Oitava 4 - Central", "Oitava 5 - Soprano", "Oitava 3 - Tenor", "Oitava 2 - Grave");
     }
 
     @Test
@@ -70,11 +70,11 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
         assertThat(container).isNotNull();
         assertInstrumentsMatchJson(widget, InstrumentType.PERCUSSION_AND_SYNTH);
-        assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(82);
 
         assertThat(widget.getOctave()).isNotNull();
-        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getVolume().getVolume()).isEqualTo(82);
     }
 
@@ -85,11 +85,11 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
         assertThat(container).isNotNull();
         assertInstrumentsMatchJson(widget, InstrumentType.PLUCKED);
-        assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(72);
 
         assertThat(widget.getOctave()).isNotNull();
-        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getVolume().getVolume()).isEqualTo(72);
     }
 
@@ -100,11 +100,11 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
         assertThat(container).isNotNull();
         assertInstrumentsMatchJson(widget, InstrumentType.STRINGS);
-        assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(83);
 
         assertThat(widget.getOctave()).isNotNull();
-        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getVolume().getVolume()).isEqualTo(83);
     }
 
@@ -115,11 +115,11 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
         assertThat(container).isNotNull();
         assertInstrumentsMatchJson(widget, InstrumentType.WINDS);
-        assertThat(widget.getDefaultOctave()).isEqualTo("Segunda Oitava");
+        assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(83);
 
         assertThat(widget.getOctave()).isNotNull();
-        assertThat(widget.octaveController.getValue()).isEqualTo("Segunda Oitava");
+        assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getVolume().getVolume()).isEqualTo(83);
     }
 
@@ -132,12 +132,12 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         assertThat(keys).hasSizeGreaterThan(1);
         Map.Entry<String, Integer> selectedInstrument = keys.get(1);
         widget.instrumentSelector.setValue(selectedInstrument.getKey());
-        widget.octaveController.setValue("Quarta Oitava");
+        widget.octaveController.setValue("Oitava 4 - Central");
         widget.volumeController.setValue(90);
 
         assertThat(widget.getInstrument().getInstrument()).isEqualTo(selectedInstrument.getValue());
         assertThat(widget.getOctave()).isNotNull();
-        assertThat(widget.octaveController.getValue()).isEqualTo("Quarta Oitava");
+        assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 4 - Central");
         assertThat(widget.getVolume().getVolume()).isEqualTo(90);
     }
 }

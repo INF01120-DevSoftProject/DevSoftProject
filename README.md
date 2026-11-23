@@ -19,7 +19,7 @@ Desenvolvido para a disciplina **INF01120 — Técnicas de Construção de Progr
 
 ## 1. Requisitos e Configuração do Ambiente
 
-- **JDK 21 ou superior** (o projeto compila para Java 21).
+- **JDK 25 ou superior** (o projeto compila para Java 25).
 - **Não é necessário instalar o Maven.** O projeto inclui o Maven Wrapper (`mvnw` / `mvnw.cmd`), que baixa a versão correta do Maven (`3.9.16`) e todas as dependências automaticamente na primeira execução (requer conexão com a internet na primeira vez).
 
 Para conferir se o Java está instalado:
@@ -50,22 +50,22 @@ echo $JAVA_HOME              # Linux / macOS
 **Windows (PowerShell)** — define de forma permanente para o seu usuário (feche e reabra o terminal depois):
 
 ```powershell
-[Environment]::SetEnvironmentVariable('JAVA_HOME', 'C:\caminho\para\o\jdk-21', 'User')
+[Environment]::SetEnvironmentVariable('JAVA_HOME', 'C:\caminho\para\o\jdk-25', 'User')
 ```
 
 Para definir apenas na sessão atual do terminal:
 
 ```powershell
-$env:JAVA_HOME = 'C:\caminho\para\o\jdk-21'
+$env:JAVA_HOME = 'C:\caminho\para\o\jdk-25'
 ```
 
 **Linux / macOS** — adicione ao `~/.bashrc` ou `~/.zshrc`:
 
 ```bash
-export JAVA_HOME=/caminho/para/o/jdk-21
+export JAVA_HOME=/caminho/para/o/jdk-25
 ```
 
-> **Dica:** Se você não tem um JDK instalado separadamente, a extensão *Language Support for Java (Red Hat)* do VS Code traz um JDK 21 em `%USERPROFILE%\.vscode\extensions\redhat.java-<versão>\jre\<versão-do-jdk>`. Como o nome dessa pasta muda a cada atualização da extensão, prefira instalar um JDK 21 próprio (por exemplo, Eclipse Temurin) e apontar o `JAVA_HOME` para ele.
+> **Dica:** Se você não tem um JDK instalado separadamente, a extensão *Language Support for Java (Red Hat)* do VS Code traz um JDK 25 em `%USERPROFILE%\.vscode\extensions\redhat.java-<versão>\jre\<versão-do-jdk>`. Como o nome dessa pasta muda a cada atualização da extensão, prefira instalar um JDK 25 próprio (por exemplo, Eclipse Temurin) e apontar o `JAVA_HOME` para ele.
 
 ---
 
@@ -175,24 +175,25 @@ DevSoftProject/
 │   ├── main/
 │   │   ├── java/
 │   │   │   ├── builders/          # Construção de sequências MIDI (MidiSequenceBuilder)
-│   │   │   ├── exporters/         # Exportação para arquivos e pipeline (MusicExportPipeline, MidiFileExporter, FileExporter)
+│   │   │   ├── exporters/         # Exportação para arquivos, rascunhos e pipeline (MusicExportPipeline, MidiFileExporter, FileExporter, TempMidiDraftService)
 │   │   │   ├── gui/               # Interface gráfica em JavaFX
 │   │   │   │   ├── builders/      # Builders fluentes de layout e controles (BoxBuilder, ButtonBuilder, etc.)
 │   │   │   │   ├── factory/       # Fábrica de componentes visuais (ControlFactory)
 │   │   │   │   ├── screens/       # Telas da aplicação (CompositionScreen, MapperScreen, PlayerScreen, Screen)
 │   │   │   │   ├── widgets/       # Componentes customizados (VoiceWidget, SheetMusicWidget, MusicSliderWidget, etc.)
 │   │   │   │   └── ScreenManager.java # Ponto de entrada (Main Class) da aplicação JavaFX
-│   │   │   ├── input/             # Leitura de arquivos de entrada (InputReader, TXTInputReader)
+│   │   │   ├── input/             # Leitura de arquivos de entrada (InputReader, TXTInputReader, JsonInputReader)
 │   │   │   ├── music/             # Modelo de domínio da música (Music, Voice, SheetMusic, VoicePreset)
 │   │   │   ├── musicElements/     # Elementos musicais (MusicElement, NoteElement, PauseElement, BPMElement, VolumeElement, InstrumentElement, Octave, Notes, DurationTime, Accidentals, InstrumentType)
 │   │   │   ├── parsers/           # Conversão do domínio Music para formato alvo (MusicParser, MusicToMidiParser)
 │   │   │   ├── player/            # Reprodução de áudio (Player, MidiPlayer)
 │   │   │   ├── translators/
-│   │   │   │   └── TextToMusic/   # Tradutor de texto para Music (TextToMusicTranslator, TextToMusicRules, TextToMusicContext, TextToMusicActions)
+│   │   │   │   └── TextToMusic/   # Tradutor de texto para Music (TextToMusicTranslator, TextToMusicRules, TextToMusicContext, TextToMusicActions, CharacterMapping, RegexBuilder)
 │   │   │   └── utils/             # Utilitários de diretórios e arquivos (MusicPathUtils, MidiMusicPathUtils)
 │   │   └── resources/
 │   │       ├── fonts/             # Fonte tipográfica utilizada na interface (Inter-Regular.ttf)
-│   │       ├── input/             # Arquivo .txt de exemplo para importação (exemplo_input.txt)
+│   │       ├── input/             # Arquivos .txt de exemplo para importação (exemplo_input.txt, etc.)
+│   │       ├── instruments/       # Catálogo de instrumentos MIDI em JSON (instruments.json)
 │   │       ├── musics/            # Pasta padrão onde os arquivos .mid são salvos e lidos pelo Player
 │   │       └── styles/            # Folhas de estilo CSS das telas e componentes JavaFX
 │   └── test/
@@ -209,7 +210,7 @@ DevSoftProject/
   - Cada `Voice` possui um `VoicePreset` inicial (instrumento, volume e oitava padrão de sua família) e uma `SheetMusic` (lista sequencial de `MusicElement`).
   - `MusicElement` é a interface comum implementada por notas (`NoteElement`), pausas (`PauseElement`) e eventos de controle (`BPMElement`, `VolumeElement`, `InstrumentElement`), apoiados pelos enums e classes de valor `Notes`, `Octave`, `DurationTime`, `Accidentals` e `InstrumentType`.
 - **`input` (Entrada):**
-  - A interface `InputReader` e sua implementação `TXTInputReader` realizam a leitura e validação de arquivos `.txt`.
+  - A interface `InputReader` e as implementações `TXTInputReader` e `JsonInputReader` (via Gson) realizam a leitura e validação de arquivos `.txt` e `.json` (como `instruments/instruments.json`).
 - **`translators.TextToMusic` (Tradução Texto → Domínio):**
   - `TextToMusicTranslator` divide o texto em linhas (uma por voz) e aplica o tokenizador regex de `TextToMusicRules`.
   - `TextToMusicContext` mantém o estado mutável durante a tradução (voz atual, oitava, volume, BPM, instrumento e último elemento inserido).
@@ -230,14 +231,16 @@ DevSoftProject/
 |---|---|
 | `groupId` / `artifactId` | `br.ufrgs.inf01120` / `devsoftproject` |
 | Versão | `0.1.0-SNAPSHOT` |
-| Java | 21 (`maven.compiler.release`) |
+| Java | 25 (`maven.compiler.release`) |
 | Codificação | UTF-8 |
-| JavaFX Controls | `27` (interface gráfica) |
+| JavaFX Controls | `27.0.1.1` (interface gráfica; requer JDK 25+) |
 | SheetMusic4J (`fxviewer`) | `0.0.5` (visualização de partitura no JavaFX) |
-| JavaFX Maven Plugin | `0.0.8` (`mainClass`: `gui.ScreenManager`) |
+| Gson | `2.15.0` (leitura de arquivos JSON) |
+| Maven Compiler Plugin | `3.16.0` (compilação para Java 25) |
+| JavaFX Maven Plugin | `0.0.8` (`mainClass`: `gui.ScreenManager`, com `--enable-native-access=javafx.graphics`) |
 | JUnit Jupiter | `6.1.3` (escopo `test`) |
 | AssertJ | `3.27.7` (escopo `test`) |
-| Maven Surefire Plugin | `3.6.0` (execução dos testes) |
+| Maven Surefire Plugin | `3.6.1` (execução dos testes, com `--enable-native-access=ALL-UNNAMED`) |
 
 ---
 

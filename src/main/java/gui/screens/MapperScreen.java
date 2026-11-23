@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -17,6 +18,7 @@ import javafx.scene.Node;
 import gui.builders.BorderPaneBuilder;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
+import gui.factory.ControlFactory;
 import gui.widgets.MappingWidget;
 
 import musicElements.Accidentals;
@@ -37,6 +39,7 @@ public class MapperScreen extends Screen {
     private final CharacterMapping mapping;
 
     private BorderPane mainContent;
+    private ScrollPane mappingScrollPane;
     
     private FlowPane pauseMappingContainer;
     private FlowPane noteMappingContainer;
@@ -47,6 +50,7 @@ public class MapperScreen extends Screen {
         this.mapping = mapping;
 
         restoreMappingContainers();
+        mappingScrollPane = ControlFactory.createScrollPane(noteMappingContainer);
 
         HBox mappingCategories = new BoxBuilder<>(new HBox(20))
 								.addClass("fixed-button-container") // Concertar nome
@@ -82,7 +86,7 @@ public class MapperScreen extends Screen {
         mainContent = new BorderPaneBuilder()
 								.setId("main")
 								.apply(b -> b.setTop(mappingHeader))
-								.apply(b -> b.setCenter(noteMappingContainer))
+								.apply(b -> b.setCenter(mappingScrollPane))
 								.apply(b -> b.setBottom(saveResetButtons))
 								.build();
 
@@ -90,7 +94,8 @@ public class MapperScreen extends Screen {
     }
 
     private void showMapping(FlowPane container) {
-        mainContent.setCenter(container);
+        mappingScrollPane.setContent(container);
+        mappingScrollPane.setVvalue(0);
     }
 
     private void restoreDefaultMapping() {
@@ -105,14 +110,14 @@ public class MapperScreen extends Screen {
         mapping.reset();
         refreshMappingContainers();
 
-        if (mainContent != null) {
-            mainContent.setCenter(noteMappingContainer);
+        if (mappingScrollPane != null) {
+            showMapping(noteMappingContainer);
         }
     }
 
     // Recria os campos a partir do mapeamento atual, mantendo a aba que estava aberta
     private void refreshMappingContainers() {
-        Node shown = mainContent == null ? null : mainContent.getCenter();
+        Node shown = mappingScrollPane == null ? null : mappingScrollPane.getContent();
         boolean pauses = shown != null && shown == pauseMappingContainer;
         boolean accidentals = shown != null && shown == accidentalMappingContainer;
         boolean controls = shown != null && shown == musicControlsMappingContainer;
@@ -122,8 +127,8 @@ public class MapperScreen extends Screen {
         accidentalMappingContainer = createAccidentalMappingContainer();
         musicControlsMappingContainer = createMusicControlsMappingContainer();
 
-        if (mainContent != null) {
-            mainContent.setCenter(pauses ? pauseMappingContainer
+        if (mappingScrollPane != null) {
+            showMapping(pauses ? pauseMappingContainer
                 : accidentals ? accidentalMappingContainer
                 : controls ? musicControlsMappingContainer
                 : noteMappingContainer);

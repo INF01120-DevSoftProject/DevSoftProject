@@ -15,6 +15,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -48,7 +49,8 @@ class MapperScreenTest extends JavaFXTestBase {
         BorderPane mainContent = (BorderPane) screen.getChildren().getFirst();
         assertThat(mainContent.getId()).isEqualTo("main");
         assertThat(mainContent.getTop()).isNotNull();
-        assertThat(mainContent.getCenter()).isNotNull();
+        assertThat(mainContent.getCenter()).isInstanceOf(ScrollPane.class);
+        assertThat(((ScrollPane) mainContent.getCenter()).getContent()).isInstanceOf(FlowPane.class);
         assertThat(mainContent.getBottom()).isNotNull();
     }
 
@@ -56,8 +58,7 @@ class MapperScreenTest extends JavaFXTestBase {
     void noteLabelsComeFromTheMappingInsteadOfThePosition() {
         MapperScreen screen = new MapperScreen(new CharacterMapping());
         // o centro começa mostrando as notas; o caractere "A" é Lá, não Dó
-        BorderPane mainContent = (BorderPane) screen.getChildren().getFirst();
-        assertThat(labelToCharacter((FlowPane) mainContent.getCenter())).containsExactly(
+        assertThat(labelToCharacter(currentMapping(screen))).containsExactly(
             Map.entry("Dó", "C"), Map.entry("Ré", "D"), Map.entry("Mi", "E"), Map.entry("Fá", "F"),
             Map.entry("Sol", "G"), Map.entry("Lá", "A"), Map.entry("Si", "B"));
     }
@@ -66,7 +67,7 @@ class MapperScreenTest extends JavaFXTestBase {
     void savingAHalfSwapFailsAndUndoesTheSave() {
         CharacterMapping mapping = new CharacterMapping();
         MapperScreen screen = new MapperScreen(mapping);
-        FlowPane notes = (FlowPane) ((BorderPane) screen.getChildren().getFirst()).getCenter();
+        FlowPane notes = currentMapping(screen);
 
         field(notes, "Dó").setText("D");
 
@@ -75,7 +76,7 @@ class MapperScreenTest extends JavaFXTestBase {
             .hasMessageContaining("Mapeamento incompleto");
 
         // o salvamento foi desfeito: o mapeamento e os campos voltam ao que eram
-        FlowPane notesAfter = (FlowPane) ((BorderPane) screen.getChildren().getFirst()).getCenter();
+        FlowPane notesAfter = currentMapping(screen);
         assertThat(mapping.isComplete()).isTrue();
         assertThat(mapping.getNote("C")).isEqualTo(Notes.C);
         assertThat(mapping.getNote("D")).isEqualTo(Notes.D);
@@ -87,7 +88,7 @@ class MapperScreenTest extends JavaFXTestBase {
     void savingACompleteSwapWorks() {
         CharacterMapping mapping = new CharacterMapping();
         MapperScreen screen = new MapperScreen(mapping);
-        FlowPane notes = (FlowPane) ((BorderPane) screen.getChildren().getFirst()).getCenter();
+        FlowPane notes = currentMapping(screen);
 
         field(notes, "Dó").setText("D");
         field(notes, "Ré").setText("C");
@@ -103,7 +104,7 @@ class MapperScreenTest extends JavaFXTestBase {
         CharacterMapping mapping = new CharacterMapping();
         TestableMapperScreen screen = new TestableMapperScreen(mapping);
         BorderPane mainContent = (BorderPane) screen.getChildren().getFirst();
-        FlowPane notes = (FlowPane) ((BorderPane) screen.getChildren().getFirst()).getCenter();
+        FlowPane notes = currentMapping(screen);
         field(notes, "Dó").setText("K");
         screen.saveMappings();
         field(notes, "Dó").setText("L");
@@ -118,7 +119,7 @@ class MapperScreenTest extends JavaFXTestBase {
         }
 
         assertThat(screen.warningCount).isEqualTo(1);
-        FlowPane notesAfter = (FlowPane) ((BorderPane) screen.getChildren().getFirst()).getCenter();
+        FlowPane notesAfter = currentMapping(screen);
         if (confirm) {
             assertThat(mapping.getNote("C")).isEqualTo(Notes.C);
             assertThat(mapping.getNote("K")).isNull();
@@ -127,6 +128,11 @@ class MapperScreenTest extends JavaFXTestBase {
             assertThat(mapping.getNote("K")).isEqualTo(Notes.C);
             assertThat(field(notesAfter, "Dó").getText()).isEqualTo("L");
         }
+    }
+
+    private FlowPane currentMapping(MapperScreen screen) {
+        BorderPane mainContent = (BorderPane) screen.getChildren().getFirst();
+        return (FlowPane) ((ScrollPane) mainContent.getCenter()).getContent();
     }
 
     private TextField field(FlowPane container, String label) {

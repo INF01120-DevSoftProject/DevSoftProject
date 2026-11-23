@@ -91,6 +91,7 @@ public class CompositionScreen extends Screen {
                                     .build();
 
         HBox compositionControls = new BoxBuilder<>(new HBox(20))
+                                    .addClass("composition-controls")
                                     .add(plusMinusButtons)
                                     .add(bpmControls)
                                     .apply(b -> HBox.setHgrow(bpmControls, Priority.ALWAYS))

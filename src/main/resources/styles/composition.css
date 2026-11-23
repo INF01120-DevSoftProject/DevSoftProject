@@ -38,6 +38,10 @@
     -fx-alignment: center-left;
 }
 
+.composition-voices {
+    -fx-padding: 0px 8px 8px;
+}
+
 .bpm-controls {
     -fx-background-color: #f5f5f5;
     -fx-alignment: center-left;

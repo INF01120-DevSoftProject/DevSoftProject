@@ -27,19 +27,54 @@ import exporters.MusicExportPipeline;
 import gui.JavaFXTestBase;
 import gui.widgets.VoiceWidget;
 import gui.widgets.BPMSliderWidget;
+import gui.widgets.MappingHelpWidget;
 import input.InputReader;
 import input.TXTInputReader;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import music.VoicePreset;
 import parsers.MusicToMidiParser;
 import translators.TextToMusic.TextToMusicTranslator;
+import translators.TextToMusic.CharacterMapping;
 
 class CompositionScreenTest extends JavaFXTestBase {
+
+    @Test
+    void refreshesHelpBesideTheVoicesUsingTheSharedMapping() throws Exception {
+        runOnFxThread(() -> {
+            CharacterMapping mapping = new CharacterMapping();
+            MusicExportPipeline<?> pipeline = createPipeline();
+            CompositionScreen screen = new CompositionScreen(new TXTInputReader(), pipeline,
+                new exporters.TempMidiDraftService(pipeline), path -> {}, path -> {}, mapping);
+            VBox main = (VBox) screen.getChildren().getFirst();
+            HBox body = (HBox) ((ScrollPane) main.getChildren().get(1)).getContent();
+            VBox voicesColumn = (VBox) ((ScrollPane) body.getChildren().getFirst()).getContent();
+            assertThat(voicesColumn.getChildren().getFirst())
+                .isSameAs(findFirstVoiceWidget(screen).getParent());
+            assertThat(findButtonByText(voicesColumn, "+")).isNotNull();
+            assertThat(findButtonByText(voicesColumn, "-")).isNotNull();
+            assertThat(voicesColumn.getChildren().get(1).lookup(".bpm-slider")).isInstanceOf(BPMSliderWidget.class);
+            MappingHelpWidget help = (MappingHelpWidget) body.getChildren().get(1);
+
+            mapping.replaceChar("note", "C", "K");
+            screen.refreshMappingHelp();
+
+            VBox sections = (VBox) ((ScrollPane) help.getContent()).getContent();
+            assertThat(sections.getChildren().stream().map(VBox.class::cast)
+                .flatMap(section -> section.getChildren().stream())
+                .filter(HBox.class::isInstance).map(HBox.class::cast))
+                .anySatisfy(row -> {
+                    assertThat(((Label) row.getChildren().get(0)).getText()).isEqualTo("K");
+                    assertThat(((Label) row.getChildren().get(1)).getText()).contains("Dó");
+                });
+        });
+    }
 
     private static class TestableCompositionScreen extends CompositionScreen {
         String lastErrorMessage;
@@ -108,6 +143,20 @@ class CompositionScreenTest extends JavaFXTestBase {
             for (Node child : parent.getChildrenUnmodifiable()) {
                 VoiceWidget found = findFirstVoiceWidget(child);
                 if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private BPMSliderWidget findBpmSlider(Node root) {
+        if (root instanceof BPMSliderWidget slider) return slider;
+        if (root instanceof ScrollPane scrollPane && scrollPane.getContent() != null) {
+            return findBpmSlider(scrollPane.getContent());
+        }
+        if (root instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                BPMSliderWidget slider = findBpmSlider(child);
+                if (slider != null) return slider;
             }
         }
         return null;
@@ -274,7 +323,7 @@ class CompositionScreenTest extends JavaFXTestBase {
         };
 
         runOnFxThread(() -> {
-            ((BPMSliderWidget) screen.lookup(".bpm-slider")).setValue(90);
+            findBpmSlider(screen).setValue(90);
             findFirstVoiceWidget(screen).setVoiceText("C D E");
             findButtonByText(screen, "Salvar música").fire();
         });
@@ -320,7 +369,7 @@ class CompositionScreenTest extends JavaFXTestBase {
             VoiceWidget firstVoice = findFirstVoiceWidget(screen);
             assertThat(firstVoice).isNotNull();
             firstVoice.setVoiceText("C D E");
-            ((BPMSliderWidget) screen.lookup(".bpm-slider")).setValue(185);
+            findBpmSlider(screen).setValue(185);
 
             findButtonByText(screen, "Ouvir rascunho").fire();
         });

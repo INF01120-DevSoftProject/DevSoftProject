@@ -21,10 +21,12 @@ import gui.builders.ButtonBuilder;
 import gui.factory.ControlFactory;
 import gui.widgets.VoiceWidget;
 import gui.widgets.BPMSliderWidget;
+import gui.widgets.MappingHelpWidget;
 import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
 import exporters.DraftMusicCreator;
 import exporters.MusicExportPipeline;
+import translators.TextToMusic.CharacterMapping;
 
 public class CompositionScreen extends Screen {
 
@@ -32,6 +34,7 @@ public class CompositionScreen extends Screen {
 
     private final VBox voicesContainer;
     private final BPMSliderWidget bpmSlider;
+    private final MappingHelpWidget mappingHelp;
     
     private final MusicExportPipeline<?> exporter;
     private final InputReader<String> reader;
@@ -49,6 +52,17 @@ public class CompositionScreen extends Screen {
         Consumer<Path> onListenDraft,
         Consumer<Path> onMusicSaved
     ) {
+        this(reader, exporter, draftCreator, onListenDraft, onMusicSaved, new CharacterMapping());
+    }
+
+    public CompositionScreen(
+        InputReader<String> reader,
+        MusicExportPipeline<?> exporter,
+        DraftMusicCreator draftCreator,
+        Consumer<Path> onListenDraft,
+        Consumer<Path> onMusicSaved,
+        CharacterMapping mapping
+    ) {
 
         if (reader == null)  throw new IllegalArgumentException("Reader cannot be null.");
         if (exporter == null)  throw new IllegalArgumentException("Exporter cannot be null.");
@@ -60,6 +74,8 @@ public class CompositionScreen extends Screen {
         this.draftCreator = draftCreator;
         this.onListenDraft = onListenDraft;
         this.onMusicSaved = onMusicSaved;
+
+        mappingHelp = new MappingHelpWidget(mapping);
 
         VoiceWidget.restartCurrentVoiceNum();
 
@@ -78,7 +94,9 @@ public class CompositionScreen extends Screen {
                                     .add(createVoiceWidget())
                                     .build();
 
-        ScrollPane voicesContainerScroll = ControlFactory.createScrollPane(voicesContainer);
+        mappingHelp.setMinWidth(300);
+        mappingHelp.setPrefWidth(340);
+        mappingHelp.setMaxWidth(340);
 
         HBox plusMinusButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fixed-button-container")
@@ -97,6 +115,24 @@ public class CompositionScreen extends Screen {
                                     .apply(b -> HBox.setHgrow(bpmControls, Priority.ALWAYS))
                                     .build();
 
+        VBox voicesColumn = new BoxBuilder<>(new VBox(20))
+                                    .addClass("composition-voices")
+                                    .add(voicesContainer)
+                                    .add(compositionControls)
+                                    .build();
+        voicesColumn.setMinWidth(400);
+        ScrollPane voicesColumnScroll = ControlFactory.createScrollPane(voicesColumn);
+        voicesColumnScroll.setMinWidth(400);
+
+        HBox compositionBody = new BoxBuilder<>(new HBox(20))
+                                    .add(voicesColumnScroll)
+                                    .add(mappingHelp)
+                                    .apply(b -> HBox.setHgrow(voicesColumnScroll, Priority.ALWAYS))
+                                    .build();
+        ScrollPane compositionScroll = ControlFactory.createScrollPane(compositionBody);
+        compositionScroll.setFitToHeight(true);
+        compositionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
         HBox actionButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fill-button-container")
                                     .add(new ButtonBuilder("Salvar música")
@@ -113,13 +149,16 @@ public class CompositionScreen extends Screen {
         VBox mainContent = new BoxBuilder<>(new VBox(25))
                                     .setId("main")
                                     .add(new Label("Composição"))
-                                    .add(voicesContainerScroll)
-                                    .add(compositionControls)
-                                    .add(ControlFactory.createVerticalGrower())
+                                    .add(compositionScroll)
                                     .add(actionButtons)
+                                    .apply(b -> VBox.setVgrow(compositionScroll, Priority.ALWAYS))
                                     .build();
         
         setScreenMainContent(mainContent);
+    }
+
+    public void refreshMappingHelp() {
+        mappingHelp.refreshMapping();
     }
 
     private void removeLastVoice() {

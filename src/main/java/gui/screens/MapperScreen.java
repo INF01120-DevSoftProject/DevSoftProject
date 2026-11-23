@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import javafx.css.PseudoClass;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
@@ -36,7 +38,14 @@ public class MapperScreen extends Screen {
     private static final Map<Accidentals, String> ACCIDENTAL_NAMES = new EnumMap<>(Map.of(
         Accidentals.SHARP, "Sustenido", Accidentals.FLAT, "Bemol"));
 
+    private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
+
     private final CharacterMapping mapping;
+
+    private Button noteTab;
+    private Button pauseTab;
+    private Button accidentalTab;
+    private Button controlsTab;
 
     private BorderPane mainContent;
     private ScrollPane mappingScrollPane;
@@ -52,21 +61,27 @@ public class MapperScreen extends Screen {
         restoreMappingContainers();
         mappingScrollPane = ControlFactory.createScrollPane(noteMappingContainer);
 
-        HBox mappingCategories = new BoxBuilder<>(new HBox(20))
-								.addClass("fixed-button-container") // Concertar nome
-								.add(new ButtonBuilder("Notas")
-										.onClick(e -> showMapping(noteMappingContainer))
-										.build())
-								.add(new ButtonBuilder("Pausas")
-										.onClick(e -> showMapping(pauseMappingContainer))
-										.build())
-								.add(new ButtonBuilder("Acidentes")
-										.onClick(e -> showMapping(accidentalMappingContainer))
-										.build())
-								.add(new ButtonBuilder("Outros")
-										.onClick(e -> showMapping(musicControlsMappingContainer))
-										.build())
+        noteTab = new ButtonBuilder("Notas")
+								.onClick(e -> showMapping(noteMappingContainer))
 								.build();
+        pauseTab = new ButtonBuilder("Pausas")
+								.onClick(e -> showMapping(pauseMappingContainer))
+								.build();
+        accidentalTab = new ButtonBuilder("Acidentes")
+								.onClick(e -> showMapping(accidentalMappingContainer))
+								.build();
+        controlsTab = new ButtonBuilder("Outros")
+								.onClick(e -> showMapping(musicControlsMappingContainer))
+								.build();
+
+        HBox mappingCategories = new BoxBuilder<>(new HBox(12))
+								.addClass("mapping-categories")
+								.add(noteTab)
+								.add(pauseTab)
+								.add(accidentalTab)
+								.add(controlsTab)
+								.build();
+        updateSelectedTab();
 
         VBox mappingHeader = new BoxBuilder<>(new VBox(25))
 								.add(new Label("Mapeamento"))
@@ -96,6 +111,17 @@ public class MapperScreen extends Screen {
     private void showMapping(FlowPane container) {
         mappingScrollPane.setContent(container);
         mappingScrollPane.setVvalue(0);
+        updateSelectedTab();
+    }
+
+    // A aba da categoria aberta fica destacada (:selected em mapper.css)
+    private void updateSelectedTab() {
+        if (noteTab == null) return;
+        Node shown = mappingScrollPane.getContent();
+        noteTab.pseudoClassStateChanged(SELECTED, shown == noteMappingContainer);
+        pauseTab.pseudoClassStateChanged(SELECTED, shown == pauseMappingContainer);
+        accidentalTab.pseudoClassStateChanged(SELECTED, shown == accidentalMappingContainer);
+        controlsTab.pseudoClassStateChanged(SELECTED, shown == musicControlsMappingContainer);
     }
 
     private void restoreDefaultMapping() {
@@ -171,10 +197,9 @@ public class MapperScreen extends Screen {
     }
 
     private BoxBuilder<FlowPane> createMappingContainer() {
+        // espaçamento entre os campos: -fx-hgap e -fx-vgap em mapper.css
         BoxBuilder<FlowPane> noteMappingContainer = new BoxBuilder<>(new FlowPane())
-            .addClass("mapping-container")
-            .apply(b -> b.setHgap(20))
-            .apply(b -> b.setVgap(20));
+            .addClass("mapping-container");
 
         return noteMappingContainer;
     }

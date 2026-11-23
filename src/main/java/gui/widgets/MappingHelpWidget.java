@@ -1,6 +1,8 @@
 package gui.widgets;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import gui.builders.BoxBuilder;
@@ -34,6 +36,9 @@ public class MappingHelpWidget extends TitledPane {
     private final CharacterMapping mapping;
     private final VBox explanations;
     private VBox currentSection;
+
+    // Tópicos que o usuário fechou; continuam fechados quando o guia é recriado após salvar o mapeamento
+    private final Set<String> collapsedSections = new HashSet<>();
 
     public MappingHelpWidget(CharacterMapping mapping) {
         if (mapping == null) throw new IllegalArgumentException("Mapping cannot be null.");
@@ -88,14 +93,21 @@ public class MappingHelpWidget extends TitledPane {
         addExplanation(characters("doubleVolume"), "Dobra o volume da voz, até 127.");
     }
 
+    // Cada tópico é retrátil: clicar no título abre ou fecha as explicações dele
     private void addHeading(String text) {
-        Label heading = new Label(text);
-        heading.getStyleClass().add("mapping-help-heading");
         currentSection = new BoxBuilder<>(new VBox(8))
-                                    .addClass("mapping-help-section")
-                                    .add(heading)
+                                    .addClass("mapping-help-rows")
                                     .build();
-        explanations.getChildren().add(currentSection);
+
+        TitledPane section = new TitledPane(text, currentSection);
+        section.getStyleClass().add("mapping-help-section");
+        section.setAnimated(false);
+        section.setExpanded(!collapsedSections.contains(text));
+        section.expandedProperty().addListener((obs, wasExpanded, expanded) -> {
+            if (expanded) collapsedSections.remove(text);
+            else collapsedSections.add(text);
+        });
+        explanations.getChildren().add(section);
     }
 
     private void addExplanation(String character, String description) {
@@ -105,8 +117,7 @@ public class MappingHelpWidget extends TitledPane {
 
         Label descriptionLabel = new Label(description);
         descriptionLabel.setWrapText(true);
-        descriptionLabel.setMinWidth(0);
-        descriptionLabel.setMaxWidth(Double.MAX_VALUE);
+        descriptionLabel.getStyleClass().add("mapping-help-description");
 
         HBox row = new BoxBuilder<>(new HBox(10))
                                     .addClass("mapping-help-row")

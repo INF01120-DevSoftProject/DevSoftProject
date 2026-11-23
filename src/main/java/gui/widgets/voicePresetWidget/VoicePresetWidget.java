@@ -10,7 +10,6 @@ import java.util.Map;
 import gui.builders.BoxBuilder;
 import gui.factory.ControlFactory;
 import input.JsonInputReader;
-import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -63,7 +62,6 @@ public abstract class VoicePresetWidget {
                                     .add(volumeContainer)
                                     .add(ControlFactory.createHorizontalGrower())
                                     .add(octaveContainer)
-                                    .apply(b -> b.setAlignment(Pos.CENTER))
                                     .build();
 
         return voicePresetContainer;

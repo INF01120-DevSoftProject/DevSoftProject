@@ -2,25 +2,66 @@
     src: url("../fonts/Inter-Regular.ttf");
 }
 
-.sidebar {
-    -fx-padding: 64px 10px;
-    -fx-background-color: #184D40;
-    -fx-pref-width: 150px;
-    -fx-alignment: top-center;
+/* Paleta: as outras folhas de estilo usam estas cores pelo nome */
+.root {
+    -color-primary: #15876A;
+    -color-primary-hover: #1B9B7A;
+    -color-primary-pressed: #0D725E;
+    -color-accent: #D0F48F;
+    -color-dark: #184D40;
+    -color-dark-hover: #22604F;
+
+    -color-background: #EDE6E4;
+    -color-surface: #F5F5F5;
+    -color-surface-hover: #FAFAFA;
+    -color-field: #F8FAF9;
+
+    -color-text: #253630;
+    -color-text-muted: #63736A;
+    -color-text-light: #F5F5F5;
+    -color-placeholder: #9BA7A1;
+
+    -color-border: #DDE5E0;
+    -color-border-hover: #9DCABD;
+    -color-highlight: #E0F3ED;
+    -color-scroll: #A9B4AE;
+    -color-scroll-hover: #77847D;
+
+    -fx-font-family: "Inter";
+    -fx-background-color: -color-background;
 }
 
-
-.root {
-    -fx-font-family: "Inter";
-    -fx-background-color: #EDE6E4;
+.sidebar {
+    -fx-padding: 64px 10px;
+    -fx-background-color: -color-dark;
+    -fx-pref-width: 150px;
+    -fx-alignment: top-center;
 }
 
 #main {
     -fx-padding: 8px 24px;
 }
 
+/* Título de cada tela */
 .label {
     -fx-font-size: 40px;
     -fx-padding: 32px 0px 12px 0px;
     -fx-font-weight: 900;
+}
+
+/* Cartões claros sobre o fundo: voz, BPM, mapeamento, player e guia */
+.voice-node,
+.bpm-controls,
+.mapping-node,
+.player-controller {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(24, 77, 64, 0.06), 8, 0, 0, 2);
+    transition: -fx-background-color 150ms ease;
+}
+
+.voice-node:hover,
+.mapping-node:hover {
+    -fx-background-color: -color-surface-hover;
+    -fx-effect: dropshadow(gaussian, rgba(24, 77, 64, 0.14), 14, 0, 0, 4);
 }

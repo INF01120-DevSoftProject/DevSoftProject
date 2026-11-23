@@ -1,26 +1,27 @@
 .text-area,
 .text-field {
-    -fx-background-color: #F8FAF9;
+    -fx-background-color: -color-field;
     -fx-background-radius: 8px;
 
-    -fx-border-color: #DDE5E0;
+    -fx-border-color: -color-border;
     -fx-border-radius: 8px;
     -fx-border-width: 1px;
 
     -fx-font-size: 13px;
-    -fx-text-fill: #253630;
-    -fx-prompt-text-fill: #9BA7A1;
+    -fx-text-fill: -color-text;
+    -fx-prompt-text-fill: -color-placeholder;
 
     -fx-highlight-fill: #CDEBE1;
     -fx-highlight-text-fill: #163F36;
 
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
+    transition: -fx-border-color 150ms ease;
 }
 
 .text-area .content,
 .text-field .content {
-    -fx-background-color: #F8FAF9;
+    -fx-background-color: -color-field;
     -fx-background-radius: 8px;
     -fx-padding: 12px;
 }
@@ -28,16 +29,23 @@
 .text-area .scroll-pane,
 .text-field .scroll-pane,
 .text-area .scroll-pane .viewport,
-.text-field  .scroll-pane .viewport {
+.text-field .scroll-pane .viewport {
     -fx-background-color: transparent;
+}
+
+.text-area:hover,
+.text-field:hover {
+    -fx-border-color: -color-border-hover;
 }
 
 .text-area:focused,
 .text-field:focused {
-    -fx-border-color: #108B72;
-    -fx-effect: dropshadow(
-        gaussian,
-        rgba(16,139,114,0.12),
-        6, 0, 0, 0
-    );
+    -fx-background-color: white;
+    -fx-border-color: -color-primary;
+    -fx-effect: dropshadow(gaussian, rgba(16, 139, 114, 0.18), 8, 0, 0, 0);
+}
+
+.text-area:focused .content,
+.text-field:focused .content {
+    -fx-background-color: white;
 }

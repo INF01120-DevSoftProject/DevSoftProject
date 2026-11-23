@@ -15,13 +15,18 @@
     <description>Tradutor de texto para música (INF01120 - UFRGS)</description>
 
     <properties>
-        <!-- Java 21 (LTS) -->
-        <maven.compiler.release>21</maven.compiler.release>
+        <!-- Java 25 (LTS) -->
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        
+
+        <javafx.version>27.0.1.1</javafx.version>
+        <fxviewer.version>0.0.5</fxviewer.version>
+        <gson.version>2.15.0</gson.version>
         <junit.version>6.1.3</junit.version>
         <assertj.version>3.27.7</assertj.version>
-        <surefire.version>3.6.0</surefire.version>
+        <compiler.version>3.16.0</compiler.version>
+        <surefire.version>3.6.1</surefire.version>
+        <javafx.plugin.version>0.0.8</javafx.plugin.version>
     </properties>
 
     <dependencies>
@@ -43,38 +48,49 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>27</version>
+            <version>${javafx.version}</version>
             <scope>compile</scope>
         </dependency>
         <!-- Sheetmusic4J: biblioteca de visualização de partitura integrada ao JavaFX -->
         <dependency>
             <groupId>com.sheetmusic4j</groupId>
             <artifactId>fxviewer</artifactId>
-            <version>0.0.5</version>
+            <version>${fxviewer.version}</version>
             <scope>compile</scope>
         </dependency>
         <!-- GSON: biblioteca de leitura de arquivo json -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.15.0</version>
+            <version>${gson.version}</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler.version}</version>
+            </plugin>
             <!-- Executa os testes na fase "test" -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
+                <configuration>
+                    <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
+                <version>${javafx.plugin.version}</version>
                 <configuration>
                     <mainClass>gui.ScreenManager</mainClass>
+                    <options>
+                        <option>--enable-native-access=javafx.graphics</option>
+                    </options>
                 </configuration>
             </plugin>
         </plugins>

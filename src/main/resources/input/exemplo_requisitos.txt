@@ -1,0 +1,4 @@
+C D:2 E:3 F:4 G:5 A:6 B:7 C#:2 Eb:4 ? F:3 ?? G:3 V A:3 . B:3 >> 2 C:1 H
+[2] a c d h H E:2 F#:4 Bb:3 << 4 G:3 ! O ; , 1 k C:2
+[4] e f g Ab:5 D#:6 Gb:7 ? V > 6 A:3 I i u 3 p C:1
+[8] g x C:2 F#:3 Bb:4 V E:3 . G:2 < 8 0 o U j C:1

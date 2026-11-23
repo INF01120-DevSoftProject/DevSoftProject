@@ -13,9 +13,10 @@ public class VoicePresetKeysWidget extends VoicePresetWidget {
     public Map<String, Octave> createOctaveTypes() {
         Map<String, Octave> octaves = new LinkedHashMap<>();
 
-        octaves.put("Segunda Oitava", new Octave(2));
-        octaves.put("Terceira Oitava", new Octave(3));
-        octaves.put("Quarta Oitava", new Octave(4));
+        octaves.put("Oitava 4 - Central", new Octave(4));
+        octaves.put("Oitava 5 - Soprano", new Octave(5));
+        octaves.put("Oitava 3 - Tenor", new Octave(3));
+        octaves.put("Oitava 2 - Grave", new Octave(2));
 
         return octaves;
     }

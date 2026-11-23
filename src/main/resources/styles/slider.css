@@ -1,7 +1,7 @@
 .slider {
     -fx-padding: 8px 0;
+    -fx-cursor: hand;
 }
-
 
 .slider .track {
     -fx-background-color: #E3EBE7;
@@ -10,26 +10,30 @@
     -fx-pref-height: 6px;
 }
 
-
 .slider .thumb {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: white;
     -fx-background-radius: 50%;
     -fx-background-insets: 0;
 
-    -fx-border-color: #108B72;
+    -fx-border-color: -color-primary;
     -fx-border-width: 3px;
     -fx-border-radius: 50%;
 
     -fx-pref-width: 18px;
     -fx-pref-height: 18px;
 
-    -fx-effect: dropshadow(
-        gaussian, rgba(0,0,0,0.12),
-        4, 0, 0, 1
-    );
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 4, 0, 0, 1);
+    transition: -fx-scale-x 120ms ease, -fx-scale-y 120ms ease;
 }
 
+/* A bolinha cresce ao passar o mouse e ao arrastar */
+.slider:hover .thumb,
+.slider .thumb:pressed {
+    -fx-border-color: -color-primary-pressed;
+    -fx-scale-x: 1.2;
+    -fx-scale-y: 1.2;
+}
 
-.slider:hover .thumb {
-    -fx-border-color: #0D725E;
+.slider:focused .thumb {
+    -fx-effect: dropshadow(gaussian, rgba(16, 139, 114, 0.35), 8, 0, 0, 0);
 }

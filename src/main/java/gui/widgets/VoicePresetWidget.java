@@ -1,8 +1,7 @@
-package gui.widgets.voicePresetWidget;
+package gui.widgets;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,29 +21,58 @@ import musicElements.VolumeElement;
 import utils.MusicPathUtils;
 import javafx.scene.Node;
 
-public abstract class VoicePresetWidget {
-    protected   ComboBox<String> instrumentSelector;
+public class VoicePresetWidget extends HBox {
+    protected ComboBox<String> instrumentSelector;
     protected ComboBox<String> octaveController;
     protected Slider volumeController;
 
     private static final int MAX_VOLUME = 100;
     private static final int MIN_VOLUME = 0;
+    private static final int DEFAULT_OCTAVE = 5;
 
-    public HBox createVoicePresetContainer() {
-        
+    private final VolumeElement defaultVolume;
+    private final InstrumentType instrumentType;
+    private final Octave minOctave;
+    private final Octave maxOctave;
+
+    public VoicePresetWidget(VolumeElement defaultVolume,
+                            InstrumentType instrumentType,
+                            Octave minOctave,
+                            Octave maxOctave) {
+        super(15);
+
+        if (defaultVolume == null) throw new IllegalArgumentException("Volume padrão obrigatório.");
+        if (instrumentType == null) throw new IllegalArgumentException("Tipo de instrumento obrigatório.");
+        if (minOctave == null) throw new IllegalArgumentException("Oitava mínima obrigatória.");
+        if (maxOctave == null) throw new IllegalArgumentException("Oitava máxima obrigatória.");
+
+        if (minOctave.getOctaveInt() > maxOctave.getOctaveInt()) {
+            throw new IllegalArgumentException("Intervalo de oitavas inválido.");
+        }
+
+        this.defaultVolume = defaultVolume;
+        this.instrumentType = instrumentType;
+        this.minOctave = minOctave;
+        this.maxOctave = maxOctave;
+
+        createVoicePresetContainer();
+    }
+
+    private void createVoicePresetContainer() {
+
         instrumentSelector = ControlFactory.createComboBox(
             "Insira seu instrumento",
             getInstrumentsNames()
         );
 
         volumeController = ControlFactory.createVolumeSlider(
-            new VolumeElement(MIN_VOLUME), 
-            new VolumeElement(MAX_VOLUME), 
+            new VolumeElement(MIN_VOLUME),
+            new VolumeElement(MAX_VOLUME),
             getDefaultVolume()
         );
 
         octaveController = ControlFactory.createComboBox(
-            "Insira sua oitava", 
+            "Insira sua oitava",
             getOctaveNames()
         );
 
@@ -55,7 +83,7 @@ public abstract class VoicePresetWidget {
         VBox volumeContainer = createControlWithLabel(volumeController, "Volume");
         VBox octaveContainer = createControlWithLabel(octaveController, "Oitava");
 
-        HBox voicePresetContainer = new BoxBuilder<>(new HBox(15))
+        new BoxBuilder<>(this)
                                     .addClass("voice-preset-container")
                                     .add(instrumentContainer)
                                     .add(ControlFactory.createHorizontalGrower())
@@ -64,7 +92,6 @@ public abstract class VoicePresetWidget {
                                     .add(octaveContainer)
                                     .build();
 
-        return voicePresetContainer;
     }
 
     public VolumeElement getVolume() {
@@ -86,17 +113,45 @@ public abstract class VoicePresetWidget {
     }
 
     public String getDefaultOctave() {
-        return new ArrayList<>(createOctaveTypes().keySet()).get(1);
+        return getOctaveName(Math.max(minOctave.getOctaveInt(), Math.min(DEFAULT_OCTAVE, maxOctave.getOctaveInt())));
     }
 
     public String getDefaultInstrument() {
         return createInstrumentTypes().keySet().iterator().next();
     }
 
-    public abstract VolumeElement getDefaultVolume();
-    public abstract InstrumentType getInstrumentType();
+    public VolumeElement getDefaultVolume() {
+        return defaultVolume;
+    }
 
-    protected abstract Map<String, Octave> createOctaveTypes();
+    public InstrumentType getInstrumentType() {
+        return instrumentType;
+    }
+
+    private Map<String, Octave> createOctaveTypes() {
+        Map<String, Octave> octaves = new LinkedHashMap<>();
+        int minimum = minOctave.getOctaveInt();
+        int maximum = maxOctave.getOctaveInt();
+
+        for (int number = minimum; number <= maximum; number++) {
+            String name = getOctaveName(number);
+            Octave octave = new Octave(number);
+
+            octaves.put(name, octave);
+        }
+
+        return octaves;
+    }
+
+    private static String getOctaveName(int octave) {
+        return switch (octave) {
+            case 2 -> "Oitava 2 - Grave";
+            case 3 -> "Oitava 3 - Tenor";
+            case 4 -> "Oitava 4 - Central";
+            case 5 -> "Oitava 5 - Soprano";
+            default -> "Oitava " + octave;
+        };
+    }
 
     private Map<String, InstrumentElement> createInstrumentTypes() {
         Map<String, InstrumentElement> instruments = new LinkedHashMap<>();
@@ -109,7 +164,7 @@ public abstract class VoicePresetWidget {
             );
 
             Map<String, Integer> filtered = filterInstrumentByType(
-                data, 
+                data,
                 getInstrumentType()
             );
 
@@ -128,8 +183,8 @@ public abstract class VoicePresetWidget {
     }
 
     private <K> LinkedHashMap<K, Integer> filterInstrumentByType(Map<K, Integer> data, InstrumentType instrumentType) {
-        int inicio = getInstrumentType().getMinInstrument();
-        int fim = getInstrumentType().getMaxInstrument();
+        int inicio = instrumentType.getMinInstrument();
+        int fim = instrumentType.getMaxInstrument();
 
         if (inicio > fim) {
             throw new IllegalArgumentException("Intervalo inválido.");
@@ -147,7 +202,7 @@ public abstract class VoicePresetWidget {
 
         return result;
     }
- 
+
     private  List<String> getInstrumentsNames() {
         return List.copyOf(createInstrumentTypes().keySet());
     }

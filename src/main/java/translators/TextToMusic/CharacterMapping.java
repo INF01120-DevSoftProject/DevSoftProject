@@ -13,10 +13,10 @@ import musicElements.Notes;
 // Cada instância tem o seu próprio estado: dois tradutores (ou dois testes) não interferem um no outro.
 public class CharacterMapping {
 
-    private final Map<String, String> defaultCharacters;
+    private final Map<MappingType, String> defaultCharacters;
 
     // Grupo -> caracteres que pertencem a ele
-    private final Map<String, String> elementsMapping = new LinkedHashMap<>();
+    private final Map<MappingType, String> elementsMapping = new LinkedHashMap<>();
 
     // Caractere -> valor musical, para os grupos que viram um valor (nota, duração e acidente)
     private final Map<String, Notes> notesRules = new LinkedHashMap<>();
@@ -26,7 +26,7 @@ public class CharacterMapping {
     // Trocas pela metade: grupo -> (caractere tirado do lugar -> caractere temporário no lugar dele).
     // Ex.: em "A -> B" com o B já sendo outra nota, essa nota fica com um temporário até
     // chegar o pedido "B -> ...". Assim dá pra trocar dois caracteres de lugar, um de cada vez.
-    private final Map<String, Map<String, String>> pendingReplacements = new LinkedHashMap<>();
+    private final Map<MappingType, Map<String, String>> pendingReplacements = new LinkedHashMap<>();
 
     // Temporários vêm da área de uso privado do Unicode, que não aparece em texto comum
     private static final char FIRST_TEMPORARY_CHAR = '';
@@ -37,30 +37,30 @@ public class CharacterMapping {
     }
 
     // Caracteres padrão de cada grupo (grupo -> caracteres)
-    private static Map<String, String> defaultCharacters() {
-        Map<String, String> characters = new LinkedHashMap<>();
-        characters.put("note",         "ABCDEFG");
-        characters.put("accidental",   "#b");
-        characters.put("duration",     "1234567");
-        characters.put("pause",        "acdefgh");
+    private static Map<MappingType, String> defaultCharacters() {
+        Map<MappingType, String> characters = new LinkedHashMap<>();
+        characters.put(MappingType.NOTE,         "ABCDEFG");
+        characters.put(MappingType.ACCIDENTAL,   "#b");
+        characters.put(MappingType.DURATION,     "1234567");
+        characters.put(MappingType.PAUSE,        "acdefgh");
 
-        characters.put("octaveUp",     "?.");
-        characters.put("octaveDown",   "V");
+        characters.put(MappingType.OCTAVE_UP,     "?.");
+        characters.put(MappingType.OCTAVE_DOWN,   "V");
 
-        characters.put("bpmUp",        ">");
-        characters.put("bpmDown",      "<");
+        characters.put(MappingType.BPM_UP,        ">");
+        characters.put(MappingType.BPM_DOWN,      "<");
 
-        characters.put("doubleVolume", " ");
+        characters.put(MappingType.DOUBLE_VOLUME, " ");
 
-        characters.put("newVoice",     "\n");
+        characters.put(MappingType.NEW_VOICE,     "\n");
 
-        characters.put("instrument",   "02468");
-        characters.put("startDelay",   "0123456789");
+        characters.put(MappingType.INSTRUMENT,   "02468");
+        characters.put(MappingType.START_DELAY,   "0123456789");
         return characters;
     }
 
     // Mapeamento com caracteres padrão escolhidos por quem cria (grupo -> caracteres)
-    public CharacterMapping(Map<String, String> defaultCharacters) {
+    public CharacterMapping(Map<MappingType, String> defaultCharacters) {
         if (defaultCharacters == null) throw new IllegalArgumentException("O mapeamento padrão não pode ser nulo");
         this.defaultCharacters = new LinkedHashMap<>(defaultCharacters);
         reset();
@@ -119,24 +119,24 @@ public class CharacterMapping {
     }
 
     // Registra um grupo novo (ex.: de um comando extra) sem mexer nos que já existem
-    public void addGroupIfAbsent(String elementType, String defaultChars) {
+    public void addGroupIfAbsent(MappingType elementType, String defaultChars) {
         if (defaultChars == null || defaultCharacters.containsKey(elementType)) return;
         defaultCharacters.put(elementType, defaultChars);
         elementsMapping.putIfAbsent(elementType, defaultChars);
     }
 
-    public boolean hasGroup(String elementType) {
+    public boolean hasGroup(MappingType elementType) {
         return elementsMapping.containsKey(elementType);
     }
 
     // Caracteres de um grupo, sem tratamento (ex.: "ABCDEFG")
-    public String getChars(String elementType) {
+    public String getChars(MappingType elementType) {
         String chars = elementsMapping.get(elementType);
         if (chars == null) throw new IllegalArgumentException("O grupo " + elementType + " não existe");
         return chars;
     }
 
-    public List<String> getMappingCharacters(String elementType) {
+    public List<String> getMappingCharacters(MappingType elementType) {
         String mapping = elementsMapping.get(elementType);
         if (mapping == null) return List.of();
         return Arrays.asList(mapping.split(""));
@@ -145,7 +145,7 @@ public class CharacterMapping {
     // Substitui um caractere por outro, levando junto o valor musical dele (nota, duração ou acidente).
     // Se o novo caractere já é de outro elemento do MESMO grupo, esse elemento fica com um caractere
     // temporário até ser trocado também (ver pendingReplacements). Isso permite trocar dois de lugar.
-    public void replaceChar(String elementType, String oldChar, String newChar) {
+    public void replaceChar(MappingType elementType, String oldChar, String newChar) {
         String chars = elementsMapping.get(elementType);
         if (chars == null)
             throw new IllegalArgumentException("O grupo " + elementType + " não tem o caractere '" + oldChar + "'");
@@ -172,17 +172,17 @@ public class CharacterMapping {
     }
 
     // Troca o caractere dentro do grupo, levando junto o valor musical dele
-    private void moveChar(String elementType, String from, String to) {
+    private void moveChar(MappingType elementType, String from, String to) {
         elementsMapping.put(elementType, elementsMapping.get(elementType).replace(from, to));
-        if (elementType.equals("note"))
+        if (elementType == MappingType.NOTE)
             notesRules.put(to, notesRules.remove(from));
-        if (elementType.equals("duration"))
+        if (elementType == MappingType.DURATION)
             durationTimeRules.put(to, durationTimeRules.remove(from));
-        if (elementType.equals("accidental"))
+        if (elementType == MappingType.ACCIDENTAL)
             accidentalsRules.put(to, accidentalsRules.remove(from));
     }
 
-    private void removePending(String elementType, String displacedChar) {
+    private void removePending(MappingType elementType, String displacedChar) {
         Map<String, String> pending = pendingReplacements.get(elementType);
         pending.remove(displacedChar);
         if (pending.isEmpty()) pendingReplacements.remove(elementType);
@@ -203,7 +203,7 @@ public class CharacterMapping {
 
     // Garante que nenhum elemento ficou com caractere temporário (troca feita pela metade)
     public void checkComplete() {
-        for (Map.Entry<String, Map<String, String>> group : pendingReplacements.entrySet()) {
+        for (Map.Entry<MappingType, Map<String, String>> group : pendingReplacements.entrySet()) {
             String displaced = group.getValue().keySet().iterator().next();
             throw new IllegalArgumentException("Mapeamento incompleto: no grupo " + group.getKey()
                 + ", o elemento que usava '" + displaced + "' ficou sem caractere. Termine a troca no Mapeamento.");
@@ -211,7 +211,7 @@ public class CharacterMapping {
     }
 
     // Substitui TODOS os caracteres de um grupo, apagando os antigos
-    public void setElementChars(String elementType, String chars) {
+    public void setElementChars(MappingType elementType, String chars) {
         checkNotUsed(chars, elementType);
         checkHasValue(elementType, chars);
         if (chars.isEmpty())
@@ -221,7 +221,7 @@ public class CharacterMapping {
     }
 
     // Acrescenta caracteres a um grupo
-    public void addElementChars(String elementType, String chars) {
+    public void addElementChars(MappingType elementType, String chars) {
         checkNotUsed(chars, elementType);
         checkHasValue(elementType, chars);
         StringBuilder current = new StringBuilder(getChars(elementType));
@@ -232,7 +232,7 @@ public class CharacterMapping {
     }
 
     // Tira caracteres de um grupo
-    public void removeElementChars(String elementType, String chars) {
+    public void removeElementChars(MappingType elementType, String chars) {
         StringBuilder current = new StringBuilder();
         for (char c : getChars(elementType).toCharArray()) {
             if (chars.indexOf(c) < 0) current.append(c);
@@ -246,7 +246,7 @@ public class CharacterMapping {
     // Um caractere que já é de outra nota é recusado (para trocar duas notas, use replaceChar).
     public void mapNote(String input, Notes note) {
         if (note == null) throw new IllegalArgumentException("A nota não pode ser nula");
-        checkNotUsed(input, "note");
+        checkNotUsed(input, MappingType.NOTE);
         Notes current = notesRules.get(input);
         if (current == note) return;
         if (current != null)
@@ -258,10 +258,10 @@ public class CharacterMapping {
         }
         if (oldChar != null) {
             notesRules.remove(oldChar);
-            removeElementChars("note", oldChar);
+            removeElementChars(MappingType.NOTE, oldChar);
         }
         notesRules.put(input, note);
-        addElementChars("note", input);
+        addElementChars(MappingType.NOTE, input);
     }
 
     public Notes getNote(String input) {
@@ -280,22 +280,22 @@ public class CharacterMapping {
     // Nos grupos que viram um valor musical (nota, duração e acidente), todo caractere precisa ter
     // esse valor; senão o REGEX reconhece o caractere e a tradução recebe um valor nulo.
     // Para associar um caractere novo a uma nota, use mapNote.
-    private void checkHasValue(String elementType, String chars) {
+    private void checkHasValue(MappingType elementType, String chars) {
         Map<String, ?> values = valuesOf(elementType);
         if (values == null) return;
         for (char c : chars.toCharArray()) {
             if (!values.containsKey(String.valueOf(c)))
                 throw new IllegalArgumentException("O caractere '" + c + "' não tem valor no grupo " + elementType
-                    + (elementType.equals("note") ? " (use mapNote para associá-lo a uma nota)" : ""));
+                    + (elementType == MappingType.NOTE ? " (use mapNote para associá-lo a uma nota)" : ""));
         }
     }
 
     // Mapa caractere -> valor musical do grupo, ou null se o grupo não tem valor
-    private Map<String, ?> valuesOf(String elementType) {
+    private Map<String, ?> valuesOf(MappingType elementType) {
         return switch (elementType) {
-            case "note"       -> notesRules;
-            case "duration"   -> durationTimeRules;
-            case "accidental" -> accidentalsRules;
+            case NOTE       -> notesRules;
+            case DURATION   -> durationTimeRules;
+            case ACCIDENTAL -> accidentalsRules;
             default           -> null;
         };
     }
@@ -303,11 +303,11 @@ public class CharacterMapping {
     // Verifica se o char já está associado a outro grupo.
     // Um dígito pode ser compartilhado só quando um dos grupos é contextual (ver CONTEXTUAL_GROUPS):
     // ex.: "2" é duração depois de ":" e troca de instrumento sozinho, sem um atrapalhar o outro.
-    private void checkNotUsed(String chars, String elementType) {
+    private void checkNotUsed(String chars, MappingType elementType) {
         for (char c : chars.toCharArray()) {
-            for (Map.Entry<String, String> element : elementsMapping.entrySet()) {
-                String otherType = element.getKey();
-                if (otherType.equals(elementType) || element.getValue().indexOf(c) < 0) continue;
+            for (Map.Entry<MappingType, String> element : elementsMapping.entrySet()) {
+                MappingType otherType = element.getKey();
+                if (otherType == elementType || element.getValue().indexOf(c) < 0) continue;
                 if (Character.isDigit(c) && (isContextual(elementType) || isContextual(otherType))) continue;
                 throw new IllegalArgumentException("O caractere '" + c + "' já é usado em " + otherType);
             }
@@ -316,9 +316,9 @@ public class CharacterMapping {
 
     // Grupos que só valem em um contexto: "[n]" no começo da linha, ":duração" e o acidente logo
     // depois da nota. O mesmo dígito sozinho no texto continua livre para outro grupo.
-    private static final Set<String> CONTEXTUAL_GROUPS = Set.of("startDelay", "duration", "accidental");
+    private static final Set<MappingType> CONTEXTUAL_GROUPS = Set.of(MappingType.START_DELAY, MappingType.DURATION, MappingType.ACCIDENTAL);
 
-    private static boolean isContextual(String elementType) {
+    private static boolean isContextual(MappingType elementType) {
         return elementType != null && CONTEXTUAL_GROUPS.contains(elementType);
     }
 }

@@ -17,10 +17,10 @@ class CharacterMappingTest {
     void startsWithTheCharactersOfTheDefaultRules() {
         CharacterMapping mapping = new CharacterMapping();
 
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
-        assertThat(mapping.getChars("pause")).isEqualTo("acdefgh");
-        assertThat(mapping.getChars("newVoice")).isEqualTo("\n");
-        assertThat(mapping.getMappingCharacters("accidental")).containsExactly("#", "b");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.PAUSE)).isEqualTo("acdefgh");
+        assertThat(mapping.getChars(MappingType.NEW_VOICE)).isEqualTo("\n");
+        assertThat(mapping.getMappingCharacters(MappingType.ACCIDENTAL)).containsExactly("#", "b");
     }
 
     @Test
@@ -28,8 +28,8 @@ class CharacterMappingTest {
         CharacterMapping first = new CharacterMapping();
         CharacterMapping second = new CharacterMapping();
 
-        first.replaceChar("note", "A", "J");
-        first.replaceChar("accidental", "#", "s");
+        first.replaceChar(MappingType.NOTE, "A", "J");
+        first.replaceChar(MappingType.ACCIDENTAL, "#", "s");
 
         assertThat(first.getNote("J")).isEqualTo(Notes.A);
         assertThat(second.getNote("J")).isNull();
@@ -41,42 +41,42 @@ class CharacterMappingTest {
     void replacedCharacterKeepsItsMusicalValue() {
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.replaceChar("duration", "2", "m");
+        mapping.replaceChar(MappingType.DURATION, "2", "m");
 
         assertThat(mapping.getDurationTime("m")).isEqualTo(DurationTime.HALF);
         assertThat(mapping.getDurationTime("2")).isEqualTo(DurationTime.QUARTER);
-        assertThat(mapping.getChars("duration")).isEqualTo("1m34567");
+        assertThat(mapping.getChars(MappingType.DURATION)).isEqualTo("1m34567");
     }
 
     @Test
     void resetUndoesEveryChange() {
         CharacterMapping mapping = new CharacterMapping();
         mapping.mapNote("J", Notes.A);
-        mapping.setElementChars("bpmUp", "+");
+        mapping.setElementChars(MappingType.BPM_UP, "+");
 
         mapping.reset();
 
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
-        assertThat(mapping.getChars("bpmUp")).isEqualTo(">");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.BPM_UP)).isEqualTo(">");
         assertThat(mapping.getNote("J")).isNull();
     }
 
     @Test
     void customDefaultsAreUsedAndRestored() {
-        CharacterMapping mapping = new CharacterMapping(Map.of("bpmUp", "+"));
-        mapping.setElementChars("bpmUp", "]");
+        CharacterMapping mapping = new CharacterMapping(Map.of(MappingType.BPM_UP, "+"));
+        mapping.setElementChars(MappingType.BPM_UP, "]");
 
         mapping.reset();
 
-        assertThat(mapping.getChars("bpmUp")).isEqualTo("+");
+        assertThat(mapping.getChars(MappingType.BPM_UP)).isEqualTo("+");
     }
 
     @Test
-    void unknownGroupIsRejected() {
+    void unregisteredGroupIsRejected() {
         CharacterMapping mapping = new CharacterMapping();
 
-        assertThrows(IllegalArgumentException.class, () -> mapping.getChars("grupoQueNaoExiste"));
-        assertThat(mapping.getMappingCharacters("grupoQueNaoExiste")).isEmpty();
+        assertThrows(IllegalArgumentException.class, () -> mapping.getChars(MappingType.TEMPO));
+        assertThat(mapping.getMappingCharacters(MappingType.TEMPO)).isEmpty();
     }
 
     @Test
@@ -84,12 +84,12 @@ class CharacterMappingTest {
         // como a tela de Mapeamento faz: primeiro "A -> B", depois "B -> A"
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.replaceChar("note", "A", "B");
+        mapping.replaceChar(MappingType.NOTE, "A", "B");
         assertThat(mapping.isComplete()).isFalse();
-        mapping.replaceChar("note", "B", "A");
+        mapping.replaceChar(MappingType.NOTE, "B", "A");
 
         assertThat(mapping.isComplete()).isTrue();
-        assertThat(mapping.getChars("note")).isEqualTo("BACDEFG");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("BACDEFG");
         assertThat(mapping.getNote("B")).isEqualTo(Notes.A);
         assertThat(mapping.getNote("A")).isEqualTo(Notes.B);
     }
@@ -98,9 +98,9 @@ class CharacterMappingTest {
     void rotatesThreeCharacters() {
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.replaceChar("note", "A", "B");
-        mapping.replaceChar("note", "B", "C");
-        mapping.replaceChar("note", "C", "A");
+        mapping.replaceChar(MappingType.NOTE, "A", "B");
+        mapping.replaceChar(MappingType.NOTE, "B", "C");
+        mapping.replaceChar(MappingType.NOTE, "C", "A");
 
         assertThat(mapping.isComplete()).isTrue();
         assertThat(mapping.getNote("B")).isEqualTo(Notes.A);
@@ -112,8 +112,8 @@ class CharacterMappingTest {
     void swapsDurationDigits() {
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.replaceChar("duration", "2", "3");
-        mapping.replaceChar("duration", "3", "2");
+        mapping.replaceChar(MappingType.DURATION, "2", "3");
+        mapping.replaceChar(MappingType.DURATION, "3", "2");
 
         assertThat(mapping.isComplete()).isTrue();
         assertThat(mapping.getDurationTime("3")).isEqualTo(DurationTime.HALF);
@@ -124,7 +124,7 @@ class CharacterMappingTest {
     void halfSwapLeavesTheMappingIncomplete() {
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.replaceChar("note", "A", "B");
+        mapping.replaceChar(MappingType.NOTE, "A", "B");
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, mapping::checkComplete);
         assertThat(error.getMessage()).contains("incompleto").contains("'B'");
@@ -133,21 +133,21 @@ class CharacterMappingTest {
     @Test
     void resetClearsAHalfSwap() {
         CharacterMapping mapping = new CharacterMapping();
-        mapping.replaceChar("note", "A", "B");
+        mapping.replaceChar(MappingType.NOTE, "A", "B");
 
         mapping.reset();
 
         assertThat(mapping.isComplete()).isTrue();
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
     }
 
     @Test
     void characterOfAnotherGroupIsStillRejected() {
         CharacterMapping mapping = new CharacterMapping();
 
-        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("note", "A", "a"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar(MappingType.NOTE, "A", "a"));
         assertThat(mapping.isComplete()).isTrue();
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
     }
 
     @Test
@@ -155,23 +155,23 @@ class CharacterMappingTest {
         CharacterMapping mapping = new CharacterMapping();
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-            () -> mapping.addElementChars("note", "Z"));
+            () -> mapping.addElementChars(MappingType.NOTE, "Z"));
         assertThat(error.getMessage()).contains("mapNote");
-        assertThrows(IllegalArgumentException.class, () -> mapping.setElementChars("note", "ABZ"));
-        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars("duration", "9"));
-        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars("accidental", "s"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.setElementChars(MappingType.NOTE, "ABZ"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars(MappingType.DURATION, "9"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars(MappingType.ACCIDENTAL, "s"));
 
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
     }
 
     @Test
     void noteCharactersWithANoteCanBeSet() {
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.setElementChars("note", "ABC");
+        mapping.setElementChars(MappingType.NOTE, "ABC");
         mapping.mapNote("Z", Notes.D);
 
-        assertThat(mapping.getChars("note")).isEqualTo("ABCZ");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCZ");
         assertThat(mapping.getNote("Z")).isEqualTo(Notes.D);
     }
 
@@ -185,7 +185,7 @@ class CharacterMappingTest {
         assertThat(error.getMessage()).contains("'B'").contains("B");
         assertThat(mapping.getNote("B")).isEqualTo(Notes.B);
         assertThat(mapping.getNote("A")).isEqualTo(Notes.A);
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
     }
 
     @Test
@@ -194,7 +194,7 @@ class CharacterMappingTest {
 
         mapping.mapNote("A", Notes.A);
 
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
         assertThat(mapping.getNote("A")).isEqualTo(Notes.A);
     }
 
@@ -204,11 +204,11 @@ class CharacterMappingTest {
 
         // "2" já troca o instrumento: não pode também subir o BPM
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-            () -> mapping.addElementChars("bpmUp", "2"));
-        assertThat(error.getMessage()).contains("instrument");
-        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("bpmDown", "<", "4"));
+            () -> mapping.addElementChars(MappingType.BPM_UP, "2"));
+        assertThat(error.getMessage()).contains(MappingType.INSTRUMENT.getGroupName());
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar(MappingType.BPM_DOWN, "<", "4"));
 
-        assertThat(mapping.getChars("bpmUp")).isEqualTo(">");
+        assertThat(mapping.getChars(MappingType.BPM_UP)).isEqualTo(">");
     }
 
     @Test
@@ -216,32 +216,32 @@ class CharacterMappingTest {
         CharacterMapping mapping = new CharacterMapping();
 
         // "9" só é usado no atraso "[n]", e "3" só na duração ":3" e no atraso
-        mapping.addElementChars("bpmUp", "9");
-        mapping.addElementChars("instrument", "3");
+        mapping.addElementChars(MappingType.BPM_UP, "9");
+        mapping.addElementChars(MappingType.INSTRUMENT, "3");
 
-        assertThat(mapping.getChars("bpmUp")).isEqualTo(">9");
-        assertThat(mapping.getChars("instrument")).isEqualTo("024683");
+        assertThat(mapping.getChars(MappingType.BPM_UP)).isEqualTo(">9");
+        assertThat(mapping.getChars(MappingType.INSTRUMENT)).isEqualTo("024683");
     }
 
     @Test
     void addGroupIfAbsentKeepsExistingGroups() {
         CharacterMapping mapping = new CharacterMapping();
 
-        mapping.addGroupIfAbsent("note", "XYZ");
-        mapping.addGroupIfAbsent("tempo", "T");
+        mapping.addGroupIfAbsent(MappingType.NOTE, "XYZ");
+        mapping.addGroupIfAbsent(MappingType.TEMPO, "T");
 
-        assertThat(mapping.getChars("note")).isEqualTo("ABCDEFG");
-        assertThat(mapping.getChars("tempo")).isEqualTo("T");
+        assertThat(mapping.getChars(MappingType.NOTE)).isEqualTo("ABCDEFG");
+        assertThat(mapping.getChars(MappingType.TEMPO)).isEqualTo("T");
     }
 
     @Test
     void restoreGoesBackToACopyIncludingHalfSwaps() {
         CharacterMapping mapping = new CharacterMapping();
-        mapping.replaceChar("note", "C", "D");
+        mapping.replaceChar(MappingType.NOTE, "C", "D");
         CharacterMapping saved = mapping.copy();
 
         mapping.reset();
-        mapping.replaceChar("note", "A", "J");
+        mapping.replaceChar(MappingType.NOTE, "A", "J");
         mapping.restore(saved);
 
         assertThat(mapping.getNote("D")).isEqualTo(Notes.C);
@@ -249,7 +249,7 @@ class CharacterMappingTest {
         assertThat(mapping.isComplete()).isFalse();
 
         // a cópia é independente: terminar a troca no original não mexe nela
-        mapping.replaceChar("note", "D", "C");
+        mapping.replaceChar(MappingType.NOTE, "D", "C");
         assertThat(mapping.isComplete()).isTrue();
         assertThat(saved.isComplete()).isFalse();
     }

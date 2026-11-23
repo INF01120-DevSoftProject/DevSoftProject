@@ -1,7 +1,8 @@
 
-package gui.widgets.voicePresetWidget;
+package gui.widgets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -12,8 +13,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import gui.JavaFXTestBase;
 import input.JsonInputReader;
-import javafx.scene.layout.HBox;
 import musicElements.InstrumentType;
+import musicElements.Octave;
+import musicElements.VolumeElement;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import utils.MusicPathUtils;
 
 class VoicePresetWidgetTest extends JavaFXTestBase {
@@ -47,10 +51,10 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
     @Test
     void keysPresetProvidesExpectedDefaultsAndBuildsContainer() {
-        VoicePresetKeysWidget widget = new VoicePresetKeysWidget();
-        HBox container = widget.createVoicePresetContainer();
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5));
 
-        assertThat(container).isNotNull();
+        assertThat(widget.getStyleClass()).contains("voice-preset-container");
+        assertThat(widget.getChildren()).hasSize(5);
         assertInstrumentsMatchJson(widget, InstrumentType.KEYS);
         assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(66);
@@ -65,10 +69,10 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
     @Test
     void percussionPresetProvidesExpectedDefaultsAndBuildsContainer() {
-        VoicePresetPercussionWidget widget = new VoicePresetPercussionWidget();
-        HBox container = widget.createVoicePresetContainer();
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(82), InstrumentType.PERCUSSION_AND_SYNTH, new Octave(2), new Octave(5));
 
-        assertThat(container).isNotNull();
+        assertThat(widget.getStyleClass()).contains("voice-preset-container");
+        assertThat(widget.getChildren()).hasSize(5);
         assertInstrumentsMatchJson(widget, InstrumentType.PERCUSSION_AND_SYNTH);
         assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(82);
@@ -80,10 +84,10 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
     @Test
     void pluckedPresetProvidesExpectedDefaultsAndBuildsContainer() {
-        VoicePresetPluckedWidget widget = new VoicePresetPluckedWidget();
-        HBox container = widget.createVoicePresetContainer();
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(72), InstrumentType.PLUCKED, new Octave(2), new Octave(5));
 
-        assertThat(container).isNotNull();
+        assertThat(widget.getStyleClass()).contains("voice-preset-container");
+        assertThat(widget.getChildren()).hasSize(5);
         assertInstrumentsMatchJson(widget, InstrumentType.PLUCKED);
         assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(72);
@@ -95,10 +99,10 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
     @Test
     void stringsPresetProvidesExpectedDefaultsAndBuildsContainer() {
-        VoicePresetStringsWidget widget = new VoicePresetStringsWidget();
-        HBox container = widget.createVoicePresetContainer();
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(83), InstrumentType.STRINGS, new Octave(2), new Octave(5));
 
-        assertThat(container).isNotNull();
+        assertThat(widget.getStyleClass()).contains("voice-preset-container");
+        assertThat(widget.getChildren()).hasSize(5);
         assertInstrumentsMatchJson(widget, InstrumentType.STRINGS);
         assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(83);
@@ -110,10 +114,10 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
     @Test
     void windsPresetProvidesExpectedDefaultsAndBuildsContainer() {
-        VoicePresetWindsWidget widget = new VoicePresetWindsWidget();
-        HBox container = widget.createVoicePresetContainer();
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(83), InstrumentType.WINDS, new Octave(2), new Octave(5));
 
-        assertThat(container).isNotNull();
+        assertThat(widget.getStyleClass()).contains("voice-preset-container");
+        assertThat(widget.getChildren()).hasSize(5);
         assertInstrumentsMatchJson(widget, InstrumentType.WINDS);
         assertThat(widget.getDefaultOctave()).isEqualTo("Oitava 5 - Soprano");
         assertThat(widget.getDefaultVolume().getVolume()).isEqualTo(83);
@@ -125,8 +129,7 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
 
     @Test
     void updatesValueWhenControlsChange() {
-        VoicePresetKeysWidget widget = new VoicePresetKeysWidget();
-        widget.createVoicePresetContainer();
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5));
 
         List<Map.Entry<String, Integer>> keys = instrumentsFor(InstrumentType.KEYS);
         assertThat(keys).hasSizeGreaterThan(1);
@@ -139,5 +142,38 @@ class VoicePresetWidgetTest extends JavaFXTestBase {
         assertThat(widget.getOctave()).isNotNull();
         assertThat(widget.octaveController.getValue()).isEqualTo("Oitava 4 - Central");
         assertThat(widget.getVolume().getVolume()).isEqualTo(90);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0, 8, 5", "3, 4, 4", "6, 8, 6", "0, 0, 0"})
+    void supportsInclusiveOctaveRangesAndKeepsDefaultWithinRange(int min, int max, int defaultOctave) {
+        VoicePresetWidget widget = new VoicePresetWidget(new VolumeElement(50), InstrumentType.STRINGS, new Octave(min), new Octave(max));
+
+        assertThat(widget.octaveController.getItems()).hasSize(max - min + 1);
+        assertThat(widget.getOctave().getOctaveInt()).isEqualTo(defaultOctave);
+        assertThat(widget.getVolume().getVolume()).isEqualTo(50);
+        for (int octave = min; octave <= max; octave++) {
+            widget.octaveController.getSelectionModel().select(octave - min);
+            assertThat(widget.getOctave().getOctaveInt()).isEqualTo(octave);
+        }
+    }
+
+    @Test
+    void rejectsReversedOctaveRange() {
+        assertThatThrownBy(() -> new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(5), new Octave(2)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Intervalo de oitavas inválido.");
+    }
+
+    @Test
+    void rejectsNullConfiguration() {
+        assertThatThrownBy(() -> new VoicePresetWidget(null, InstrumentType.KEYS, new Octave(2), new Octave(5)))
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("Volume padrão obrigatório.");
+        assertThatThrownBy(() -> new VoicePresetWidget(new VolumeElement(66), null, new Octave(2), new Octave(5)))
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("Tipo de instrumento obrigatório.");
+        assertThatThrownBy(() -> new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, null, new Octave(5)))
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("Oitava mínima obrigatória.");
+        assertThatThrownBy(() -> new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), null))
+            .isInstanceOf(IllegalArgumentException.class).hasMessage("Oitava máxima obrigatória.");
     }
 }

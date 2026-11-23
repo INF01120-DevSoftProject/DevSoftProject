@@ -148,8 +148,7 @@ public class PlayerScreen extends Screen {
         if (currentPath == null)
             return;
 
-        if (currentPath.toAbsolutePath().normalize()
-                .equals(savedPath.toAbsolutePath().normalize())) {
+        if (currentPath.toAbsolutePath().normalize().equals(savedPath.toAbsolutePath().normalize())) {
             loadMusic(savedPath);
         }
     }

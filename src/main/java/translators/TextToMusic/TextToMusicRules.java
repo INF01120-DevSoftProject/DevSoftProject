@@ -24,8 +24,8 @@ public class TextToMusicRules {
     private final CharacterMapping mapping;
 
     //Dict das Actions de cada grupo do REGEX, sendo salva como: NomeGrupo , Action
-    //A ordem importa: "startDelay" e "note" primeiro, "else" por último
-    private final Map<String, TextToMusicActions> elementsActionMapping;
+    //A ordem importa: MappingType.START_DELAY e MappingType.NOTE primeiro, MappingType.ELSE por último
+    private final Map<MappingType, TextToMusicActions> elementsActionMapping;
 
     private final String REGEXToken;
 
@@ -38,8 +38,8 @@ public class TextToMusicRules {
     }
 
     // customActions: ações extras (NomeGrupo -> Action), sem precisar editar esta classe.
-    // Cada grupo extra precisa ter caracteres no mapeamento; ele entra antes do "else".
-    public TextToMusicRules(CharacterMapping mapping, Map<String, TextToMusicActions> customActions) {
+    // Cada grupo extra precisa ter caracteres no mapeamento; ele entra antes do MappingType.ELSE.
+    public TextToMusicRules(CharacterMapping mapping, Map<MappingType, TextToMusicActions> customActions) {
         if (mapping == null) throw new IllegalArgumentException("O mapeamento não pode ser nulo");
         if (customActions == null) throw new IllegalArgumentException("As ações extras não podem ser nulas");
         // troca de caracteres feita pela metade: melhor avisar do que traduzir errado
@@ -50,34 +50,34 @@ public class TextToMusicRules {
         this.REGEXToken = RegexBuilder.build(mapping, elementsActionMapping.keySet());
     }
 
-    private Map<String, TextToMusicActions> createActionMapping(Map<String, TextToMusicActions> customActions) {
-        Map<String, TextToMusicActions> actions = new LinkedHashMap<>();
-        actions.put("startDelay",   this::addStartDelay);
-        actions.put("note",         this::addNote);
-        actions.put("pause",        this::addPause);
-        actions.put("octaveUp",     this::raiseOctave);
-        actions.put("octaveDown",   this::lowerOctave);
-        actions.put("bpmUp",        this::increaseBpm);
-        actions.put("bpmDown",      this::decreaseBpm);
-        actions.put("doubleVolume", this::doubleVolume);
-        actions.put("newVoice",     this::startNewVoice);
-        actions.put("instrument",   this::nextInstrument);
+    private Map<MappingType, TextToMusicActions> createActionMapping(Map<MappingType, TextToMusicActions> customActions) {
+        Map<MappingType, TextToMusicActions> actions = new LinkedHashMap<>();
+        actions.put(MappingType.START_DELAY,   this::addStartDelay);
+        actions.put(MappingType.NOTE,         this::addNote);
+        actions.put(MappingType.PAUSE,        this::addPause);
+        actions.put(MappingType.OCTAVE_UP,     this::raiseOctave);
+        actions.put(MappingType.OCTAVE_DOWN,   this::lowerOctave);
+        actions.put(MappingType.BPM_UP,        this::increaseBpm);
+        actions.put(MappingType.BPM_DOWN,      this::decreaseBpm);
+        actions.put(MappingType.DOUBLE_VOLUME, this::doubleVolume);
+        actions.put(MappingType.NEW_VOICE,     this::startNewVoice);
+        actions.put(MappingType.INSTRUMENT,   this::nextInstrument);
 
-        for (Map.Entry<String, TextToMusicActions> custom : customActions.entrySet()) {
-            if (actions.containsKey(custom.getKey()) || custom.getKey().equals("else"))
+        for (Map.Entry<MappingType, TextToMusicActions> custom : customActions.entrySet()) {
+            if (actions.containsKey(custom.getKey()) || custom.getKey() == MappingType.ELSE)
                 throw new IllegalArgumentException("Já existe uma ação para o grupo " + custom.getKey());
             if (!mapping.hasGroup(custom.getKey()))
                 throw new IllegalArgumentException("O grupo " + custom.getKey() + " não tem caracteres no mapeamento");
             actions.put(custom.getKey(), custom.getValue());
         }
 
-        actions.put("else",         this::repeatLastNoteOrPause);
+        actions.put(MappingType.ELSE,         this::repeatLastNoteOrPause);
         return Collections.unmodifiableMap(actions);
     }
 
     private void addStartDelay(Matcher matcher, TextToMusicContext context) {
         // "[n]" no começo da linha: a voz espera n tempos
-        int beats = Integer.parseInt(matcher.group("startDelay"));
+        int beats = Integer.parseInt(matcher.group(MappingType.START_DELAY.getGroupName()));
         for (int i = 0; i < beats; i++) {
             context.appendToSheetMusic(new PauseElement(DurationTime.QUARTER));
         }
@@ -86,10 +86,10 @@ public class TextToMusicRules {
     private void addNote(Matcher matcher, TextToMusicContext context) {
         //Dá um append de uma nova nota na sheetMusic atual
         NoteElement newNote = new NoteElement(
-            getNote(matcher.group("note")),
+            getNote(matcher.group(MappingType.NOTE.getGroupName())),
             context.getCurrentOctave(),
-            getDurationTime(matcher.group("duration")),
-            getAccidental(matcher.group("accidental"))
+            getDurationTime(matcher.group(MappingType.DURATION.getGroupName())),
+            getAccidental(matcher.group(MappingType.ACCIDENTAL.getGroupName()))
         );
         context.appendToSheetMusic(newNote);
     }
@@ -164,7 +164,7 @@ public class TextToMusicRules {
         return mapping;
     }
 
-    public String getElementChars(String elementType) {
+    public String getElementChars(MappingType elementType) {
         return RegexBuilder.quotedChars(elementType, mapping);
     }
 
@@ -176,7 +176,7 @@ public class TextToMusicRules {
         return RegexBuilder.startDelay(mapping);
     }
 
-    public Map<String, TextToMusicActions> getElementsActionMapping() {
+    public Map<MappingType, TextToMusicActions> getElementsActionMapping() {
         return elementsActionMapping;
     }
 

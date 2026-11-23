@@ -14,6 +14,7 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import translators.TextToMusic.CharacterMapping;
+import translators.TextToMusic.MappingType;
 
 class MappingHelpWidgetTest extends JavaFXTestBase {
 
@@ -33,11 +34,11 @@ class MappingHelpWidgetTest extends JavaFXTestBase {
         CharacterMapping mapping = new CharacterMapping();
         MappingHelpWidget widget = new MappingHelpWidget(mapping);
 
-        mapping.replaceChar("note", "C", "D");
-        mapping.replaceChar("note", "D", "C");
-        mapping.replaceChar("duration", "1", "7");
-        mapping.replaceChar("duration", "7", "1");
-        mapping.replaceChar("bpmUp", ">", "+");
+        mapping.replaceChar(MappingType.NOTE, "C", "D");
+        mapping.replaceChar(MappingType.NOTE, "D", "C");
+        mapping.replaceChar(MappingType.DURATION, "1", "7");
+        mapping.replaceChar(MappingType.DURATION, "7", "1");
+        mapping.replaceChar(MappingType.BPM_UP, ">", "+");
         widget.refreshMapping();
 
         Map<String, String> rows = explanations(widget);
@@ -70,7 +71,7 @@ class MappingHelpWidgetTest extends JavaFXTestBase {
         });
 
         sections.get("Duração da nota").setExpanded(false);
-        mapping.replaceChar("note", "C", "K");
+        mapping.replaceChar(MappingType.NOTE, "C", "K");
         widget.refreshMapping();
 
         sections = sections(widget);
@@ -89,9 +90,9 @@ class MappingHelpWidgetTest extends JavaFXTestBase {
         assertThat(widget.isExpanded()).isTrue();
         assertThat(widget.isCollapsible()).isFalse();
 
-        mapping.replaceChar("note", "C", "K");
-        mapping.replaceChar("doubleVolume", " ", "_");
-        mapping.replaceChar("pause", "a", " ");
+        mapping.replaceChar(MappingType.NOTE, "C", "K");
+        mapping.replaceChar(MappingType.DOUBLE_VOLUME, " ", "_");
+        mapping.replaceChar(MappingType.PAUSE, "a", " ");
         widget.refreshMapping();
 
         Map<String, String> rows = explanations(widget);

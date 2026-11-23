@@ -13,16 +13,16 @@ class RegexBuilderTest {
 
     @Test
     void charGroupCapturesWithTheGroupName() {
-        Matcher matcher = Pattern.compile(RegexBuilder.charGroup("bpmUp", mapping)).matcher(">");
+        Matcher matcher = Pattern.compile(RegexBuilder.charGroup(MappingType.BPM_UP, mapping)).matcher(">");
 
         assertThat(matcher.matches()).isTrue();
-        assertThat(matcher.group("bpmUp")).isEqualTo(">");
+        assertThat(matcher.group(MappingType.BPM_UP.getGroupName())).isEqualTo(">");
     }
 
     @Test
     void specialRegexCharactersAreQuoted() {
-        mapping.setElementChars("bpmUp", "]^");
-        Pattern pattern = Pattern.compile(RegexBuilder.charGroup("bpmUp", mapping));
+        mapping.setElementChars(MappingType.BPM_UP, "]^");
+        Pattern pattern = Pattern.compile(RegexBuilder.charGroup(MappingType.BPM_UP, mapping));
 
         assertThat(pattern.matcher("]").matches()).isTrue();
         assertThat(pattern.matcher("^").matches()).isTrue();
@@ -31,12 +31,12 @@ class RegexBuilderTest {
 
     @Test
     void tokenFollowsTheCurrentMapping() {
-        mapping.replaceChar("bpmUp", ">", "+");
+        mapping.replaceChar(MappingType.BPM_UP, ">", "+");
         String token = new TextToMusicRules(mapping).getREGEXToken();
         Matcher matcher = Pattern.compile(token).matcher("+");
 
         assertThat(matcher.find()).isTrue();
-        assertThat(matcher.group("bpmUp")).isEqualTo("+");
+        assertThat(matcher.group(MappingType.BPM_UP.getGroupName())).isEqualTo("+");
     }
 
     @Test

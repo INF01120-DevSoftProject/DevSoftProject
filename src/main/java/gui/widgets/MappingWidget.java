@@ -8,17 +8,18 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.Region;
 
 import translators.TextToMusic.CharacterMapping;
+import translators.TextToMusic.MappingType;
 
 public class MappingWidget extends VBox {
     // Campo mostrando "SPACE": o CSS deixa ele mais largo
     private static final PseudoClass SPACE = PseudoClass.getPseudoClass("space");
 
     private final CharacterMapping mapping;
-    private final String mappingRuleType;
+    private final MappingType mappingRuleType;
     private String oldCaracter;
     private final TextField textField;
 
-    public MappingWidget(CharacterMapping mapping, String mappingRuleType, String nodeName, String character) {
+    public MappingWidget(CharacterMapping mapping, MappingType mappingRuleType, String nodeName, String character) {
         this.mapping = mapping;
         this.mappingRuleType = mappingRuleType;
         this.oldCaracter = character;

@@ -22,7 +22,10 @@ import gui.factory.ControlFactory;
 import gui.widgets.VoiceWidget;
 import gui.widgets.BPMSliderWidget;
 import gui.widgets.MappingHelpWidget;
-import gui.widgets.voicePresetWidget.*;
+import gui.widgets.VoicePresetWidget;
+import musicElements.InstrumentType;
+import musicElements.Octave;
+import musicElements.VolumeElement;
 import input.InputReader;
 import exporters.DraftMusicCreator;
 import exporters.MusicExportPipeline;
@@ -77,9 +80,55 @@ public class CompositionScreen extends Screen {
 
         mappingHelp = new MappingHelpWidget(mapping);
 
-        VoiceWidget.restartCurrentVoiceNum();
-
         bpmSlider = new BPMSliderWidget();
+        voicesContainer = new VBox(20);
+        ScrollPane compositionScroll = createCompositionBody();
+
+        HBox actionButtons = new BoxBuilder<>(new HBox(20))
+                                    .addClass("fill-button-container")
+                                    .add(new ButtonBuilder("Salvar música")
+                                            .onClick(b -> saveMusic())
+                                            .build())
+                                    .add(new ButtonBuilder("Importar música")
+                                            .onClick(b -> importMusic())
+                                            .build())
+                                    .add(new ButtonBuilder("Ouvir rascunho")
+                                            .onClick(b -> listenDraft())
+                                            .build())
+                                    .build();
+
+        VBox mainContent = new BoxBuilder<>(new VBox(25))
+                                    .setId("main")
+                                    .add(new Label("Composição"))
+                                    .add(compositionScroll)
+                                    .add(actionButtons)
+                                    .apply(b -> VBox.setVgrow(compositionScroll, Priority.ALWAYS))
+                                    .build();
+
+        setScreenMainContent(mainContent);
+    }
+
+    public void refreshMappingHelp() {
+        mappingHelp.refreshMapping();
+    }
+
+    private ScrollPane createCompositionBody() {
+        ScrollPane voicesColumnScroll = createVoicesBlock();
+
+        HBox compositionBody = new BoxBuilder<>(new HBox(20))
+                                    .add(voicesColumnScroll)
+                                    .add(mappingHelp)
+                                    .apply(b -> HBox.setHgrow(voicesColumnScroll, Priority.ALWAYS))
+                                    .build();
+
+        ScrollPane compositionScroll = ControlFactory.createScrollPane(compositionBody);
+        compositionScroll.setFitToHeight(true);
+        compositionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        return compositionScroll;
+    }
+
+    private ScrollPane createVoicesBlock() {
         Label bpmLabel = new Label();
         bpmLabel.textProperty().bind(bpmSlider.valueProperty().asString("BPM: %.0f"));
 
@@ -90,9 +139,7 @@ public class CompositionScreen extends Screen {
                                     .apply(b -> HBox.setHgrow(bpmSlider, Priority.ALWAYS))
                                     .build();
 
-        voicesContainer = new BoxBuilder<>(new VBox(20))
-                                    .add(createVoiceWidget())
-                                    .build();
+        voicesContainer.getChildren().add(createVoiceWidget());
 
         HBox plusMinusButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fixed-button-container")
@@ -119,41 +166,7 @@ public class CompositionScreen extends Screen {
         ScrollPane voicesColumnScroll = ControlFactory.createScrollPane(voicesColumn);
         voicesColumnScroll.getStyleClass().add("composition-voices-scroll");
 
-        HBox compositionBody = new BoxBuilder<>(new HBox(20))
-                                    .add(voicesColumnScroll)
-                                    .add(mappingHelp)
-                                    .apply(b -> HBox.setHgrow(voicesColumnScroll, Priority.ALWAYS))
-                                    .build();
-        ScrollPane compositionScroll = ControlFactory.createScrollPane(compositionBody);
-        compositionScroll.setFitToHeight(true);
-        compositionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-
-        HBox actionButtons = new BoxBuilder<>(new HBox(20))
-                                    .addClass("fill-button-container")
-                                    .add(new ButtonBuilder("Salvar música")
-                                            .onClick(b -> saveMusic())
-                                            .build())
-                                    .add(new ButtonBuilder("Importar música")
-                                            .onClick(b -> importMusic())                                            
-                                            .build())
-                                    .add(new ButtonBuilder("Ouvir rascunho")
-                                            .onClick(b -> listenDraft())      
-                                            .build())
-                                    .build();
-
-        VBox mainContent = new BoxBuilder<>(new VBox(25))
-                                    .setId("main")
-                                    .add(new Label("Composição"))
-                                    .add(compositionScroll)
-                                    .add(actionButtons)
-                                    .apply(b -> VBox.setVgrow(compositionScroll, Priority.ALWAYS))
-                                    .build();
-        
-        setScreenMainContent(mainContent);
-    }
-
-    public void refreshMappingHelp() {
-        mappingHelp.refreshMapping();
+        return voicesColumnScroll;
     }
 
     private void removeLastVoice() {
@@ -165,7 +178,6 @@ public class CompositionScreen extends Screen {
         }
 
         voicesContainer.getChildren().removeLast();
-        VoiceWidget.decrementCurrentVoiceNum();
     }
 
     private void saveMusic() {
@@ -259,7 +271,6 @@ public class CompositionScreen extends Screen {
         while (voicesContainer.getChildren().size() > voiceCount) {
             int lastIndex = voicesContainer.getChildren().size() - 1;
             voicesContainer.getChildren().remove(lastIndex);
-            VoiceWidget.decrementCurrentVoiceNum();
         }
 
         for (int i = 0; i < voiceCount; i++) {
@@ -270,15 +281,16 @@ public class CompositionScreen extends Screen {
 
     private VoiceWidget createVoiceWidget() {
         List<VoicePresetWidget> presets = List.of(
-            new VoicePresetKeysWidget(),
-            new VoicePresetPluckedWidget(),
-            new VoicePresetStringsWidget(),
-            new VoicePresetWindsWidget(),
-            new VoicePresetPercussionWidget()
+            new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5)),
+            new VoicePresetWidget(new VolumeElement(72), InstrumentType.PLUCKED, new Octave(2), new Octave(5)),
+            new VoicePresetWidget(new VolumeElement(83), InstrumentType.STRINGS, new Octave(2), new Octave(5)),
+            new VoicePresetWidget(new VolumeElement(83), InstrumentType.WINDS, new Octave(2), new Octave(5)),
+            new VoicePresetWidget(new VolumeElement(82), InstrumentType.PERCUSSION_AND_SYNTH, new Octave(2), new Octave(5))
         );
 
-        int currentPreset = VoiceWidget.getCurrentVoiceNum() % presets.size();
+        int voiceCount = voicesContainer.getChildren().size();
+        int currentPreset = voiceCount % presets.size();
 
-        return new VoiceWidget(presets.get(currentPreset));
+        return new VoiceWidget(presets.get(currentPreset), voiceCount + 1);
     }
 }

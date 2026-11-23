@@ -9,6 +9,7 @@ import gui.JavaFXTestBase;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import translators.TextToMusic.CharacterMapping;
+import translators.TextToMusic.MappingType;
 
 class MappingWidgetTest extends JavaFXTestBase {
 
@@ -16,7 +17,7 @@ class MappingWidgetTest extends JavaFXTestBase {
 
     @Test
     void initializesWithLabelAndTextField() {
-        MappingWidget widget = new MappingWidget(mapping, "note", "Nota D\u00f3", "A");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.NOTE, "Nota D\u00f3", "A");
 
         assertThat(widget.getStyleClass()).contains("mapping-node");
         assertThat(widget.getChildren()).hasSize(2);
@@ -30,53 +31,53 @@ class MappingWidgetTest extends JavaFXTestBase {
 
     @Test
     void savesChangeWhenCharacterIsModified() {
-        MappingWidget widget = new MappingWidget(mapping, "note", "Nota D\u00f3", "A");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.NOTE, "Nota D\u00f3", "A");
         TextField field = (TextField) widget.getChildren().get(1);
 
         field.setText("K");
         widget.saveChange();
 
-        assertThat(mapping.getMappingCharacters("note")).contains("K");
+        assertThat(mapping.getMappingCharacters(MappingType.NOTE)).contains("K");
     }
 
     @Test
     void doesNotModifyRulesWhenCharacterIsNotChanged() {
-        MappingWidget widget = new MappingWidget(mapping, "note", "Nota D\u00f3", "A");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.NOTE, "Nota D\u00f3", "A");
 
         widget.saveChange();
 
-        assertThat(mapping.getMappingCharacters("note")).contains("A");
+        assertThat(mapping.getMappingCharacters(MappingType.NOTE)).contains("A");
     }
 
     @Test
     void displaysSpaceWithoutChangingTheDoubleVolumeCharacter() {
-        MappingWidget widget = new MappingWidget(mapping, "doubleVolume", "Dobrar Volume", " ");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.DOUBLE_VOLUME, "Dobrar Volume", " ");
         TextField field = (TextField) widget.getChildren().get(1);
 
         assertThat(field.getText()).isEqualTo("SPACE");
         widget.saveChange();
 
-        assertThat(mapping.getChars("doubleVolume")).isEqualTo(" ");
+        assertThat(mapping.getChars(MappingType.DOUBLE_VOLUME)).isEqualTo(" ");
     }
 
     @Test
     void allowsChangingDoubleVolumeAndReturningToSpace() {
-        MappingWidget widget = new MappingWidget(mapping, "doubleVolume", "Dobrar Volume", " ");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.DOUBLE_VOLUME, "Dobrar Volume", " ");
         TextField field = (TextField) widget.getChildren().get(1);
 
         field.setText("_");
         widget.saveChange();
-        assertThat(mapping.getChars("doubleVolume")).isEqualTo("_");
+        assertThat(mapping.getChars(MappingType.DOUBLE_VOLUME)).isEqualTo("_");
 
         field.setText(" ");
         assertThat(field.getText()).isEqualTo("SPACE");
         widget.saveChange();
-        assertThat(mapping.getChars("doubleVolume")).isEqualTo(" ");
+        assertThat(mapping.getChars(MappingType.DOUBLE_VOLUME)).isEqualTo(" ");
     }
 
     @Test
     void typingOneCharacterReplacesSpaceWithoutSelectingTheWholeLabel() {
-        MappingWidget widget = new MappingWidget(mapping, "doubleVolume", "Dobrar Volume", " ");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.DOUBLE_VOLUME, "Dobrar Volume", " ");
         TextField field = (TextField) widget.getChildren().get(1);
 
         field.positionCaret(field.getLength());
@@ -84,12 +85,12 @@ class MappingWidgetTest extends JavaFXTestBase {
         widget.saveChange();
 
         assertThat(field.getText()).isEqualTo("_");
-        assertThat(mapping.getChars("doubleVolume")).isEqualTo("_");
+        assertThat(mapping.getChars(MappingType.DOUBLE_VOLUME)).isEqualTo("_");
     }
 
     @Test
     void deletingSpaceClearsTheWholeLabelAndAllowsAnotherCharacter() {
-        MappingWidget widget = new MappingWidget(mapping, "doubleVolume", "Dobrar Volume", " ");
+        MappingWidget widget = new MappingWidget(mapping, MappingType.DOUBLE_VOLUME, "Dobrar Volume", " ");
         TextField field = (TextField) widget.getChildren().get(1);
 
         field.positionCaret(field.getLength());
@@ -98,20 +99,20 @@ class MappingWidgetTest extends JavaFXTestBase {
 
         field.replaceSelection("_");
         widget.saveChange();
-        assertThat(mapping.getChars("doubleVolume")).isEqualTo("_");
+        assertThat(mapping.getChars(MappingType.DOUBLE_VOLUME)).isEqualTo("_");
 
         field.selectAll();
         field.replaceSelection(" ");
         widget.saveChange();
         assertThat(field.getText()).isEqualTo("SPACE");
-        assertThat(mapping.getChars("doubleVolume")).isEqualTo(" ");
+        assertThat(mapping.getChars(MappingType.DOUBLE_VOLUME)).isEqualTo(" ");
     }
 
     @ParameterizedTest
-    @CsvSource({"note,A", "pause,a", "accidental,#", "octaveUp,?", "octaveDown,V",
-            "bpmUp,>", "bpmDown,<", "doubleVolume,_", "duration,1", "instrument,0"})
-    void anyMappingCanUseSpaceAndReplaceItWithOneCharacter(String group, String character) {
-        mapping.replaceChar("doubleVolume", " ", "_");
+    @CsvSource({"NOTE,A", "PAUSE,a", "ACCIDENTAL,#", "OCTAVE_UP,?", "OCTAVE_DOWN,V",
+            "BPM_UP,>", "BPM_DOWN,<", "DOUBLE_VOLUME,_", "DURATION,1", "INSTRUMENT,0"})
+    void anyMappingCanUseSpaceAndReplaceItWithOneCharacter(MappingType group, String character) {
+        mapping.replaceChar(MappingType.DOUBLE_VOLUME, " ", "_");
         MappingWidget widget = new MappingWidget(mapping, group, "Mapeamento", character);
         TextField field = (TextField) widget.getChildren().get(1);
 

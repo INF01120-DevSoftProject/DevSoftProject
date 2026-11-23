@@ -26,6 +26,7 @@ import gui.widgets.MappingWidget;
 import musicElements.Accidentals;
 import musicElements.Notes;
 import translators.TextToMusic.CharacterMapping;
+import translators.TextToMusic.MappingType;
 
 public class MapperScreen extends Screen {
 
@@ -61,27 +62,7 @@ public class MapperScreen extends Screen {
         restoreMappingContainers();
         mappingScrollPane = ControlFactory.createScrollPane(noteMappingContainer);
 
-        noteTab = new ButtonBuilder("Notas")
-								.onClick(e -> showMapping(noteMappingContainer))
-								.build();
-        pauseTab = new ButtonBuilder("Pausas")
-								.onClick(e -> showMapping(pauseMappingContainer))
-								.build();
-        accidentalTab = new ButtonBuilder("Acidentes")
-								.onClick(e -> showMapping(accidentalMappingContainer))
-								.build();
-        controlsTab = new ButtonBuilder("Outros")
-								.onClick(e -> showMapping(musicControlsMappingContainer))
-								.build();
-
-        HBox mappingCategories = new BoxBuilder<>(new HBox(12))
-								.addClass("mapping-categories")
-								.add(noteTab)
-								.add(pauseTab)
-								.add(accidentalTab)
-								.add(controlsTab)
-								.build();
-        updateSelectedTab();
+        HBox mappingCategories = createTabs();
 
         VBox mappingHeader = new BoxBuilder<>(new VBox(25))
 								.add(new Label("Mapeamento"))
@@ -106,6 +87,32 @@ public class MapperScreen extends Screen {
 								.build();
 
         setScreenMainContent(mainContent);
+    }
+
+    private HBox createTabs() {
+        noteTab = new ButtonBuilder("Notas")
+								.onClick(e -> showMapping(noteMappingContainer))
+								.build();
+        pauseTab = new ButtonBuilder("Pausas")
+								.onClick(e -> showMapping(pauseMappingContainer))
+								.build();
+        accidentalTab = new ButtonBuilder("Acidentes")
+								.onClick(e -> showMapping(accidentalMappingContainer))
+								.build();
+        controlsTab = new ButtonBuilder("Outros")
+								.onClick(e -> showMapping(musicControlsMappingContainer))
+								.build();
+
+        HBox mappingCategories = new BoxBuilder<>(new HBox(12))
+								.addClass("mapping-categories")
+								.add(noteTab)
+								.add(pauseTab)
+								.add(accidentalTab)
+								.add(controlsTab)
+								.build();
+        updateSelectedTab();
+
+        return mappingCategories;
     }
 
     private void showMapping(FlowPane container) {
@@ -204,7 +211,7 @@ public class MapperScreen extends Screen {
         return noteMappingContainer;
     }
 
-    private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type, String text) {
+    private void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, MappingType type, String text) {
         for (String c : mapping.getMappingCharacters(type)) {
             container.add(new MappingWidget(mapping, type, text, c));
         }
@@ -212,7 +219,7 @@ public class MapperScreen extends Screen {
 
     // Um widget por caractere do grupo, com o rótulo do valor musical que o mapeamento dá a ele.
     // Os widgets ficam na ordem dos valores (Dó, Ré, ..., Si), não na ordem dos caracteres.
-    private <T extends Enum<T>> void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, String type,
+    private <T extends Enum<T>> void assingMappingWidgetToContainer(BoxBuilder<FlowPane> container, MappingType type,
                                                                    Function<String, T> valueOf, Map<T, String> names) {
         List<String> characters = new ArrayList<>(mapping.getMappingCharacters(type));
         characters.sort(Comparator.comparing(valueOf));
@@ -224,14 +231,14 @@ public class MapperScreen extends Screen {
 
     private FlowPane createNoteMappingContainer() {
         BoxBuilder<FlowPane> noteMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(noteMappingContainer, "note", mapping::getNote, NOTE_NAMES);
+        assingMappingWidgetToContainer(noteMappingContainer, MappingType.NOTE, mapping::getNote, NOTE_NAMES);
 
         return noteMappingContainer.build();
     }
 
     private FlowPane createPauseMappingContainer() {
         BoxBuilder<FlowPane> pauseMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(pauseMappingContainer, "pause",  "Pausa");
+        assingMappingWidgetToContainer(pauseMappingContainer, MappingType.PAUSE,  "Pausa");
 
         return pauseMappingContainer.build();
     }
@@ -239,18 +246,18 @@ public class MapperScreen extends Screen {
     private FlowPane createMusicControlsMappingContainer() {
         BoxBuilder<FlowPane> musicControlsMappingContainer = createMappingContainer();
 
-        assingMappingWidgetToContainer(musicControlsMappingContainer, "octaveUp",  "Aumentar Oitava");
-        assingMappingWidgetToContainer(musicControlsMappingContainer, "octaveDown",  "Diminuir Oitava");
-        assingMappingWidgetToContainer(musicControlsMappingContainer, "bpmUp",  "Aumentar BPM");
-        assingMappingWidgetToContainer(musicControlsMappingContainer, "bpmDown",  "Diminuir BPM");
-        assingMappingWidgetToContainer(musicControlsMappingContainer, "doubleVolume",  "Dobrar Volume");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, MappingType.OCTAVE_UP,  "Aumentar Oitava");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, MappingType.OCTAVE_DOWN,  "Diminuir Oitava");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, MappingType.BPM_UP,  "Aumentar BPM");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, MappingType.BPM_DOWN,  "Diminuir BPM");
+        assingMappingWidgetToContainer(musicControlsMappingContainer, MappingType.DOUBLE_VOLUME,  "Dobrar Volume");
 
         return musicControlsMappingContainer.build();
     }
 
     private FlowPane createAccidentalMappingContainer() {
         BoxBuilder<FlowPane> accidentalMappingContainer = createMappingContainer();
-        assingMappingWidgetToContainer(accidentalMappingContainer, "accidental", mapping::getAccidental, ACCIDENTAL_NAMES);
+        assingMappingWidgetToContainer(accidentalMappingContainer, MappingType.ACCIDENTAL, mapping::getAccidental, ACCIDENTAL_NAMES);
 
         return accidentalMappingContainer.build();
     }

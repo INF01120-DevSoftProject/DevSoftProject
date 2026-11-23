@@ -446,7 +446,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacedNoteLetterMovesToTheNewCharacter() {
-        mapping.replaceChar("note", "A", "J");
+        mapping.replaceChar(MappingType.NOTE, "A", "J");
         List<MusicElement> elements = firstVoiceElements("JA");
 
         assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
@@ -456,8 +456,8 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacedAccidentalAndDurationKeepTheirMeaning() {
-        mapping.replaceChar("accidental", "#", "s");
-        mapping.replaceChar("duration", "2", "m");
+        mapping.replaceChar(MappingType.ACCIDENTAL, "#", "s");
+        mapping.replaceChar(MappingType.DURATION, "2", "m");
         NoteElement note = noteAt(firstVoiceElements("Cs:m"), 0);
 
         assertThat(note.getAccidental()).isEqualTo(Accidentals.SHARP);
@@ -466,7 +466,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacingADigitOnlyChangesItsGroup() {
-        mapping.replaceChar("duration", "2", "m");
+        mapping.replaceChar(MappingType.DURATION, "2", "m");
         List<MusicElement> elements = firstVoiceElements("C:2");
 
         // "2" não é mais duração, mas continua trocando o instrumento
@@ -476,23 +476,23 @@ class TextToMusicTranslatorTest {
 
     @Test
     void replacingACharacterOutsideItsGroupIsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("pause", "A", "J"));
-        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar("grupoQueNaoExiste", "A", "J"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar(MappingType.PAUSE, "A", "J"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.replaceChar(MappingType.TEMPO, "A", "J"));
     }
 
     @Test
     void characterAlreadyInUseIsRejected() {
         // "a" já é pausa: não pode virar também subir o BPM
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-            () -> mapping.replaceChar("bpmUp", ">", "a"));
-        assertThat(error.getMessage()).contains("pause");
-        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars("bpmUp", "V"));
+            () -> mapping.replaceChar(MappingType.BPM_UP, ">", "a"));
+        assertThat(error.getMessage()).contains(MappingType.PAUSE.getGroupName());
+        assertThrows(IllegalArgumentException.class, () -> mapping.addElementChars(MappingType.BPM_UP, "V"));
         assertThrows(IllegalArgumentException.class, () -> mapping.mapNote("a", Notes.A));
     }
 
     @Test
     void digitsCanBeUsedMoreThanOnce() {
-        mapping.addElementChars("bpmUp", "9");
+        mapping.addElementChars(MappingType.BPM_UP, "9");
         List<MusicElement> elements = firstVoiceElements("9");
 
         assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
@@ -511,7 +511,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void elementCharsCanBeChanged() {
-        mapping.setElementChars("bpmUp", "+]");
+        mapping.setElementChars(MappingType.BPM_UP, "+]");
         List<MusicElement> elements = firstVoiceElements("+]>");
 
         assertThat(((BPMElement) elements.get(0)).getBPM()).isEqualTo(130);
@@ -521,7 +521,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void eachAddedCharacterWorksOnItsOwn() {
-        mapping.addElementChars("octaveUp", "^L");
+        mapping.addElementChars(MappingType.OCTAVE_UP, "^L");
         // desce 3 antes, pra subir sem passar da oitava máxima
         List<MusicElement> elements = firstVoiceElements("VVVA^AL?A");
 
@@ -532,8 +532,8 @@ class TextToMusicTranslatorTest {
 
     @Test
     void removedCharacterStopsWorking() {
-        mapping.addElementChars("bpmUp", "+");
-        mapping.removeElementChars("bpmUp", ">");
+        mapping.addElementChars(MappingType.BPM_UP, "+");
+        mapping.removeElementChars(MappingType.BPM_UP, ">");
         List<MusicElement> elements = firstVoiceElements(">+");
 
         assertThat(elements.get(0)).isInstanceOf(PauseElement.class);
@@ -542,8 +542,8 @@ class TextToMusicTranslatorTest {
 
     @Test
     void groupCannotBeLeftWithoutCharacters() {
-        assertThrows(IllegalArgumentException.class, () -> mapping.removeElementChars("bpmUp", ">"));
-        assertThrows(IllegalArgumentException.class, () -> mapping.setElementChars("bpmUp", ""));
+        assertThrows(IllegalArgumentException.class, () -> mapping.removeElementChars(MappingType.BPM_UP, ">"));
+        assertThrows(IllegalArgumentException.class, () -> mapping.setElementChars(MappingType.BPM_UP, ""));
     }
 
     @Test
@@ -556,8 +556,8 @@ class TextToMusicTranslatorTest {
 
     @Test
     void swappedNotesAreTranslatedWithTheirNewCharacters() {
-        mapping.replaceChar("note", "A", "B");
-        mapping.replaceChar("note", "B", "A");
+        mapping.replaceChar(MappingType.NOTE, "A", "B");
+        mapping.replaceChar(MappingType.NOTE, "B", "A");
         List<MusicElement> elements = firstVoiceElements("BA");
 
         assertThat(noteAt(elements, 0).getNote()).isEqualTo(Notes.A);
@@ -566,7 +566,7 @@ class TextToMusicTranslatorTest {
 
     @Test
     void halfSwapIsReportedWhenTranslating() {
-        mapping.replaceChar("note", "A", "B");
+        mapping.replaceChar(MappingType.NOTE, "A", "B");
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> voices("B"));
         assertThat(error.getMessage()).contains("incompleto");

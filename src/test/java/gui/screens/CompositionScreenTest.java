@@ -39,10 +39,13 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.BorderPane;
 import music.VoicePreset;
+import musicElements.InstrumentType;
 import parsers.MusicToMidiParser;
 import translators.TextToMusic.TextToMusicTranslator;
 import translators.TextToMusic.CharacterMapping;
+import translators.TextToMusic.MappingType;
 
 class CompositionScreenTest extends JavaFXTestBase {
 
@@ -63,7 +66,7 @@ class CompositionScreenTest extends JavaFXTestBase {
             assertThat(voicesColumn.getChildren().get(1).lookup(".bpm-slider")).isInstanceOf(BPMSliderWidget.class);
             MappingHelpWidget help = (MappingHelpWidget) body.getChildren().get(1);
 
-            mapping.replaceChar("note", "C", "K");
+            mapping.replaceChar(MappingType.NOTE, "C", "K");
             screen.refreshMappingHelp();
 
             VBox sections = (VBox) ((ScrollPane) help.getContent()).getContent();
@@ -198,7 +201,44 @@ class CompositionScreenTest extends JavaFXTestBase {
 
         VBox mainContent = (VBox) screen.getChildren().getFirst();
         assertThat(mainContent.getId()).isEqualTo("main");
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
+        assertThat(((VBox) findFirstVoiceWidget(screen).getParent()).getChildren()).hasSize(1);
+    }
+
+    @Test
+    void keepsVoiceNumbersAndPresetsIndependentAcrossScreensAndAfterRemoval() throws Exception {
+        runOnFxThread(() -> {
+            CompositionScreen firstScreen = new CompositionScreen(
+                new TXTInputReader(), createPipeline(),
+                (text, presets, initialBpm) -> Path.of("draft.mid"), path -> {}, path -> {}
+            );
+            findButtonByText(firstScreen, "+").fire();
+
+            CompositionScreen secondScreen = new CompositionScreen(
+                new TXTInputReader(), createPipeline(),
+                (text, presets, initialBpm) -> Path.of("draft.mid"), path -> {}, path -> {}
+            );
+            findButtonByText(firstScreen, "+").fire();
+            findButtonByText(firstScreen, "-").fire();
+            findButtonByText(firstScreen, "+").fire();
+            findButtonByText(secondScreen, "+").fire();
+
+            VBox firstVoices = (VBox) findFirstVoiceWidget(firstScreen).getParent();
+            VBox secondVoices = (VBox) findFirstVoiceWidget(secondScreen).getParent();
+            assertThat(firstVoices.getChildren().stream()
+                .map(VoiceWidget.class::cast)
+                .map(voice -> ((Label) ((BorderPane) voice.getLeft()).getCenter()).getText()))
+                .containsExactly("Voz 1", "Voz 2", "Voz 3");
+            assertThat(secondVoices.getChildren().stream()
+                .map(VoiceWidget.class::cast)
+                .map(voice -> ((Label) ((BorderPane) voice.getLeft()).getCenter()).getText()))
+                .containsExactly("Voz 1", "Voz 2");
+            assertThat(firstVoices.getChildren().stream()
+                .map(VoiceWidget.class::cast).map(voice -> voice.getInstrument().getType()))
+                .containsExactly(InstrumentType.KEYS, InstrumentType.PLUCKED, InstrumentType.STRINGS);
+            assertThat(secondVoices.getChildren().stream()
+                .map(VoiceWidget.class::cast).map(voice -> voice.getInstrument().getType()))
+                .containsExactly(InstrumentType.KEYS, InstrumentType.PLUCKED);
+        });
     }
 
     @Test
@@ -253,7 +293,6 @@ class CompositionScreenTest extends JavaFXTestBase {
 
             assertThat(screen.warningCount).isEqualTo(1);
             assertThat(voices.getChildren()).hasSize(confirm ? 1 : 2);
-            assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(confirm ? 1 : 2);
             if (!confirm) {
                 assertThat(voices.getChildren().getLast()).isSameAs(lastVoice);
                 assertThat(lastVoice.getVoiceText()).isEqualTo("C D E");
@@ -278,7 +317,6 @@ class CompositionScreenTest extends JavaFXTestBase {
 
             assertThat(screen.warningCount).isZero();
             assertThat(voices.getChildren()).hasSize(1);
-            assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
             assertThat(findFirstVoiceWidget(screen).getVoiceText()).isEqualTo("C D E");
         });
     }
@@ -295,7 +333,7 @@ class CompositionScreenTest extends JavaFXTestBase {
             findButtonByText(screen, "-").fire();
 
             assertThat(screen.warningCount).isZero();
-            assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
+            assertThat(((VBox) findFirstVoiceWidget(screen).getParent()).getChildren()).hasSize(1);
             assertThat(findFirstVoiceWidget(screen).getVoiceText()).isEqualTo("C D E");
         });
     }

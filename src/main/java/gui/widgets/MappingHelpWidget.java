@@ -17,6 +17,7 @@ import musicElements.Accidentals;
 import musicElements.DurationTime;
 import musicElements.Notes;
 import translators.TextToMusic.CharacterMapping;
+import translators.TextToMusic.MappingType;
 
 public class MappingHelpWidget extends TitledPane {
 
@@ -65,14 +66,14 @@ public class MappingHelpWidget extends TitledPane {
         explanations.getChildren().clear();
 
         addHeading("Notas");
-        for (String character : mapping.getMappingCharacters("note")) {
+        for (String character : mapping.getMappingCharacters(MappingType.NOTE)) {
             addExplanation(displayCharacter(character),
                 "Toca " + NOTE_NAMES.get(mapping.getNote(character)) + " na oitava atual.");
         }
 
         addHeading("Pausas e acidentes");
-        addExplanation(characters("pause"), "Insere uma pausa de um tempo.");
-        for (String character : mapping.getMappingCharacters("accidental")) {
+        addExplanation(characters(MappingType.PAUSE), "Insere uma pausa de um tempo.");
+        for (String character : mapping.getMappingCharacters(MappingType.ACCIDENTAL)) {
             String description = mapping.getAccidental(character) == Accidentals.SHARP
                 ? "Sustenido: sobe meio tom. Use logo após a nota."
                 : "Bemol: desce meio tom. Use logo após a nota.";
@@ -80,17 +81,17 @@ public class MappingHelpWidget extends TitledPane {
         }
 
         addHeading("Duração da nota");
-        for (String character : mapping.getMappingCharacters("duration")) {
+        for (String character : mapping.getMappingCharacters(MappingType.DURATION)) {
             addExplanation(":" + displayCharacter(character),
                 DURATION_NAMES.get(mapping.getDurationTime(character)) + " Use após a nota ou acidente.");
         }
 
         addHeading("Comandos");
-        addExplanation(characters("octaveUp"), "Sobe uma oitava. Após a oitava 8, volta à oitava inicial da voz.");
-        addExplanation(characters("octaveDown"), "Desce uma oitava, até a oitava 0.");
-        addExplanation(characters("bpmUp"), "Aumenta o andamento em 10 BPM, até 999.");
-        addExplanation(characters("bpmDown"), "Diminui o andamento em 10 BPM, até 20.");
-        addExplanation(characters("doubleVolume"), "Dobra o volume da voz, até 127.");
+        addExplanation(characters(MappingType.OCTAVE_UP), "Sobe uma oitava. Após a oitava 8, volta à oitava inicial da voz.");
+        addExplanation(characters(MappingType.OCTAVE_DOWN), "Desce uma oitava, até a oitava 0.");
+        addExplanation(characters(MappingType.BPM_UP), "Aumenta o andamento em 10 BPM, até 999.");
+        addExplanation(characters(MappingType.BPM_DOWN), "Diminui o andamento em 10 BPM, até 20.");
+        addExplanation(characters(MappingType.DOUBLE_VOLUME), "Dobra o volume da voz, até 127.");
     }
 
     // Cada tópico é retrátil: clicar no título abre ou fecha as explicações dele
@@ -128,7 +129,7 @@ public class MappingHelpWidget extends TitledPane {
         currentSection.getChildren().add(row);
     }
 
-    private String characters(String group) {
+    private String characters(MappingType group) {
         StringJoiner characters = new StringJoiner(", ");
         for (String character : mapping.getMappingCharacters(group)) {
             characters.add(displayCharacter(character));

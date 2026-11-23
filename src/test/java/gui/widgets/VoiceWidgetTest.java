@@ -2,47 +2,30 @@ package gui.widgets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import gui.JavaFXTestBase;
-import gui.widgets.voicePresetWidget.VoicePresetKeysWidget;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.control.Label;
+import musicElements.InstrumentType;
+import musicElements.Octave;
+import musicElements.VolumeElement;
 
 class VoiceWidgetTest extends JavaFXTestBase {
 
-    @BeforeEach
-    void setUp() {
-        VoiceWidget.restartCurrentVoiceNum();
-    }
-
     @Test
-    void incrementsVoiceNumberOnCreation() {
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isZero();
+    void displaysTheVoiceNumberProvidedByTheCaller() {
+        VoicePresetWidget preset = new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5));
+        VoiceWidget widget = new VoiceWidget(preset, 3);
+        BorderPane labelContainer = (BorderPane) widget.getLeft();
 
-        new VoiceWidget(new VoicePresetKeysWidget());
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
-
-        new VoiceWidget(new VoicePresetKeysWidget());
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(2);
-    }
-
-    @Test
-    void decrementsVoiceNumberOnlyAboveOne() {
-        new VoiceWidget(new VoicePresetKeysWidget());
-        new VoiceWidget(new VoicePresetKeysWidget());
-
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(2);
-
-        VoiceWidget.decrementCurrentVoiceNum();
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
-
-        VoiceWidget.decrementCurrentVoiceNum();
-        assertThat(VoiceWidget.getCurrentVoiceNum()).isEqualTo(1);
+        assertThat(((Label) labelContainer.getCenter()).getText()).isEqualTo("Voz 3");
     }
 
     @Test
     void setsAndGetsVoiceText() {
-        VoiceWidget widget = new VoiceWidget(new VoicePresetKeysWidget());
+        VoiceWidget widget = new VoiceWidget(new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5)), 1);
 
         widget.setVoiceText("C D E F G");
 
@@ -51,8 +34,10 @@ class VoiceWidgetTest extends JavaFXTestBase {
 
     @Test
     void delegatesPresetValuesCorrectly() {
-        VoicePresetKeysWidget preset = new VoicePresetKeysWidget();
-        VoiceWidget widget = new VoiceWidget(preset);
+        VoicePresetWidget preset = new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5));
+        VoiceWidget widget = new VoiceWidget(preset, 1);
+
+        assertThat(((VBox) widget.getCenter()).getChildren().getFirst()).isSameAs(preset);
 
         assertThat(widget.getInstrument().getInstrument())
             .isEqualTo(preset.getInstrument().getInstrument());
@@ -70,7 +55,7 @@ class VoiceWidgetTest extends JavaFXTestBase {
 
     @Test
     void hasExpectedStyleClassAndLayout() {
-        VoiceWidget widget = new VoiceWidget(new VoicePresetKeysWidget());
+        VoiceWidget widget = new VoiceWidget(new VoicePresetWidget(new VolumeElement(66), InstrumentType.KEYS, new Octave(2), new Octave(5)), 1);
 
         assertThat(widget.getStyleClass()).contains("voice-node");
         assertThat(widget.getLeft()).isNotNull();

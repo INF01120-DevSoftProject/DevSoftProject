@@ -13,7 +13,7 @@ import musicElements.BPMElement;
 public class TextToMusicTranslator {
 
     private final CharacterMapping mapping;
-    private final Map<String, TextToMusicActions> customActions;
+    private final Map<MappingType, TextToMusicActions> customActions;
 
     // Usa um mapeamento novo, com os caracteres padrão
     public TextToMusicTranslator() {
@@ -25,7 +25,7 @@ public class TextToMusicTranslator {
     }
 
     // customActions: comandos extras, repassados para o TextToMusicRules
-    public TextToMusicTranslator(CharacterMapping mapping, Map<String, TextToMusicActions> customActions) {
+    public TextToMusicTranslator(CharacterMapping mapping, Map<MappingType, TextToMusicActions> customActions) {
         if (mapping == null) throw new IllegalArgumentException("O mapeamento não pode ser nulo");
         if (customActions == null) throw new IllegalArgumentException("As ações extras não podem ser nulas");
         this.mapping = mapping;
@@ -65,8 +65,8 @@ public class TextToMusicTranslator {
 
         while (matcher.find()) {
             // acha o grupo que casou e executa a action dele
-            for (Map.Entry<String, TextToMusicActions> rule : musicRules.getElementsActionMapping().entrySet()) {
-                if (matcher.group(rule.getKey()) != null) {
+            for (Map.Entry<MappingType, TextToMusicActions> rule : musicRules.getElementsActionMapping().entrySet()) {
+                if (matcher.group(rule.getKey().getGroupName()) != null) {
                     rule.getValue().apply(matcher, context);
                     break;
                 }

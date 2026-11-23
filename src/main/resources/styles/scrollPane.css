@@ -7,15 +7,19 @@
     -fx-background-color: transparent;
 }
 
-.scroll-pane .scroll-bar:vertical {
+.scroll-pane .scroll-bar:vertical,
+.scroll-pane .scroll-bar:horizontal,
+.scroll-pane .scroll-bar .track {
     -fx-background-color: transparent;
 }
 
-.scroll-pane .scroll-bar:vertical .track {
-    -fx-background-color: transparent;
-}
-
-.scroll-pane .scroll-bar:vertical .thumb {
-    -fx-background-color: #777777;
+.scroll-pane .scroll-bar .thumb {
+    -fx-background-color: -color-scroll;
     -fx-background-radius: 10px;
+    transition: -fx-background-color 150ms ease;
+}
+
+.scroll-pane .scroll-bar .thumb:hover,
+.scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: -color-scroll-hover;
 }

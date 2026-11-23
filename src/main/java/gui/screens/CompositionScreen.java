@@ -94,10 +94,6 @@ public class CompositionScreen extends Screen {
                                     .add(createVoiceWidget())
                                     .build();
 
-        mappingHelp.setMinWidth(300);
-        mappingHelp.setPrefWidth(340);
-        mappingHelp.setMaxWidth(340);
-
         HBox plusMinusButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fixed-button-container")
                                     .add(new ButtonBuilder("+")
@@ -120,9 +116,8 @@ public class CompositionScreen extends Screen {
                                     .add(voicesContainer)
                                     .add(compositionControls)
                                     .build();
-        voicesColumn.setMinWidth(400);
         ScrollPane voicesColumnScroll = ControlFactory.createScrollPane(voicesColumn);
-        voicesColumnScroll.setMinWidth(400);
+        voicesColumnScroll.getStyleClass().add("composition-voices-scroll");
 
         HBox compositionBody = new BoxBuilder<>(new HBox(20))
                                     .add(voicesColumnScroll)

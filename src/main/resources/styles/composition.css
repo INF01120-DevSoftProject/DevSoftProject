@@ -1,7 +1,7 @@
+/* ---------- Vozes (o fundo e a sombra dos cartões vêm de base.css) ---------- */
+
 .voice-node {
-    -fx-background-color: #f5f5f5;
     -fx-alignment: center;
-    -fx-background-radius: 8px;
     -fx-padding: 4px 8px;
 }
 
@@ -33,20 +33,43 @@
     -fx-alignment: center-left;
 }
 
-.composition-controls,
-.composition-controls .fixed-button-container {
-    -fx-alignment: center-left;
+.voice-preset-container {
+    -fx-alignment: center;
+}
+
+/* Instrumento e oitava sem cortar o texto ("Oitava 5 - Soprano") */
+.voice-preset-container .combo-box {
+    -fx-min-width: 175px;
+}
+
+/* ---------- Coluna das vozes e controles ---------- */
+
+.composition-voices,
+.composition-voices-scroll {
+    -fx-min-width: 400px;
 }
 
 .composition-voices {
     -fx-padding: 0px 8px 8px;
 }
 
-.bpm-controls {
-    -fx-background-color: #f5f5f5;
+.composition-controls,
+.composition-controls .fixed-button-container {
     -fx-alignment: center-left;
-    -fx-background-radius: 8px;
-    -fx-padding: 4px 8px;
+}
+
+/* + e - com a mesma altura do cartão de BPM ao lado */
+.composition-controls .fixed-button-container .button {
+    -fx-min-width: 44px;
+    -fx-min-height: 40px;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.bpm-controls {
+    -fx-alignment: center-left;
+    -fx-min-height: 40px;
+    -fx-padding: 4px 16px;
 }
 
 .bpm-controls .label {
@@ -54,23 +77,31 @@
     -fx-font-weight: 700;
     -fx-padding: 0;
     -fx-min-width: 75px;
+    -fx-text-fill: -color-dark;
 }
 
+/* ---------- Guia "Como escrever sua música" ---------- */
+
 .mapping-help {
+    -fx-min-width: 300px;
+    -fx-pref-width: 340px;
+    -fx-max-width: 340px;
     -fx-alignment: center;
     -fx-font-size: 13px;
     -fx-font-weight: 700;
-    -fx-text-fill: #184D40;
+    -fx-text-fill: -color-dark;
+    -fx-effect: dropshadow(gaussian, rgba(24, 77, 64, 0.06), 8, 0, 0, 2);
 }
 
 .mapping-help > .title {
-    -fx-background-color: #f5f5f5;
-    -fx-background-radius: 8px;
-    -fx-padding: 12px;
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 8px 8px 0px 0px;
+    -fx-padding: 14px 12px 10px;
+    -fx-font-size: 15px;
 }
 
 .mapping-help > .content {
-    -fx-background-color: #f5f5f5;
+    -fx-background-color: -color-surface;
     -fx-background-radius: 0px 0px 8px 8px;
     -fx-border-width: 0;
     -fx-padding: 0;
@@ -78,50 +109,83 @@
 
 .mapping-help-details {
     -fx-alignment: top-center;
-    -fx-spacing: 16px;
-    -fx-padding: 8px 12px 12px;
+    -fx-spacing: 12px;
+    -fx-padding: 4px 12px 12px;
 }
 
-.mapping-help-section {
-    -fx-background-color: #f5f5f5;
+/* Cada tópico é um TitledPane: clicar no título abre e fecha as explicações */
+.mapping-help .mapping-help-section {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -color-dark;
+}
+
+.mapping-help .mapping-help-section > .title {
+    -fx-background-color: -color-surface;
     -fx-background-radius: 8px;
-    -fx-alignment: top-center;
-    -fx-padding: 8px 0px;
+    -fx-padding: 8px 6px;
+    -fx-cursor: hand;
+    transition: -fx-background-color 150ms ease;
+}
+
+.mapping-help .mapping-help-section > .title:hover {
+    -fx-background-color: -color-highlight;
+}
+
+.mapping-help .mapping-help-section > .title > .arrow-button > .arrow {
+    -fx-background-color: -color-dark;
+}
+
+.mapping-help .mapping-help-section:collapsed > .title > .arrow-button > .arrow {
+    -fx-background-color: -color-text-muted;
+}
+
+.mapping-help .mapping-help-section > .content {
+    -fx-background-color: -color-surface;
+    -fx-border-width: 0;
+    -fx-padding: 4px 0px 8px;
 }
 
 .mapping-help .label {
     -fx-alignment: center-left;
     -fx-text-alignment: left;
-    -fx-text-fill: #184D40;
+    -fx-text-fill: -color-dark;
     -fx-max-width: 99999px;
     -fx-font-size: 13px;
     -fx-font-weight: normal;
     -fx-padding: 0;
 }
 
-.mapping-help .mapping-help-heading {
-    -fx-alignment: center-left;
-    -fx-text-alignment: left;
-    -fx-text-fill: #184D40;
-    -fx-font-size: 14px;
-    -fx-font-weight: 700;
-    -fx-padding: 0px 0px 8px;
+.mapping-help .mapping-help-description {
+    -fx-min-width: 0;
 }
 
+/* Cada linha do guia acende ao passar o mouse */
 .mapping-help-row {
     -fx-alignment: center;
     -fx-spacing: 12px;
+    -fx-padding: 3px 6px;
+    -fx-background-radius: 8px;
+    transition: -fx-background-color 120ms ease;
+}
+
+.mapping-help-row:hover {
+    -fx-background-color: -color-highlight;
 }
 
 .mapping-help .mapping-help-character {
-    -fx-background-color: #15876A;
+    -fx-background-color: -color-primary;
     -fx-background-radius: 8px;
     -fx-padding: 6px 8px;
     -fx-alignment: center;
     -fx-text-alignment: center;
-    -fx-text-fill: #f5f5f5;
+    -fx-text-fill: -color-text-light;
     -fx-font-weight: 700;
     -fx-min-width: 72px;
     -fx-pref-width: 72px;
     -fx-max-width: 72px;
+}
+
+.mapping-help-row:hover .mapping-help-character {
+    -fx-background-color: -color-primary-pressed;
 }

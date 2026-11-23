@@ -1,5 +1,6 @@
 package gui.widgets;
 
+import javafx.css.PseudoClass;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -9,6 +10,9 @@ import javafx.scene.layout.Region;
 import translators.TextToMusic.CharacterMapping;
 
 public class MappingWidget extends VBox {
+    // Campo mostrando "SPACE": o CSS deixa ele mais largo
+    private static final PseudoClass SPACE = PseudoClass.getPseudoClass("space");
+
     private final CharacterMapping mapping;
     private final String mappingRuleType;
     private String oldCaracter;
@@ -50,7 +54,6 @@ public class MappingWidget extends VBox {
         TextField field = new TextField();
 
         field.setPrefColumnCount(1);
-        field.setMaxWidth(45);
 
         field.setTextFormatter(new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
@@ -71,9 +74,10 @@ public class MappingWidget extends VBox {
         }));
 
         field.textProperty().addListener((observable, oldText, newText) -> {
+            // a largura do campo vem do CSS (.text-field e .text-field:space em mapper.css)
             boolean isSpace = newText.equals("SPACE");
             field.setPrefColumnCount(isSpace ? 5 : 1);
-            field.setMaxWidth(isSpace ? 85 : 45);
+            field.pseudoClassStateChanged(SPACE, isSpace);
         });
 
         return field;

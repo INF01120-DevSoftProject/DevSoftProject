@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -30,6 +32,16 @@ public abstract class Screen extends Pane {
             Alert.AlertType.ERROR,
             message
         ).showAndWait();
+    }
+
+    protected boolean showWarningMessage(String message) {
+        ButtonType yes = new ButtonType("Sim", ButtonBar.ButtonData.YES);
+        ButtonType no = new ButtonType("Não", ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert warning = new Alert(Alert.AlertType.WARNING, message, yes, no);
+        warning.setTitle("Aviso");
+        warning.setHeaderText(null);
+
+        return warning.showAndWait().orElse(no) == yes;
     }
 
     protected File openFileChooserWindow() {

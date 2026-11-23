@@ -13,22 +13,28 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import music.VoicePreset;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.factory.ControlFactory;
 import gui.widgets.VoiceWidget;
+import gui.widgets.BPMSliderWidget;
+import gui.widgets.MappingHelpWidget;
 import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
 import exporters.DraftMusicCreator;
 import exporters.MusicExportPipeline;
+import translators.TextToMusic.CharacterMapping;
 
 public class CompositionScreen extends Screen {
 
     private static final int MAX_VOICES = 15;
 
     private final VBox voicesContainer;
+    private final BPMSliderWidget bpmSlider;
+    private final MappingHelpWidget mappingHelp;
     
     private final MusicExportPipeline<?> exporter;
     private final InputReader<String> reader;
@@ -46,6 +52,17 @@ public class CompositionScreen extends Screen {
         Consumer<Path> onListenDraft,
         Consumer<Path> onMusicSaved
     ) {
+        this(reader, exporter, draftCreator, onListenDraft, onMusicSaved, new CharacterMapping());
+    }
+
+    public CompositionScreen(
+        InputReader<String> reader,
+        MusicExportPipeline<?> exporter,
+        DraftMusicCreator draftCreator,
+        Consumer<Path> onListenDraft,
+        Consumer<Path> onMusicSaved,
+        CharacterMapping mapping
+    ) {
 
         if (reader == null)  throw new IllegalArgumentException("Reader cannot be null.");
         if (exporter == null)  throw new IllegalArgumentException("Exporter cannot be null.");
@@ -58,13 +75,28 @@ public class CompositionScreen extends Screen {
         this.onListenDraft = onListenDraft;
         this.onMusicSaved = onMusicSaved;
 
+        mappingHelp = new MappingHelpWidget(mapping);
+
         VoiceWidget.restartCurrentVoiceNum();
+
+        bpmSlider = new BPMSliderWidget();
+        Label bpmLabel = new Label();
+        bpmLabel.textProperty().bind(bpmSlider.valueProperty().asString("BPM: %.0f"));
+
+        HBox bpmControls = new BoxBuilder<>(new HBox(15))
+                                    .addClass("bpm-controls")
+                                    .add(bpmLabel)
+                                    .add(bpmSlider)
+                                    .apply(b -> HBox.setHgrow(bpmSlider, Priority.ALWAYS))
+                                    .build();
 
         voicesContainer = new BoxBuilder<>(new VBox(20))
                                     .add(createVoiceWidget())
                                     .build();
 
-        ScrollPane voicesContainerScroll = ControlFactory.createScrollPane(voicesContainer);
+        mappingHelp.setMinWidth(300);
+        mappingHelp.setPrefWidth(340);
+        mappingHelp.setMaxWidth(340);
 
         HBox plusMinusButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fixed-button-container")
@@ -72,10 +104,34 @@ public class CompositionScreen extends Screen {
                                             .onClickAddToContainer(() -> createVoiceWidget(), voicesContainer, MAX_VOICES)
                                             .build())
                                     .add(new ButtonBuilder("-")
-                                            .onClickRemoveLastFromContainer(voicesContainer)
-                                            .onClick(e -> VoiceWidget.decrementCurrentVoiceNum())
+                                            .onClick(e -> removeLastVoice())
                                             .build())
                                     .build();
+
+        HBox compositionControls = new BoxBuilder<>(new HBox(20))
+                                    .addClass("composition-controls")
+                                    .add(plusMinusButtons)
+                                    .add(bpmControls)
+                                    .apply(b -> HBox.setHgrow(bpmControls, Priority.ALWAYS))
+                                    .build();
+
+        VBox voicesColumn = new BoxBuilder<>(new VBox(20))
+                                    .addClass("composition-voices")
+                                    .add(voicesContainer)
+                                    .add(compositionControls)
+                                    .build();
+        voicesColumn.setMinWidth(400);
+        ScrollPane voicesColumnScroll = ControlFactory.createScrollPane(voicesColumn);
+        voicesColumnScroll.setMinWidth(400);
+
+        HBox compositionBody = new BoxBuilder<>(new HBox(20))
+                                    .add(voicesColumnScroll)
+                                    .add(mappingHelp)
+                                    .apply(b -> HBox.setHgrow(voicesColumnScroll, Priority.ALWAYS))
+                                    .build();
+        ScrollPane compositionScroll = ControlFactory.createScrollPane(compositionBody);
+        compositionScroll.setFitToHeight(true);
+        compositionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         HBox actionButtons = new BoxBuilder<>(new HBox(20))
                                     .addClass("fill-button-container")
@@ -93,13 +149,28 @@ public class CompositionScreen extends Screen {
         VBox mainContent = new BoxBuilder<>(new VBox(25))
                                     .setId("main")
                                     .add(new Label("Composição"))
-                                    .add(voicesContainerScroll)
-                                    .add(plusMinusButtons)
-                                    .add(ControlFactory.createVerticalGrower())
+                                    .add(compositionScroll)
                                     .add(actionButtons)
+                                    .apply(b -> VBox.setVgrow(compositionScroll, Priority.ALWAYS))
                                     .build();
         
         setScreenMainContent(mainContent);
+    }
+
+    public void refreshMappingHelp() {
+        mappingHelp.refreshMapping();
+    }
+
+    private void removeLastVoice() {
+        if (voicesContainer.getChildren().size() <= 1) return;
+
+        VoiceWidget voice = (VoiceWidget) voicesContainer.getChildren().getLast();
+        if (!voice.getVoiceText().isBlank() && !showWarningMessage("Deseja mesmo excluir esta voz? O texto será perdido.")) {
+            return;
+        }
+
+        voicesContainer.getChildren().removeLast();
+        VoiceWidget.decrementCurrentVoiceNum();
     }
 
     private void saveMusic() {
@@ -108,7 +179,7 @@ public class CompositionScreen extends Screen {
 
         try {
             MusicInputData data = getMusicInputData();
-            exporter.exportMusic(file, data.text(), data.presets());
+            exporter.exportMusic(file, data.text(), data.presets(), bpmSlider.getBPM());
             onMusicSaved.accept(file.toPath());
 
         } catch (IOException | IllegalArgumentException e) {
@@ -146,7 +217,7 @@ public class CompositionScreen extends Screen {
         MusicInputData data = getMusicInputData();
 
         try {
-            Path draftPath = draftCreator.createDraft(data.text(), data.presets());
+            Path draftPath = draftCreator.createDraft(data.text(), data.presets(), bpmSlider.getBPM());
             onListenDraft.accept(draftPath);
         }
         catch (IOException | IllegalArgumentException e) {

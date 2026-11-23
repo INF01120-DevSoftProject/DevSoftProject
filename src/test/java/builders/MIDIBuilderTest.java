@@ -248,7 +248,7 @@ public class MIDIBuilderTest {
     }
 
     @Test
-    void addsTempoChangesToDifferentTracks() {
+    void addsTempoChangesFromDifferentVoicesToTheFirstTrack() {
         Sequence sequence = new MidiSequenceBuilder()
             .addTrack()
             .setBPM(new BPMElement(120))
@@ -256,10 +256,10 @@ public class MIDIBuilderTest {
             .setBPM(new BPMElement(90))
             .build();
 
-        assertThat(tempoEvents(sequence.getTracks()[0])).hasSize(1);
-        assertThat(tempoEvents(sequence.getTracks()[1])).hasSize(1);
+        assertThat(tempoEvents(sequence.getTracks()[0])).hasSize(2);
+        assertThat(tempoEvents(sequence.getTracks()[1])).isEmpty();
         assertThat(mpq(tempoEvents(sequence.getTracks()[0]).get(0))).isEqualTo(500_000);
-        assertThat(mpq(tempoEvents(sequence.getTracks()[1]).get(0))).isEqualTo(666_666);
+        assertThat(mpq(tempoEvents(sequence.getTracks()[0]).get(1))).isEqualTo(666_666);
     }
 
     @Test
@@ -447,7 +447,9 @@ public class MIDIBuilderTest {
         assertThat(firstShortMessage(first, ShortMessage.NOTE_ON).getChannel()).isZero();
         assertThat(firstShortMessage(second, ShortMessage.NOTE_ON).getChannel()).isEqualTo(1);
         assertThat(mpq(tempoEvents(first).get(0))).isEqualTo(500_000);
-        assertThat(mpq(tempoEvents(second).get(0))).isEqualTo(666_666);
+        assertThat(mpq(tempoEvents(first).get(1))).isEqualTo(666_666);
+        assertThat(tempoEvents(first).get(1).getTick()).isEqualTo(480);
+        assertThat(tempoEvents(second)).isEmpty();
     }
 
     @Test

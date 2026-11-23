@@ -17,6 +17,7 @@ public class VoicePresetPercussionWidget extends VoicePresetWidget {
         octaves.put("Oitava 3 - Tenor", new Octave(3));
         octaves.put("Oitava 2 - Grave", new Octave(2));
 
+
         return octaves;
     }
 

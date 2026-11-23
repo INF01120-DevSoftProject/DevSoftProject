@@ -22,12 +22,17 @@ public class MusicExportPipeline<T> {
     }
 
     public void exportMusic(File file, String text, List<VoicePreset> presets) throws IOException  {
+        exportMusic(file, text, presets, Music.DEFAULT_BPM);
+    }
+
+    public void exportMusic(File file, String text, List<VoicePreset> presets, int initialBpm) throws IOException  {
         if (text.isBlank()) throw new IllegalArgumentException("A composição está vazia.");
 
         Music music = translator.textToMusic(
             file.getName(),
             text,
-            presets
+            presets,
+            initialBpm
         );
 
         T data = parser.convertMusicToFile(music);

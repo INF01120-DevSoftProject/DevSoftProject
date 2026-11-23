@@ -32,3 +32,96 @@
 .voice-header {
     -fx-alignment: center-left;
 }
+
+.composition-controls,
+.composition-controls .fixed-button-container {
+    -fx-alignment: center-left;
+}
+
+.composition-voices {
+    -fx-padding: 0px 8px 8px;
+}
+
+.bpm-controls {
+    -fx-background-color: #f5f5f5;
+    -fx-alignment: center-left;
+    -fx-background-radius: 8px;
+    -fx-padding: 4px 8px;
+}
+
+.bpm-controls .label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 0;
+    -fx-min-width: 75px;
+}
+
+.mapping-help {
+    -fx-alignment: center;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #184D40;
+}
+
+.mapping-help > .title {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px;
+}
+
+.mapping-help > .content {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 0px 0px 8px 8px;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.mapping-help-details {
+    -fx-alignment: top-center;
+    -fx-spacing: 16px;
+    -fx-padding: 8px 12px 12px;
+}
+
+.mapping-help-section {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 8px;
+    -fx-alignment: top-center;
+    -fx-padding: 8px 0px;
+}
+
+.mapping-help .label {
+    -fx-alignment: center-left;
+    -fx-text-alignment: left;
+    -fx-text-fill: #184D40;
+    -fx-max-width: 99999px;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-padding: 0;
+}
+
+.mapping-help .mapping-help-heading {
+    -fx-alignment: center-left;
+    -fx-text-alignment: left;
+    -fx-text-fill: #184D40;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 0px 0px 8px;
+}
+
+.mapping-help-row {
+    -fx-alignment: center;
+    -fx-spacing: 12px;
+}
+
+.mapping-help .mapping-help-character {
+    -fx-background-color: #15876A;
+    -fx-background-radius: 8px;
+    -fx-padding: 6px 8px;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-text-fill: #f5f5f5;
+    -fx-font-weight: 700;
+    -fx-min-width: 72px;
+    -fx-pref-width: 72px;
+    -fx-max-width: 72px;
+}

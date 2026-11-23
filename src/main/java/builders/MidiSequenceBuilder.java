@@ -87,6 +87,7 @@ public class MidiSequenceBuilder {
 
     public MidiSequenceBuilder setBPM(BPMElement bpm) {
         if (bpm == null) throw new NullPointerException("BPM nao pode ser nulo");
+        if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
 
         int mpq; // Microseconds Per Quarter Note
         mpq = MICROSECONDS_IN_MINUTE / bpm.getBPM(); // Transform BPM in MPQ
@@ -101,7 +102,9 @@ public class MidiSequenceBuilder {
             (byte) (mpq)
         };
 
-        addMetaMessageToTrack(MPQ_META_MESSAGE_TYPE, mpqData, mpqData.length);
+        // O andamento vale para todas as vozes e fica na primeira track do MIDI.
+        // No mesmo tick, prevalece o último comando na ordem das vozes.
+        addMetaMessageToTrack(sequence.getTracks()[0], MPQ_META_MESSAGE_TYPE, mpqData, mpqData.length);
 
         return this;
     }
@@ -170,12 +173,16 @@ public class MidiSequenceBuilder {
     }
 
     private void addMetaMessageToTrack(int messageType, byte[] data, int dataLength) {
-        if (currentTrack == null) throw new NullPointerException("Nenhuma track foi criada");
+        addMetaMessageToTrack(currentTrack, messageType, data, dataLength);
+    }
+
+    private void addMetaMessageToTrack(Track track, int messageType, byte[] data, int dataLength) {
+        if (track == null) throw new NullPointerException("Nenhuma track foi criada");
 
         try {
             MetaMessage message = new MetaMessage();
             message.setMessage(messageType, data, dataLength);
-            currentTrack.add(new MidiEvent(message, currentTick));
+            track.add(new MidiEvent(message, currentTick));
 
         } catch(InvalidMidiDataException e) {
             throw new RuntimeException("Não foi possível criar a sequência MIDI", e);

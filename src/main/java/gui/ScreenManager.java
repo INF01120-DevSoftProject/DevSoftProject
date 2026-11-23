@@ -55,7 +55,8 @@ public class ScreenManager extends Application {
             },
             filePath -> {
                 playerScreen.onMusicSaved(filePath);
-            }
+            },
+            mapping
         );
 
         mapperScreen = new MapperScreen(mapping);
@@ -70,7 +71,10 @@ public class ScreenManager extends Application {
         VBox sideBar = new BoxBuilder<>(new VBox(10))
                             .addClass("sidebar")
                             .add(new ButtonBuilder("Composição")
-                                    .onClick(e -> layout.setCenter(compositionScreen))
+                                    .onClick(e -> {
+                                        compositionScreen.refreshMappingHelp();
+                                        layout.setCenter(compositionScreen);
+                                    })
                                     .build())
                             .add(new ButtonBuilder("Mapeamento")
                                     .onClick(e -> layout.setCenter(mapperScreen))

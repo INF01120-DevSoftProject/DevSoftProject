@@ -6,14 +6,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Collections;
 import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MetaMessage;
 import javax.sound.midi.Sequence;
+import javax.sound.midi.Track;
 
 import music.VoicePreset;
 import musicElements.InstrumentType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import parsers.MusicToMidiParser;
 import translators.TextToMusic.TextToMusicTranslator;
 
@@ -63,6 +68,83 @@ class TempMidiDraftServiceTest {
 
         Sequence sequence = MidiSystem.getSequence(draft.toFile());
         assertThat(sequence.getTracks()).isNotEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {20, 90, 120, 180, 999})
+    void usesChosenBpmForAllVoices(int initialBpm) throws Exception {
+        Path draft = createService().createDraft("CCCC\nCCCC", defaultPresets(), initialBpm);
+        Sequence sequence = MidiSystem.getSequence(draft.toFile());
+
+        assertThat(sequence.getMicrosecondLength()).isEqualTo(4L * (60_000_000 / initialBpm));
+        int tempoCount = 0;
+        for (int t = 0; t < sequence.getTracks().length; t++) {
+            Track track = sequence.getTracks()[t];
+            for (int i = 0; i < track.size(); i++) {
+                if (track.get(i).getMessage() instanceof MetaMessage meta && meta.getType() == 0x51) {
+                    assertThat(t).isZero();
+                    assertThat(track.get(i).getTick()).isZero();
+                    tempoCount++;
+                }
+            }
+        }
+        assertThat(tempoCount).isEqualTo(1);
+    }
+
+    @Test
+    void appliesBpmCommandsFromAnotherVoiceToTheWholeMusic() throws Exception {
+        Path draft = createService().createDraft("CCCC\nC>C<C", defaultPresets(), 180);
+        Sequence sequence = MidiSystem.getSequence(draft.toFile());
+
+        assertThat(sequence.getMicrosecondLength())
+                .isEqualTo(3L * (60_000_000 / 180) + 60_000_000 / 190);
+    }
+
+    @Test
+    void anotherVoiceDoesNotResetBpmChangesAtTheStart() throws Exception {
+        Path draft = createService().createDraft(">CCCC\nCCCC", defaultPresets(), 90);
+        Sequence sequence = MidiSystem.getSequence(draft.toFile());
+
+        assertThat(sequence.getMicrosecondLength()).isEqualTo(4L * (60_000_000 / 100));
+    }
+
+    @Test
+    void usesChosenBpmWhenFirstVoiceIsEmpty() throws Exception {
+        Path draft = createService().createDraft("\nCC", defaultPresets(), 90);
+        Sequence sequence = MidiSystem.getSequence(draft.toFile());
+
+        assertThat(sequence.getMicrosecondLength()).isEqualTo(2L * (60_000_000 / 90));
+    }
+
+    @Test
+    void keepsTheMaximumOfFifteenVoicesWithGlobalBpm() throws Exception {
+        String text = String.join("\n", Collections.nCopies(15, "CCCC"));
+        Path draft = createService().createDraft(text, defaultPresets(), 90);
+        Sequence sequence = MidiSystem.getSequence(draft.toFile());
+
+        assertThat(sequence.getTracks()).hasSize(15);
+        assertThat(sequence.getMicrosecondLength()).isEqualTo(4L * (60_000_000 / 90));
+    }
+
+    @Test
+    void lastVoiceDefinesTempoWhenCommandsCoincide() throws Exception {
+        Path draft = createService().createDraft(">CCCC\n<CCCC", defaultPresets(), 180);
+        Sequence sequence = MidiSystem.getSequence(draft.toFile());
+
+        assertThat(sequence.getMicrosecondLength()).isEqualTo(4L * (60_000_000 / 170));
+    }
+
+    @Test
+    void rejectsInvalidBpmWithoutRemovingThePreviousDraft() throws Exception {
+        TempMidiDraftService draftService = createService();
+        Path draft = draftService.createDraft("C", defaultPresets(), 90);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> draftService.createDraft("C", defaultPresets(), 19));
+        assertThrows(IllegalArgumentException.class,
+                () -> draftService.createDraft("C", defaultPresets(), 1000));
+        assertThat(draft).exists();
+        assertThat(draftService.isDraft(draft)).isTrue();
     }
 
     @Test

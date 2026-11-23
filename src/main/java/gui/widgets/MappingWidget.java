@@ -33,6 +33,9 @@ public class MappingWidget extends VBox {
 
     public void saveChange() {
         String newCaracter = textField.getText();
+        if (newCaracter.equals("SPACE")) {
+            newCaracter = " ";
+        }
 
         if (oldCaracter.equals(newCaracter)) {
             return;
@@ -49,11 +52,29 @@ public class MappingWidget extends VBox {
         field.setPrefColumnCount(1);
         field.setMaxWidth(45);
 
-        field.setTextFormatter(new TextFormatter<>(change ->
-            change.getControlNewText().length() <= 1
-                ? change
-                : null
-        ));
+        field.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (change.isContentChange() && change.getControlText().equals("SPACE")
+                    && change.getText().length() <= 1) {
+                change.setRange(0, change.getControlText().length());
+                change.selectRange(change.getText().length(), change.getText().length());
+                newText = change.getControlNewText();
+            }
+            if (newText.equals(" ")) {
+                change.setRange(0, change.getControlText().length());
+                change.setText("SPACE");
+                change.selectRange(5, 5);
+                return change;
+            }
+            if (newText.equals("SPACE")) return change;
+            return newText.length() <= 1 ? change : null;
+        }));
+
+        field.textProperty().addListener((observable, oldText, newText) -> {
+            boolean isSpace = newText.equals("SPACE");
+            field.setPrefColumnCount(isSpace ? 5 : 1);
+            field.setMaxWidth(isSpace ? 85 : 45);
+        });
 
         return field;
     }

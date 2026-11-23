@@ -36,6 +36,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import music.VoicePreset;
@@ -66,7 +67,7 @@ class CompositionScreenTest extends JavaFXTestBase {
             screen.refreshMappingHelp();
 
             VBox sections = (VBox) ((ScrollPane) help.getContent()).getContent();
-            assertThat(sections.getChildren().stream().map(VBox.class::cast)
+            assertThat(sections.getChildren().stream().map(TitledPane.class::cast).map(section -> (VBox) section.getContent())
                 .flatMap(section -> section.getChildren().stream())
                 .filter(HBox.class::isInstance).map(HBox.class::cast))
                 .anySatisfy(row -> {

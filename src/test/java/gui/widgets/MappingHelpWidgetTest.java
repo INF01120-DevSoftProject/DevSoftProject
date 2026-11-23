@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import gui.JavaFXTestBase;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import translators.TextToMusic.CharacterMapping;
@@ -19,7 +20,7 @@ class MappingHelpWidgetTest extends JavaFXTestBase {
     private Map<String, String> explanations(MappingHelpWidget widget) {
         VBox content = (VBox) ((ScrollPane) widget.getContent()).getContent();
         Map<String, String> rows = new LinkedHashMap<>();
-        content.getChildren().stream().map(VBox.class::cast)
+        content.getChildren().stream().map(TitledPane.class::cast).map(section -> (VBox) section.getContent())
             .flatMap(section -> section.getChildren().stream())
             .filter(HBox.class::isInstance).map(HBox.class::cast)
             .forEach(row -> rows.put(((Label) row.getChildren().get(0)).getText(),
@@ -46,6 +47,39 @@ class MappingHelpWidgetTest extends JavaFXTestBase {
         assertThat(rows.get(":1")).contains("Semifusa");
         assertThat(rows.get("+")).contains("Aumenta o andamento");
         assertThat(rows).doesNotContainKey(">");
+    }
+
+    private Map<String, TitledPane> sections(MappingHelpWidget widget) {
+        VBox content = (VBox) ((ScrollPane) widget.getContent()).getContent();
+        Map<String, TitledPane> sections = new LinkedHashMap<>();
+        content.getChildren().stream().map(TitledPane.class::cast)
+            .forEach(section -> sections.put(section.getText(), section));
+        return sections;
+    }
+
+    @Test
+    void eachTopicOpensAndClosesAndStaysClosedAfterARefresh() {
+        CharacterMapping mapping = new CharacterMapping();
+        MappingHelpWidget widget = new MappingHelpWidget(mapping);
+
+        Map<String, TitledPane> sections = sections(widget);
+        assertThat(sections.keySet()).containsExactly("Notas", "Pausas e acidentes", "Duração da nota", "Comandos");
+        assertThat(sections.values()).allSatisfy(section -> {
+            assertThat(section.isCollapsible()).isTrue();
+            assertThat(section.isExpanded()).isTrue();
+        });
+
+        sections.get("Duração da nota").setExpanded(false);
+        mapping.replaceChar("note", "C", "K");
+        widget.refreshMapping();
+
+        sections = sections(widget);
+        assertThat(sections.get("Duração da nota").isExpanded()).isFalse();
+        assertThat(sections.get("Notas").isExpanded()).isTrue();
+
+        sections.get("Duração da nota").setExpanded(true);
+        widget.refreshMapping();
+        assertThat(sections(widget).get("Duração da nota").isExpanded()).isTrue();
     }
 
     @Test

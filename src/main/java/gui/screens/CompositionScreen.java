@@ -13,12 +13,14 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import music.VoicePreset;
 import gui.builders.BoxBuilder;
 import gui.builders.ButtonBuilder;
 import gui.factory.ControlFactory;
 import gui.widgets.VoiceWidget;
+import gui.widgets.BPMSliderWidget;
 import gui.widgets.voicePresetWidget.*;
 import input.InputReader;
 import exporters.DraftMusicCreator;
@@ -29,6 +31,7 @@ public class CompositionScreen extends Screen {
     private static final int MAX_VOICES = 15;
 
     private final VBox voicesContainer;
+    private final BPMSliderWidget bpmSlider;
     
     private final MusicExportPipeline<?> exporter;
     private final InputReader<String> reader;
@@ -60,6 +63,17 @@ public class CompositionScreen extends Screen {
 
         VoiceWidget.restartCurrentVoiceNum();
 
+        bpmSlider = new BPMSliderWidget();
+        Label bpmLabel = new Label();
+        bpmLabel.textProperty().bind(bpmSlider.valueProperty().asString("BPM: %.0f"));
+
+        HBox bpmControls = new BoxBuilder<>(new HBox(15))
+                                    .addClass("bpm-controls")
+                                    .add(bpmLabel)
+                                    .add(bpmSlider)
+                                    .apply(b -> HBox.setHgrow(bpmSlider, Priority.ALWAYS))
+                                    .build();
+
         voicesContainer = new BoxBuilder<>(new VBox(20))
                                     .add(createVoiceWidget())
                                     .build();
@@ -75,6 +89,12 @@ public class CompositionScreen extends Screen {
                                             .onClickRemoveLastFromContainer(voicesContainer)
                                             .onClick(e -> VoiceWidget.decrementCurrentVoiceNum())
                                             .build())
+                                    .build();
+
+        HBox compositionControls = new BoxBuilder<>(new HBox(20))
+                                    .add(plusMinusButtons)
+                                    .add(bpmControls)
+                                    .apply(b -> HBox.setHgrow(bpmControls, Priority.ALWAYS))
                                     .build();
 
         HBox actionButtons = new BoxBuilder<>(new HBox(20))
@@ -94,7 +114,7 @@ public class CompositionScreen extends Screen {
                                     .setId("main")
                                     .add(new Label("Composição"))
                                     .add(voicesContainerScroll)
-                                    .add(plusMinusButtons)
+                                    .add(compositionControls)
                                     .add(ControlFactory.createVerticalGrower())
                                     .add(actionButtons)
                                     .build();
@@ -108,7 +128,7 @@ public class CompositionScreen extends Screen {
 
         try {
             MusicInputData data = getMusicInputData();
-            exporter.exportMusic(file, data.text(), data.presets());
+            exporter.exportMusic(file, data.text(), data.presets(), bpmSlider.getBPM());
             onMusicSaved.accept(file.toPath());
 
         } catch (IOException | IllegalArgumentException e) {
@@ -146,7 +166,7 @@ public class CompositionScreen extends Screen {
         MusicInputData data = getMusicInputData();
 
         try {
-            Path draftPath = draftCreator.createDraft(data.text(), data.presets());
+            Path draftPath = draftCreator.createDraft(data.text(), data.presets(), bpmSlider.getBPM());
             onListenDraft.accept(draftPath);
         }
         catch (IOException | IllegalArgumentException e) {

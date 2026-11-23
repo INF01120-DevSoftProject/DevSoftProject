@@ -32,3 +32,14 @@
 .voice-header {
     -fx-alignment: center-left;
 }
+
+.bpm-controls {
+    -fx-alignment: center-left;
+}
+
+.bpm-controls .label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 0;
+    -fx-min-width: 75px;
+}

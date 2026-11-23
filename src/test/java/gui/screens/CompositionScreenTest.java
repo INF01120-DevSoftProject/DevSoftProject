@@ -16,11 +16,15 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MetaMessage;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.Track;
 import exporters.DraftMusicCreator;
 import exporters.MidiFileExporter;
 import exporters.MusicExportPipeline;
 import gui.JavaFXTestBase;
 import gui.widgets.VoiceWidget;
+import gui.widgets.BPMSliderWidget;
 import input.InputReader;
 import input.TXTInputReader;
 import javafx.application.Platform;
@@ -124,7 +128,7 @@ class CompositionScreenTest extends JavaFXTestBase {
         CompositionScreen screen = new CompositionScreen(
                 new TXTInputReader(),
                 createPipeline(),
-                (text, presets) -> Path.of("draft.mid"),
+                (text, presets, initialBpm) -> Path.of("draft.mid"),
                 path -> {},
                 path -> {}
         );
@@ -141,7 +145,7 @@ class CompositionScreenTest extends JavaFXTestBase {
     void rejectsNullDependenciesInConstructor() {
         InputReader<String> reader = new TXTInputReader();
         MusicExportPipeline<?> pipeline = createPipeline();
-        DraftMusicCreator draftCreator = (text, presets) -> Path.of("draft.mid");
+        DraftMusicCreator draftCreator = (text, presets, initialBpm) -> Path.of("draft.mid");
         Consumer<Path> onListenDraft = path -> {};
 
         assertThrows(IllegalArgumentException.class,
@@ -159,7 +163,7 @@ class CompositionScreenTest extends JavaFXTestBase {
         CompositionScreen screen = new CompositionScreen(
                 new TXTInputReader(),
                 createPipeline(),
-                (text, presets) -> Path.of("draft.mid"),
+                (text, presets, initialBpm) -> Path.of("draft.mid"),
                 path -> {},
                 path -> {}
         );
@@ -178,7 +182,7 @@ class CompositionScreenTest extends JavaFXTestBase {
         AtomicReference<Exception> callbackError = new AtomicReference<>();
         CompositionScreen screen = new CompositionScreen(
                 new TXTInputReader(), createPipeline(),
-                (text, presets) -> Path.of("unused.mid"), path -> {},
+                (text, presets, initialBpm) -> Path.of("unused.mid"), path -> {},
                 path -> {
                     try {
                         MidiSystem.getSequence(path.toFile());
@@ -195,12 +199,24 @@ class CompositionScreenTest extends JavaFXTestBase {
         };
 
         runOnFxThread(() -> {
+            ((BPMSliderWidget) screen.lookup(".bpm-slider")).setValue(90);
             findFirstVoiceWidget(screen).setVoiceText("C D E");
             findButtonByText(screen, "Salvar música").fire();
         });
 
         assertThat(callbackError.get()).isNull();
         assertThat(savedPath.get()).isEqualTo(target);
+        Sequence sequence = MidiSystem.getSequence(target.toFile());
+        assertThat(sequence.getMicrosecondLength()).isEqualTo(3L * (60_000_000 / 90));
+        MetaMessage tempo = null;
+        Track track = sequence.getTracks()[0];
+        for (int i = 0; i < track.size(); i++) {
+            if (track.get(i).getMessage() instanceof MetaMessage meta && meta.getType() == 0x51) {
+                tempo = meta;
+            }
+        }
+        assertThat(tempo).isNotNull();
+        assertThat(tempo.getData()).containsExactly((byte) 0x0A, (byte) 0x2C, (byte) 0x2A);
     }
 
     @Test
@@ -208,11 +224,13 @@ class CompositionScreenTest extends JavaFXTestBase {
         Path expectedDraftPath = Path.of("rascunho-teste.mid");
         AtomicReference<String> capturedText = new AtomicReference<>();
         AtomicReference<List<VoicePreset>> capturedPresets = new AtomicReference<>();
+        AtomicReference<Integer> capturedBpm = new AtomicReference<>();
         AtomicReference<Path> navigatedPath = new AtomicReference<>();
 
-        DraftMusicCreator fakeCreator = (text, presets) -> {
+        DraftMusicCreator fakeCreator = (text, presets, initialBpm) -> {
             capturedText.set(text);
             capturedPresets.set(presets);
+            capturedBpm.set(initialBpm);
             return expectedDraftPath;
         };
 
@@ -227,12 +245,14 @@ class CompositionScreenTest extends JavaFXTestBase {
             VoiceWidget firstVoice = findFirstVoiceWidget(screen);
             assertThat(firstVoice).isNotNull();
             firstVoice.setVoiceText("C D E");
+            ((BPMSliderWidget) screen.lookup(".bpm-slider")).setValue(185);
 
             findButtonByText(screen, "Ouvir rascunho").fire();
         });
 
         assertThat(capturedText.get()).isEqualTo("C D E");
         assertThat(capturedPresets.get()).hasSize(1);
+        assertThat(capturedBpm.get()).isEqualTo(185);
         assertThat(navigatedPath.get()).isEqualTo(expectedDraftPath);
         assertThat(screen.lastErrorMessage).isNull();
     }
@@ -257,7 +277,7 @@ class CompositionScreenTest extends JavaFXTestBase {
     @Test
     void listenDraftShowsErrorAndDoesNotNavigateOnIOException() throws Exception {
         AtomicReference<Path> navigatedPath = new AtomicReference<>();
-        DraftMusicCreator failingCreator = (text, presets) -> {
+        DraftMusicCreator failingCreator = (text, presets, initialBpm) -> {
             throw new IOException("Erro de disco");
         };
 

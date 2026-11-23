@@ -23,7 +23,7 @@ public class TempMidiDraftService implements DraftMusicCreator, DraftMusicManage
     }
 
     @Override
-    public Path createDraft(String text, List<VoicePreset> presets) throws IOException {
+    public Path createDraft(String text, List<VoicePreset> presets, int initialBpm) throws IOException {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("The composition is empty.");
         }
@@ -35,7 +35,7 @@ public class TempMidiDraftService implements DraftMusicCreator, DraftMusicManage
         tempPath.toFile().deleteOnExit();
 
         try {
-            exportPipeline.exportMusic(tempPath.toFile(), text, presets);
+            exportPipeline.exportMusic(tempPath.toFile(), text, presets, initialBpm);
         } catch (IOException | RuntimeException e) {
             deleteQuietly(tempPath);
             throw e;

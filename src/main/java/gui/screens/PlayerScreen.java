@@ -29,31 +29,27 @@ public class PlayerScreen extends Screen {
     private final MusicPathUtils musicPathUtils;
     private final DraftMusicManager draftManager;
 
-    private final Label musicTitle;
-    private final Label draftStatusLabel;
-    private final HBox draftActionsContainer;
+    private Label musicTitle;
+    private Label draftStatusLabel;
+    private HBox draftActionsContainer;
 
     private final SheetMusicWidget sheetMusicWidget;
-    private final MusicSliderWidget musicSlider;
+    private MusicSliderWidget musicSlider;
     private final MusicSelectionWidget musicSelectionWidget;
-    private final MusicPlayButtonWidget playPauseButton;
+    private MusicPlayButtonWidget playPauseButton;
 
-    private final Button nextMusicButton;
-    private final Button previousMusicButton;
+    private Button nextMusicButton;
+    private Button previousMusicButton;
 
     public PlayerScreen(
             Stage stage,
             Player<?> player,
             MusicPathUtils musicPathUtils,
             DraftMusicManager draftManager) {
-        if (stage == null)
-            throw new IllegalArgumentException("Stage cannot be null.");
-        if (player == null)
-            throw new IllegalArgumentException("Player cannot be null.");
-        if (musicPathUtils == null)
-            throw new IllegalArgumentException("Music path utils cannot be null.");
-        if (draftManager == null)
-            throw new IllegalArgumentException("Draft manager cannot be null.");
+        if (stage == null) throw new IllegalArgumentException("Stage cannot be null.");
+        if (player == null) throw new IllegalArgumentException("Player cannot be null.");
+        if (musicPathUtils == null) throw new IllegalArgumentException("Music path utils cannot be null.");
+        if (draftManager == null) throw new IllegalArgumentException("Draft manager cannot be null.");
 
         this.player = player;
         this.musicPathUtils = musicPathUtils;
@@ -64,50 +60,10 @@ public class PlayerScreen extends Screen {
         player.load(musicPathUtils.getAllMusicsPathInResources().getFirst());
 
         sheetMusicWidget = new SheetMusicWidget(player.getCurrentMusicPath(), player::getMusicPosition);
-        playPauseButton = new MusicPlayButtonWidget(player);
-
         musicSelectionWidget = new MusicSelectionWidget(musicPathUtils);
         musicSelectionWidget.setOnAction(e -> selectMusic());
 
-        musicTitle = new Label(player.getCurrentMusicName());
-        musicSlider = new MusicSliderWidget(player);
-
-        draftStatusLabel = new Label();
-        draftStatusLabel.getStyleClass().add("draft-status-label");
-        setNodeVisibility(draftStatusLabel, false);
-
-        nextMusicButton = new ButtonBuilder("⏮")
-                .onClick(e -> changeToPreviousMusic())
-                .build();
-
-        previousMusicButton = new ButtonBuilder("⏭")
-                .onClick(e -> changeToNextMusic())
-                .build();
-
-        HBox playerButtons = new BoxBuilder<>(new HBox(25))
-                .addClass("player-buttons")
-                .add(nextMusicButton)
-                .add(playPauseButton)
-                .add(previousMusicButton)
-                .build();
-
-        draftActionsContainer = new BoxBuilder<>(new HBox(10))
-                .addClass("player-buttons")
-                .add(new ButtonBuilder("Salvar rascunho")
-                        .onClick(e -> saveCurrentDraft())
-                        .build())
-                .build();
-
-        setNodeVisibility(draftActionsContainer, false);
-
-        VBox playerController = new BoxBuilder<>(new VBox(25))
-                .addClass("player-controller")
-                .add(musicTitle)
-                .add(musicSlider)
-                .add(playerButtons)
-                .add(draftActionsContainer)
-                .add(draftStatusLabel)
-                .build();
+        VBox playerController = createPlayerController();
 
         VBox mainContent = new BoxBuilder<>(new VBox(25))
                 .setId("main")
@@ -118,6 +74,59 @@ public class PlayerScreen extends Screen {
                 .build();
 
         setScreenMainContent(mainContent);
+    }
+
+    private VBox createPlayerController() {
+        musicTitle = new Label(player.getCurrentMusicName());
+        musicSlider = new MusicSliderWidget(player);
+
+        HBox playerButtons = createPlayerButtons();
+        createDraftControls();
+
+        VBox playerController = new BoxBuilder<>(new VBox(25))
+                .addClass("player-controller")
+                .add(musicTitle)
+                .add(musicSlider)
+                .add(playerButtons)
+                .add(draftActionsContainer)
+                .add(draftStatusLabel)
+                .build();
+
+        return playerController;
+    }
+
+    private HBox createPlayerButtons() {
+        previousMusicButton = new ButtonBuilder("⏮")
+                .onClick(e -> changeToPreviousMusic())
+                .build();
+        playPauseButton = new MusicPlayButtonWidget(player);
+        nextMusicButton = new ButtonBuilder("⏭")
+                .onClick(e -> changeToNextMusic())
+                .build();
+
+        HBox playerButtons = new BoxBuilder<>(new HBox(25))
+                .addClass("player-buttons")
+                .add(previousMusicButton)
+                .add(playPauseButton)
+                .add(nextMusicButton)
+                .build();
+
+        return playerButtons;
+    }
+
+    private void createDraftControls() {
+        draftStatusLabel = new Label();
+        draftStatusLabel.getStyleClass().add("draft-status-label");
+        setNodeVisibility(draftStatusLabel, false);
+
+        draftActionsContainer = new BoxBuilder<>(new HBox(10))
+                .addClass("player-buttons")
+                .add(new ButtonBuilder("Salvar rascunho")
+                        .onClick(e -> saveCurrentDraft())
+                        .build())
+                .build();
+
+        setNodeVisibility(draftActionsContainer, false);
     }
 
     /**
@@ -137,8 +146,6 @@ public class PlayerScreen extends Screen {
 
         musicSelectionWidget.clearCurrentBoxSelection();
         setNodeVisibility(draftStatusLabel, false);
-        setNodeVisibility(previousMusicButton, false);
-        setNodeVisibility(nextMusicButton, false);
     }
 
     public void onMusicSaved(Path savedPath) {
@@ -188,8 +195,6 @@ public class PlayerScreen extends Screen {
             musicSelectionWidget.selectMusicSilently(savedFileName);
 
             setNodeVisibility(draftStatusLabel, true);
-            setNodeVisibility(previousMusicButton, true);
-            setNodeVisibility(nextMusicButton, true);
 
         } catch (IOException | IllegalArgumentException e) {
             showErrorMessage("Falha ao salvar o rascunho: " + e.getMessage());
@@ -239,6 +244,8 @@ public class PlayerScreen extends Screen {
         playPauseButton.setCurrentButtonToPlay();
 
         setNodeVisibility(draftActionsContainer, isDraft);
+        setNodeVisibility(previousMusicButton, !isDraft);
+        setNodeVisibility(nextMusicButton, !isDraft);
 
         if (!isDraft) {
             setNodeVisibility(draftStatusLabel, false);

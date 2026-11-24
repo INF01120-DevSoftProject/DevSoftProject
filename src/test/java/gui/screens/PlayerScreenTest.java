@@ -118,6 +118,14 @@ class PlayerScreenTest extends JavaFXTestBase {
                 .orElseThrow(() -> new AssertionError("Botão não encontrado: " + text));
     }
 
+    private void assertNavigationVisibility(PlayerScreen screen, boolean visible) {
+        for (String text : List.of("⏮", "⏭")) {
+            Button button = findButtonByText(screen, text);
+            assertThat(button.isVisible()).isEqualTo(visible);
+            assertThat(button.isManaged()).isEqualTo(visible);
+        }
+    }
+
     private Label findLabelByStyleClass(Node root, String styleClass) {
         return collectAllNodes(root).stream()
                 .filter(Label.class::isInstance)
@@ -248,6 +256,44 @@ class PlayerScreenTest extends JavaFXTestBase {
         assertThat(findMusicSelectionBox(screen).getValue()).isNull();
         assertThat(findButtonByText(screen, "Salvar rascunho").isVisible()).isTrue();
         assertThat(findLabelByStyleClass(screen, "draft-status-label").isVisible()).isFalse();
+        assertNavigationVisibility(screen, false);
+    }
+
+    @Test
+    void navigationButtonsFollowPlaylistOrderAndWrapAround() throws Exception {
+        TempMidiDraftService service = createDraftService();
+        Path draft = service.createDraft("C D E", List.of(new VoicePreset(InstrumentType.KEYS)));
+        Path musicsDir = Files.createDirectory(tempDir.resolve("navigation"));
+        Path first = Files.copy(draft, musicsDir.resolve("a.mid"));
+        Path second = Files.copy(draft, musicsDir.resolve("b.mid"));
+        Path third = Files.copy(draft, musicsDir.resolve("c.mid"));
+
+        runOnFxThread(() -> {
+            TestPlayer player = new TestPlayer();
+            PlayerScreen screen = new PlayerScreen(
+                    createManagedStage(), player, musicPathUtilsFor(musicsDir), service);
+            Button previous = findButtonByText(screen, "⏮");
+            Button next = findButtonByText(screen, "⏭");
+
+            assertNavigationVisibility(screen, true);
+            assertThat(player.getCurrentMusicPath()).isEqualTo(first);
+            assertThat(previous.getParent().getChildrenUnmodifiable().getFirst()).isSameAs(previous);
+            assertThat(next.getParent().getChildrenUnmodifiable().getLast()).isSameAs(next);
+
+            next.fire();
+            assertThat(player.getCurrentMusicPath()).isEqualTo(second);
+            assertThat(findMusicSelectionBox(screen).getValue()).isEqualTo("b.mid");
+            assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("b.mid");
+
+            next.fire();
+            assertThat(player.getCurrentMusicPath()).isEqualTo(third);
+            next.fire();
+            assertThat(player.getCurrentMusicPath()).isEqualTo(first);
+            previous.fire();
+            assertThat(player.getCurrentMusicPath()).isEqualTo(third);
+            assertThat(findMusicSelectionBox(screen).getValue()).isEqualTo("c.mid");
+            assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("c.mid");
+        });
     }
 
     @Test
@@ -297,6 +343,7 @@ class PlayerScreenTest extends JavaFXTestBase {
             screen.loadDraft(draft);
 
             assertThat(findButtonByText(screen, "Salvar rascunho").isVisible()).isTrue();
+            assertNavigationVisibility(screen, false);
             ComboBox<String> selectionBox = findMusicSelectionBox(screen);
             assertThat(selectionBox.getItems()).contains("salvo.mid");
 
@@ -306,6 +353,7 @@ class PlayerScreenTest extends JavaFXTestBase {
             assertThat(selectionBox.getValue()).isEqualTo("salvo.mid");
             assertThat(findMusicTitleLabel(screen).getText()).isEqualTo("salvo.mid");
             assertThat(findLabelByStyleClass(screen, "draft-status-label").isVisible()).isFalse();
+            assertNavigationVisibility(screen, true);
         });
     }
 
